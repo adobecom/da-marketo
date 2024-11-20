@@ -13,14 +13,17 @@
 /*
  * Marketo Form
  */
-import {
+
+import { LIBS } from '../../scripts/scripts.js';
+
+const {
   parseEncodedConfig,
   loadScript,
   loadLink,
   localizeLink,
   createTag,
   createIntersectionObserver,
-} from '../../utils/utils.js';
+} = await import(`${LIBS}/utils/utils.js`);
 
 const ROOT_MARGIN = 50;
 const FORM_ID = 'form id';
@@ -129,7 +132,7 @@ const showSuccessSection = (formData, scroll = true) => {
 };
 
 export const formSuccess = (formEl, formData) => {
-  const el = formEl.closest('.marketo');
+  const el = formEl.closest('.marketo-v2');
   const parentModal = formEl?.closest('.dialog-modal');
   const mktoSubmit = new Event('mktoSubmit');
 
@@ -160,7 +163,7 @@ export function setProductOfInterest(formData, search = window.location.search) 
 
 const readyForm = (form, formData) => {
   const formEl = form.getFormElem().get(0);
-  const el = formEl.closest('.marketo');
+  const el = formEl.closest('.marketo-v2');
   const isDesktop = matchMedia('(min-width: 900px)');
   el.classList.remove('loading');
 
