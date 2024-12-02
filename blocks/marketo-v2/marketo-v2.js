@@ -25,6 +25,42 @@ const {
   createIntersectionObserver,
 } = await import(`${LIBS}/utils/utils.js`);
 
+const formJS = [
+  // 'state_translate-en.js',
+  // 'state_translate-pl.js',
+  // 'state_translate-es_es.js',
+  // 'state_translate-pt.js',
+  // 'state_translate-fi.js',
+  // 'state_translate-ru.js',
+  // 'state_translate-ja_jp.js',
+  // 'state_translate-zh_cn.js',
+  // 'state_translate-fr_fr.js',
+  // 'state_translate-sv.js',
+  // 'state_translate-it.js',
+  // 'state_translate-tr.js',
+  // 'state_translate-cs.js',
+  // 'state_translate-ko.js',
+  // 'state_translate-zh_tw.js',
+  // 'state_translate-da.js',
+  // 'state_translate-nl.js',
+  // 'state_translate-de.js',
+  // 'state_translate-no.js',
+  'marketo_form_setup_rules.js',
+  'template_rules.js',
+  'template_manager.js',
+  'marketo_form_setup_process.js',
+  'privacy_validation_rules.js',
+  'privacy_validation_process.js',
+  'field_preferences.js',
+  'adobe_analytics.js',
+  'category_filters.js',
+  'general_translations.js',
+  'cleaning_validation.js',
+  'rendering_review.js',
+  'form_dynamics.js',
+  // 'known_visitor.js',
+];
+
 const ROOT_MARGIN = 50;
 const FORM_ID = 'form id';
 const BASE_URL = 'marketo host';
@@ -163,6 +199,9 @@ export function setProductOfInterest(formData, search = window.location.search) 
 
 const readyForm = (form, formData) => {
   const formEl = form.getFormElem().get(0);
+  // formJS.forEach((file) => loadScript(`/blocks/marketo-v2/forms/${file}`));
+  const files = [...Array(15).keys()];
+  files.forEach((file) => loadScript(`/blocks/marketo-v2/js/marketo-${file}.js`));
   const el = formEl.closest('.marketo-v2');
   const isDesktop = matchMedia('(min-width: 900px)');
   el.classList.remove('loading');
@@ -188,12 +227,12 @@ export const loadMarketo = (el, formData) => {
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
 
-  loadScript('/deps/forms2.min.js')
+  loadScript('/deps/forms2.js')
     .then(() => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
-      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID);
+      MktoForms2.loadForm(`https://${baseURL}`, munchkinID, formID);
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
     })
     .catch(() => {
