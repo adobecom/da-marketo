@@ -23,6 +23,7 @@ const {
   localizeLink,
   createTag,
   createIntersectionObserver,
+  SLD,
 } = await import(`${LIBS}/utils/utils.js`);
 
 const ROOT_MARGIN = 50;
@@ -32,8 +33,6 @@ const MUNCHKIN_ID = 'marketo munckin';
 const SUCCESS_TYPE = 'form.success.type';
 const SUCCESS_CONTENT = 'form.success.content';
 const SUCCESS_SECTION = 'form.success.section';
-const PROGRAM_POI = 'program.poi';
-const POI_FILTER = 'field_filters.products';
 const FORM_MAP = {
   'success-type': SUCCESS_TYPE,
   'destination-type': SUCCESS_TYPE,
@@ -44,7 +43,6 @@ const FORM_MAP = {
   'sfdc-campaign-id': 'program.campaignids.sfdc',
 };
 export const FORM_PARAM = 'form';
-const QUERY_POI = 'poi';
 
 export const formValidate = (formEl) => {
   formEl.classList.remove('hide-errors');
@@ -59,11 +57,10 @@ export const decorateURL = (destination, baseURL = window.location) => {
     const { hostname, pathname, search, hash } = destinationUrl;
 
     if (!hostname) {
-      /* c8 ignore next 2 */
       throw new Error('URL does not have a valid host');
     }
 
-    if (destinationUrl.hostname.includes('.hlx.')) {
+    if (destinationUrl.hostname.includes(`.${SLD}.`)) {
       destinationUrl = new URL(`${pathname}${search}${hash}`, baseURL.origin);
     }
 
@@ -153,14 +150,6 @@ export const formSuccess = (formEl, formData) => {
   return false;
 };
 
-export function setProductOfInterest(formData, search = window.location.search) {
-  const productOfInterest = new URLSearchParams(search).get(QUERY_POI);
-  if (!productOfInterest) return;
-
-  formData[PROGRAM_POI] = productOfInterest;
-  formData[POI_FILTER] = 'hidden';
-}
-
 const readyForm = (form, formData) => {
   const formEl = form.getFormElem().get(0);
   const el = formEl.closest('.marketo-v2');
@@ -188,7 +177,7 @@ export const loadMarketo = (el, formData) => {
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
 
-  loadScript('/deps/forms2.min.js')
+  loadScript('/deps/forms2.js')
     .then(() => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
@@ -253,7 +242,6 @@ export default function init(el) {
     if (destinationUrl) formData[SUCCESS_CONTENT] = destinationUrl;
   }
 
-  setProductOfInterest(formData);
   setPreferences(formData);
 
   const fragment = new DocumentFragment();
