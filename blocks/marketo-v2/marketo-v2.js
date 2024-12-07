@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /*
  * Copyright 2022 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
@@ -59,10 +60,11 @@ export const decorateURL = (destination, baseURL = window.location) => {
 
     /* c8 ignore next 3 */
     if (!hostname) {
+      /* c8 ignore next 2 */
       throw new Error('URL does not have a valid host');
     }
 
-    if (destinationUrl.hostname.includes(`.${SLD}.`)) {
+    if (destinationUrl.hostname.includes('.hlx.')) {
       destinationUrl = new URL(`${pathname}${search}${hash}`, baseURL.origin);
     }
 
@@ -174,12 +176,28 @@ export const loadMarketo = (el, formData) => {
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
 
-  loadScript('/deps/forms2.js')
-    .then(() => {
+  const mcz = loadScript('/blocks/marketo-v2/mkto-frms/state_translate-en.js')
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/marketo_form_setup_rules.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/template_rules.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/marketo_form_setup_process.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/privacy_validation_rules.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/privacy_validation_process.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/field_preferences.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/adobe_analytics.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/form_dynamics.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/template_manager.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/category_filters.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/cleaning_validation.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/general_translations.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/rendering_review.js'));
+  const forms2 = loadScript('/deps/forms2.min.js');
+
+  Promise.all([mcz, forms2])
+    .then(async () => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
-      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID);
+      MktoForms2.loadForm(`https://${baseURL}`, munchkinID, formID);
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
     })
     .catch(() => {
@@ -255,7 +273,7 @@ export default function init(el) {
     formWrapper.append(description);
   }
 
-  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors', style: 'opacity:0;visibility:hidden;' });
+  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors mktoForm', style: 'opacity:0;visibility:hidden;' });
   const span1 = createTag('span', { id: 'mktoForms2BaseStyle', style: 'display:none;' });
   const span2 = createTag('span', { id: 'mktoForms2ThemeStyle', style: 'display:none;' });
   formWrapper.append(span1, span2, marketoForm);
