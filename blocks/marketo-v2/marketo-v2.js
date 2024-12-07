@@ -23,7 +23,6 @@ const {
   localizeLink,
   createTag,
   createIntersectionObserver,
-  SLD,
 } = await import(`${LIBS}/utils/utils.js`);
 
 const ROOT_MARGIN = 50;
@@ -33,6 +32,8 @@ const MUNCHKIN_ID = 'marketo munckin';
 const SUCCESS_TYPE = 'form.success.type';
 const SUCCESS_CONTENT = 'form.success.content';
 const SUCCESS_SECTION = 'form.success.section';
+const PROGRAM_POI = 'program.poi';
+const POI_FILTER = 'field_filters.products';
 const FORM_MAP = {
   'success-type': SUCCESS_TYPE,
   'destination-type': SUCCESS_TYPE,
@@ -43,6 +44,7 @@ const FORM_MAP = {
   'sfdc-campaign-id': 'program.campaignids.sfdc',
 };
 export const FORM_PARAM = 'form';
+const QUERY_POI = 'poi';
 
 export const formValidate = (formEl) => {
   formEl.classList.remove('hide-errors');
@@ -57,10 +59,11 @@ export const decorateURL = (destination, baseURL = window.location) => {
     const { hostname, pathname, search, hash } = destinationUrl;
 
     if (!hostname) {
+      /* c8 ignore next 2 */
       throw new Error('URL does not have a valid host');
     }
 
-    if (destinationUrl.hostname.includes(`.${SLD}.`)) {
+    if (destinationUrl.hostname.includes('.hlx.')) {
       destinationUrl = new URL(`${pathname}${search}${hash}`, baseURL.origin);
     }
 
@@ -150,6 +153,14 @@ export const formSuccess = (formEl, formData) => {
   return false;
 };
 
+export function setProductOfInterest(formData, search = window.location.search) {
+  const productOfInterest = new URLSearchParams(search).get(QUERY_POI);
+  if (!productOfInterest) return;
+
+  formData[PROGRAM_POI] = productOfInterest;
+  formData[POI_FILTER] = 'hidden';
+}
+
 const readyForm = (form, formData) => {
   const formEl = form.getFormElem().get(0);
   const el = formEl.closest('.marketo-v2');
@@ -177,12 +188,31 @@ export const loadMarketo = (el, formData) => {
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
 
-  loadScript('/deps/forms2.js')
-    .then(() => {
+  const mcz = loadScript('/blocks/marketo-v2/mkto-frms/state_translate-en.js')
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/marketo_form_setup_rules.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/template_rules.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/marketo_form_setup_process.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/privacy_validation_rules.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/privacy_validation_process.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/field_preferences.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/adobe_analytics.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/form_dynamics.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/template_manager.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/category_filters.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/cleaning_validation.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/general_translations.js'))
+    .then(() => loadScript('/blocks/marketo-v2/mkto-frms/rendering_review.js'));
+  const forms2 = loadScript('/deps/forms2.js');
+
+  Promise.all([mcz, forms2])
+    .then(async () => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
-      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID);
+      MktoForms2.loadForm(`https://${baseURL}`, munchkinID, formID, () => {
+        // eslint-disable-next-line no-undef
+        marketoFormSetup('stage1');
+      });
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
     })
     .catch(() => {
@@ -242,6 +272,7 @@ export default function init(el) {
     if (destinationUrl) formData[SUCCESS_CONTENT] = destinationUrl;
   }
 
+  setProductOfInterest(formData);
   setPreferences(formData);
 
   const fragment = new DocumentFragment();
@@ -257,7 +288,7 @@ export default function init(el) {
     formWrapper.append(description);
   }
 
-  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors', style: 'opacity:0;visibility:hidden;' });
+  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors mktoForm', style: 'opacity:0;visibility:hidden;' });
   const span1 = createTag('span', { id: 'mktoForms2BaseStyle', style: 'display:none;' });
   const span2 = createTag('span', { id: 'mktoForms2ThemeStyle', style: 'display:none;' });
   formWrapper.append(span1, span2, marketoForm);

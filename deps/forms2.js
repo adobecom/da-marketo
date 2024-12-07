@@ -6241,6 +6241,8 @@ var Form = function (formData, modernizr, opts){
       descriptor.data("mktoFieldDescriptor", fieldData);
       return descriptor;
     }else if (field.Datatype == "htmltext" || field.Datatype == "richtext"){
+      // REMOVE SCRIPT TAGS
+      if ((field.Htmltext || field.InputLabel).includes("<script>")) return;
       return $b.docFrag([
         $b(".mktoOffset.mktoHasWidth").css({width:first(field.OffsetWidth, formData.OffsetWidth, 0)}),
         $b(".mktoFieldWrap",[

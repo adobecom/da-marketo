@@ -28,6 +28,9 @@ module.exports = {
       rules: { 'no-console': 'off' },
     },
   ],
+  ignorePatterns: [
+    '/deps/*',
+  ],
   plugins: [
     'chai-friendly',
   ],
