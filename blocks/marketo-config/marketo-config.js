@@ -65,6 +65,7 @@ const Fields = ({ fieldsData }) => {
 
   return fieldsData.map((field) => {
     const { prop } = field;
+    if (!prop) return null;
     const id = prop.replaceAll(' ', '-');
     const value = state?.[prop];
     const required = field.required === 'yes';
@@ -177,7 +178,7 @@ const Configurator = ({ title, panelsData, lsKey }) => {
 
   const getContent = () => {
     const validatedState = validateState(state, panelsData);
-    const marketoBlk = createBlockTable('marketo', validatedState);
+    const marketoBlk = createBlockTable('marketo-v2', validatedState);
 
     return {
       content: marketoBlk.outerHTML,
@@ -190,8 +191,10 @@ const Configurator = ({ title, panelsData, lsKey }) => {
     const validatedState = validateState(state, panelsData);
     saveStateToLocalStorage(validatedState, lsKey);
 
-    const iframe = createTag('iframe', { src: window.location.href });
-    const table = createBlockTable('marketo', validatedState);
+    const iframeUrl = new URL(window.location.href);
+    iframeUrl.searchParams.set('preview', '1');
+    const iframe = createTag('iframe', { src: iframeUrl.href });
+    const table = createBlockTable('marketo-v2', validatedState);
 
     contentEl.replaceChildren(iframe, table);
   }, [state]);
@@ -291,12 +294,12 @@ export default async function init(el) {
   const title = children[0].textContent.trim();
   // If the block is loaded in an iframe, replace it with the block itself
   if (window.self !== window.top) {
-    console.log('loading from iframe');
+    console.log('loading from iframe', window.location.href);
 
     const lsKey = `${title.toLowerCase().replace(' ', '-')}-ConfiguratorState`;
     // const state = JSON.parse(localStorage.getItem('marketo-ConfiguratorState'));
     const state = loadStateFromLocalStorage(lsKey);
-    const marketoBlock = createBlockDiv('marketo', state);
+    const marketoBlock = createBlockDiv('marketo-v2', state);
     el.replaceWith(marketoBlock);
     await loadBlock(marketoBlock);
     return;

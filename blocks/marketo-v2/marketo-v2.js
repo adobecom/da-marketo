@@ -27,9 +27,9 @@ const {
 } = await import(`${LIBS}/utils/utils.js`);
 
 const ROOT_MARGIN = 50;
-const FORM_ID = 'form id';
-const BASE_URL = 'marketo host';
-const MUNCHKIN_ID = 'marketo munckin';
+const FORM_ID = 'form-id';
+const BASE_URL = 'marketo-host';
+const MUNCHKIN_ID = 'marketo-munckin';
 const SUCCESS_TYPE = 'form.success.type';
 const SUCCESS_CONTENT = 'form.success.content';
 const SUCCESS_SECTION = 'form.success.section';
@@ -50,6 +50,7 @@ export const formValidate = (formEl) => {
 };
 
 export const decorateURL = (destination, baseURL = window.location) => {
+  if (!destination) return null;
   if (!(destination.startsWith('http') || destination.startsWith('/'))) return null;
 
   try {
@@ -192,18 +193,38 @@ export const loadMarketo = (el, formData) => {
     });
 };
 
-export default function init(el) {
-  const children = Array.from(el.querySelectorAll(':scope > div'));
-  const encodedConfigDiv = children.shift();
-  const link = encodedConfigDiv.querySelector('a');
+function parseChildren(children) {
+  return children.reduce((data, element) => {
+    const key = element.children[0]?.textContent.trim().toLowerCase().replaceAll(' ', '-');
+    const value = element.children[1]?.href ?? element.children[1]?.textContent;
+    if (!key || !value) return data;
+    if (key in FORM_MAP) {
+      data[FORM_MAP[key]] = value;
+    } else {
+      data[key] = value;
+    }
+    return data;
+  }, {});
+}
 
-  if (!link?.href) {
-    el.style.display = 'none';
-    return;
+export default function init(el) {
+  el.classList.add('marketo');
+  const children = Array.from(el.querySelectorAll(':scope > div'));
+  const link = children[0].querySelector('a');
+  let linkData = {};
+
+  if (link?.href) {
+    children.shift();
+    const encodedConfig = link.href.split('#')[1];
+    linkData = parseEncodedConfig(encodedConfig);
   }
 
-  const encodedConfig = link.href.split('#')[1];
-  const formData = parseEncodedConfig(encodedConfig);
+  const blockData = parseChildren(children);
+  const formData = {
+    'form type': 'marketo_form',
+    ...linkData,
+    ...blockData,
+  };
 
   children.forEach((element) => {
     const key = element.children[0]?.textContent.trim().toLowerCase().replaceAll(' ', '-');
