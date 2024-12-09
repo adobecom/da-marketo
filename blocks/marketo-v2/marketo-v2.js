@@ -22,6 +22,8 @@ const {
   loadLink,
   localizeLink,
   createTag,
+  getMetadata,
+  getConfig,
   createIntersectionObserver,
   SLD,
 } = await import(`${LIBS}/utils/utils.js`);
@@ -42,6 +44,8 @@ const FORM_MAP = {
   'co-partner-names': 'program.copartnernames',
   'sfdc-campaign-id': 'program.campaignids.sfdc',
 };
+const TEMPLATE_URL = '/marketo-config/marketo-templates.json';
+
 export const FORM_PARAM = 'form';
 
 export const formValidate = (formEl) => {
@@ -178,8 +182,28 @@ export const loadMarketo = (el, formData) => {
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
 
-  loadScript('/deps/forms2.js')
-    .then(() => {
+  const templates = fetch(TEMPLATE_URL)
+    .then((response) => {
+      if (!response.ok) {
+        return {};
+      }
+      return response.json();
+    });
+
+  const forms2 = loadScript('/deps/forms2.js');
+
+  Promise.all([templates, forms2])
+    .then(([templatesData]) => {
+      const template = formData['form.template'].toLowerCase().replaceAll('_', '-');
+      const templateData = templatesData[template]?.data;
+
+      if (templateData) {
+        templateData.forEach((data) => {
+          formData[data.Field.toLowerCase()] = data.Value;
+        });
+      }
+
+      setPreferences(formData);
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
@@ -209,6 +233,7 @@ function parseChildren(children) {
 
 export default function init(el) {
   el.classList.add('marketo');
+  const { marketo } = getConfig('marketo');
   const children = Array.from(el.querySelectorAll(':scope > div'));
   const link = children[0].querySelector('a');
   let linkData = {};
@@ -221,21 +246,13 @@ export default function init(el) {
 
   const blockData = parseChildren(children);
   const formData = {
+    [FORM_ID]: getMetadata('form-id') ?? marketo?.formId,
+    [BASE_URL]: marketo?.host,
+    [MUNCHKIN_ID]: marketo?.munckin,
     'form type': 'marketo_form',
     ...linkData,
     ...blockData,
   };
-
-  children.forEach((element) => {
-    const key = element.children[0]?.textContent.trim().toLowerCase().replaceAll(' ', '-');
-    const value = element.children[1]?.href ?? element.children[1]?.textContent;
-    if (!key || !value) return;
-    if (key in FORM_MAP) {
-      formData[FORM_MAP[key]] = value;
-    } else {
-      formData[key] = value;
-    }
-  });
 
   const formID = formData[FORM_ID];
   const baseURL = formData[BASE_URL];

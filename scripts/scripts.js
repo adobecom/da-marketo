@@ -66,6 +66,11 @@ const CONFIG = {
     de: { ietf: 'de-DE', tk: 'hah7vzn.css' },
     kr: { ietf: 'ko-KR', tk: 'zfo3ouc' },
   },
+  marketo: {
+    formId: '2277',
+    munckin: '360-KCI-804',
+    host: 'engage.adobe.com',
+  },
 };
 
 // Decorate the page with site specific needs.
