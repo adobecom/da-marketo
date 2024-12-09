@@ -1,8 +1,22 @@
 import { createContext, html, useReducer } from '../../deps/htm-preact.js';
-import { parseEncodedConfig } from '../../utils/utils.js';
+import { LIBS } from '../../scripts/scripts.js';
 
-export const saveStateToLocalStorage = (state, lsKey) => {
-  localStorage.setItem(lsKey, JSON.stringify(state));
+const { parseEncodedConfig } = await import(`${LIBS}/utils/utils.js`);
+
+export const saveStateToLocalStorage = (state, localStorageKey) => {
+  localStorage.setItem(localStorageKey, JSON.stringify(state));
+};
+
+export const loadStateFromLocalStorage = (localStorageKey) => {
+  const lsState = localStorage.getItem(localStorageKey);
+  if (lsState) {
+    try {
+      return JSON.parse(lsState);
+      /* c8 ignore next 2 */
+      // eslint-disable-next-line no-empty
+    } catch (e) { }
+  }
+  return null;
 };
 
 function deepCopy(obj) {
@@ -19,9 +33,10 @@ const getHashConfig = () => {
   return parseEncodedConfig(encodedConfig);
 };
 
-const getInitialState = (defaultState, lsKey) => {
+const getInitialState = (defaultState, localStorageKey) => {
   const hashConfig = getHashConfig() ?? null;
   const mergedState = { ...defaultState };
+  const lsState = loadStateFromLocalStorage(localStorageKey);
 
   /* c8 ignore next 4 */
   if (hashConfig) {
@@ -29,13 +44,8 @@ const getInitialState = (defaultState, lsKey) => {
     return mergedState;
   }
 
-  const lsState = localStorage.getItem(lsKey);
   if (lsState) {
-    try {
-      Object.assign(mergedState, JSON.parse(lsState));
-      /* c8 ignore next 2 */
-      // eslint-disable-next-line no-empty
-    } catch (e) { }
+    Object.assign(mergedState, lsState);
   }
 
   return mergedState;
