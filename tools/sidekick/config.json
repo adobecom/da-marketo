@@ -73,5 +73,13 @@
         "**.docx**"
       ]
     }
+  ],
+  "apps": [
+    {
+      "title": "Marketo Manager",
+      "description": "Manage Marketo forms",
+      "image": "https://main--da-bacom-blog--adobecom.hlx.live/blog/media/media_16511e0ee43cd539bda4e68e33ec41888c79de546.jpeg",
+      "url": "https://da.live/app/adobecom/da-marketo/tools/marketo-manager/marketo-manager"
+    }
   ]
 }
