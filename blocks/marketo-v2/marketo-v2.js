@@ -42,15 +42,69 @@ const FORM_MAP = {
   'co-partner-names': 'program.copartnernames',
   'sfdc-campaign-id': 'program.campaignids.sfdc',
 };
+const VALIDATION_MAP = {
+  Email: 'validate-1',
+  Country: 'validate-1',
+  name: 'validate-2',
+  phone: 'validate-2',
+  mktoFormsJobTitle: 'validate-2',
+  mktoFormsFunctionalArea: 'validate-2',
+  company: 'validate-3',
+  state: 'validate-3',
+  postcode: 'validate-3',
+  mktoFormsPrimaryProductInterest: 'validate-3',
+};
 export const FORM_PARAM = 'form';
 
-export const formValidate = (formEl) => {
+export const formValidate = (formEl, success) => {
+  if (!success) {
+    formEl.classList.remove('hide-errors');
+    formEl.classList.add('show-warnings');
+  }
+
   const marketo = formEl.closest('.marketo');
+  const totalSteps = marketo.classList.contains('multi-3') ? 3 : 2;
+  let currentStep = 1;
+
+  if (marketo.classList.contains('step-2')) {
+    currentStep = 2;
+  } else if (marketo.classList.contains('step-3')) {
+    currentStep = 3;
+  }
+  const submitButton = formEl.querySelector('#mktoButton_new');
+  if (formEl.querySelector(`.mktoFormRowTop[data-validate="validate-${currentStep}"] .mktoInvalid`)) {
+    return;
+  }
+  formEl.classList.add('hide-errors');
+  if (!marketo.querySelector('.step-details .back-btn')) {
+    const backBtn = createTag('button', { class: 'back-btn', type: 'button' }, 'Back');
+    backBtn.addEventListener('click', () => {
+      submitButton.textContent = 'Next';
+      if (marketo.classList.contains('step-3')) {
+        marketo.classList.remove('step-3');
+        marketo.classList.add('step-2');
+        marketo.querySelector('.step-details .step').textContent = 'Step 2 of 3';
+      } else if (marketo.classList.contains('step-2')) {
+        marketo.classList.remove('step-2');
+        marketo.classList.add('step-1');
+        backBtn.remove();
+        marketo.querySelector('.step-details .step').textContent = `Step 1 of ${totalSteps}`;
+      }
+    });
+    marketo.querySelector('.step-details')?.prepend(backBtn);
+  }
+  // Multi-step form next
   if (marketo.classList.contains('step-1')) {
     marketo.classList.remove('step-1');
     marketo.classList.add('step-2');
     formEl.classList.add('hide-errors');
     formEl.classList.remove('show-warnings');
+    marketo.querySelector('.step-details .step').textContent = `Step 2 of ${totalSteps}`;
+    if (marketo.classList.contains('multi-2')) {
+      setTimeout(() => {
+        submitButton.textContent = 'Submit';
+      }, 200);
+    }
     return;
   }
   if (marketo.classList.contains('step-2') && marketo.classList.contains('multi-3')) {
@@ -58,10 +112,11 @@ export const formValidate = (formEl) => {
     marketo.classList.add('step-3');
     formEl.classList.add('hide-errors');
     formEl.classList.remove('show-warnings');
-    return;
+    marketo.querySelector('.step-details .step').textContent = 'Step 3 of 3';
+    setTimeout(() => {
+      submitButton.textContent = 'Submit';
+    }, 200);
   }
-  formEl.classList.remove('hide-errors');
-  formEl.classList.add('show-warnings');
 };
 
 export const decorateURL = (destination, baseURL = window.location) => {
@@ -183,8 +238,26 @@ const readyForm = (form, formData) => {
     const offsetPosition = targetPosition + window.pageYOffset - pageTop - window.innerHeight / 2;
     window.scrollTo(0, offsetPosition);
   }, true);
-  form.onValidate(() => formValidate(formEl));
+  form.onValidate((success) => formValidate(formEl, success));
   form.onSuccess(() => formSuccess(formEl, formData));
+};
+
+export const onRender = (form) => {
+  const formEl = form.getFormElem().get(0);
+  const marketo = formEl.closest('.marketo');
+  if (!formEl.classList.contains('mktoVisible')) return;
+  if (!marketo.classList.contains('multi-step')) return;
+
+  const submitButton = formEl.querySelector('#mktoButton_new');
+  if (submitButton) submitButton.textContent = 'Next';
+
+  formEl.querySelectorAll('.mktoFormRowTop').forEach((row) => {
+    const rowClass = row.getAttribute('data-mktofield') || row.getAttribute('data-mkto_vis_src');
+    if (!rowClass) return;
+    if (VALIDATION_MAP[rowClass]) {
+      row.setAttribute('data-validate', VALIDATION_MAP[rowClass]);
+    }
+  });
 };
 
 export const loadMarketo = (el, formData) => {
@@ -199,6 +272,7 @@ export const loadMarketo = (el, formData) => {
 
       MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID);
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
+      MktoForms2.whenRendered((form) => { onRender(form); });
     })
     .catch(() => {
       /* c8 ignore next 2 */
@@ -284,11 +358,6 @@ export default function init(el) {
   if (el.classList.contains('multi-2') || el.classList.contains('multi-3')) {
     el.classList.add('multi-step');
     el.classList.add('step-1');
-    const backBtn = createTag('button', { class: 'back-btn', type: 'button' }, 'Back');
-    backBtn.addEventListener('click', () => {
-      el.classList.remove('step-2');
-      el.classList.add('step-1');
-    });
     const totalSteps = el.classList.contains('multi-3') ? 3 : 2;
     const stepEl = createTag('p', { class: 'step' }, `Step 1 of ${totalSteps}`);
     const stepWrapper = createTag('div', { class: 'step-details' }, stepEl);

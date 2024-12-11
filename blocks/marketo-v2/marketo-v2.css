@@ -91,22 +91,10 @@
   display: none;
 }
 
-.marketo.multi-step.step-1 .mktoFormRow.mktoFormRowTop[data-mktofield="Email"],
-.marketo.multi-step.step-1 .mktoFormRow.mktoFormRowTop[data-mktofield="Country"] {
-  display: block;
-}
-
-.marketo.multi-step.step-2 .mktoFormRow.mktoFormRowTop.name,
-.marketo.multi-step.step-2 .mktoFormRow.mktoFormRowTop[data-mkto_vis_src="phone"],
-.marketo.multi-step.step-2 .mktoFormRow.mktoFormRowTop[data-mktofield="mktoFormsJobTitle"],
-.marketo.multi-step.step-2 .mktoFormRow.mktoFormRowTop[data-mktofield="mktoFormsFunctionalArea"] {
-  display: block;
-}
-
-.marketo.multi-step.multi-3.step-3 .mktoFormRow.mktoFormRowTop[data-mkto_vis_src="company"],
-.marketo.multi-step.multi-3.step-3 .mktoFormRow.mktoFormRowTop.state,
-.marketo.multi-step.multi-3.step-3 .mktoFormRow.mktoFormRowTop.postcode,
-.marketo.multi-step.multi-3.step-3 .mktoFormRow.mktoFormRowTop[data-mktofield="mktoFormsPrimaryProductInterest"] {
+.marketo.multi-step.step-1 .mktoFormRow.mktoFormRowTop[data-validate="validate-1"],
+.marketo.multi-step.step-2 .mktoFormRow.mktoFormRowTop[data-validate="validate-2"],
+.marketo.multi-step.step-3 .mktoFormRow.mktoFormRowTop[data-validate="validate-3"],
+.marketo.multi-step.step-2.multi-2 .mktoFormRow.mktoFormRowTop[data-validate="validate-3"] {
   display: block;
 }
 
@@ -136,6 +124,8 @@
   padding: 0!important;
   text-decoration: underline;
   cursor: pointer;
+  color: var(--link-color-dark);
+  margin-right: 8px;
 }
 
 .marketo-v2 .mktoFormCol.mktoVisible {
