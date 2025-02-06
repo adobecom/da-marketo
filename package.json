@@ -9,7 +9,8 @@
     "test:watch": "npm test -- --watch",
     "lint": "npm run lint:js && npm run lint:css",
     "lint:js": "eslint .",
-    "lint:css": "stylelint 'blocks/**/*.css' 'styles/*.css'"
+    "lint:css": "stylelint 'blocks/**/*.css' 'styles/*.css'",
+    "build:forms2": "microbundle ./deps/forms2.js -o ./build/forms2.js -f modern --no-sourcemap --target web; mv ./build/forms2.modern.js ./deps/forms2.min.js"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
     "eslint-plugin-compat": "^4.2.0",
     "eslint-plugin-ecmalist": "^1.0.8",
     "eslint-plugin-import": "2.25.4",
+    "microbundle": "0.15.1",
     "sinon": "13.0.1",
     "stylelint": "14.6.0",
     "stylelint-config-prettier": "9.0.3",

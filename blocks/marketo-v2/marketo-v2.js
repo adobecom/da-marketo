@@ -197,7 +197,10 @@ export const loadMarketo = (el, formData) => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
-      MktoForms2.loadForm(`https://${baseURL}`, munchkinID, formID);
+      MktoForms2.loadForm(`https://${baseURL}`, munchkinID, formID, () => {
+        // eslint-disable-next-line no-undef
+        marketoFormSetup('stage1');
+      });
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
     })
     .catch(() => {
