@@ -218,6 +218,7 @@ export default function init(el) {
     }
   });
 
+  formData[FORM_ID] = '2945';
   const formID = formData[FORM_ID];
   const baseURL = formData[BASE_URL];
   const munchkinID = formData[MUNCHKIN_ID];

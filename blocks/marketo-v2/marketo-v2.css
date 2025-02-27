@@ -93,29 +93,47 @@
   display: contents;
 }
 
-.marketo.multi-step .mktoFormRow.mktoFormRowTop[data-validate="2"],
-.marketo.multi-step .mktoFormRow.mktoFormRowTop[data-validate="3"] {
+.marketo.multi-step .mktoFormRow.mktoFormRowTop[data-mktofield_step="2"],
+.marketo.multi-step .mktoFormRow.mktoFormRowTop[data-mktofield_step="3"] {
   display: none;
 }
 
-.marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="2"],
-.marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="3"] {
-  display: block;
+.marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="2"],
+.marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="3"] {
+  display: contents;
 }
 
-.marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="1"],
-.marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="1"] {
+.marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="1"],
+.marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="1"] {
   display: none;
 }
 
-.marketo.multi-step .mktoForm[data-step="1"] .mktoFormRow.mktoFormRowTop.adobe-privacy,
-.marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop.adobe-privacy {
+/* Has */
+.marketo.multi-step .mktoFormRowTop:has([data-mktofield_step="1"]),
+.marketo.multi-step .mktoFormRowTop:has([data-mktofield_step="2"]),
+.marketo.multi-step .mktoFormRowTop:has([data-mktofield_step="3"]) {
   display: none;
 }
 
-.marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop.adobe-privacy,
-.marketo.multi-step.multi-2 .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop.adobe-privacy {
-  display: block;
+.marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRowTop:has([data-mktofield_step="2"]),
+.marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRowTop:has([data-mktofield_step="3"]) {
+  display: contents;
+}
+
+.marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRowTop:has([data-mktofield_step="1"]),
+.marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRowTop:has([data-mktofield_step="1"]) {
+  display: none;
+}
+
+/* privacy */
+.marketo.multi-step .mktoForm[data-mktofield_step="1"] .mktoFormRow.mktoFormRowTop.adobe-privacy,
+.marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop.adobe-privacy {
+  display: none;
+}
+
+.marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRow.mktoFormRowTop.adobe-privacy,
+.marketo.multi-step.multi-2 .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop.adobe-privacy {
+  display: grid;
 }
 
 .marketo.multi-step .step-details {
@@ -128,9 +146,9 @@
 }
 
 .marketo.multi-step .step-details button {
-  background: none!important;
+  background: none;
   border: none;
-  padding: 0!important;
+  padding: 0;
   text-decoration: underline;
   cursor: pointer;
   color: var(--link-color-dark);
@@ -559,6 +577,16 @@
   .marketo .mktoFormRow.mktoFormRowTop.comments,
   .marketo .mktoFormRow.mktoFormRowTop.demo,
   .marketo .mktoFormRow.mktoFormRowTop.name {
+    display: block;
+    grid-column: span 2;
+  }
+
+  .marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="2"].comments,
+  .marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="2"].demo,
+  .marketo.multi-step .mktoForm[data-mktofield_step="2"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="2"].name,
+  .marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="3"].comments,
+  .marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="3"].demo,
+  .marketo.multi-step .mktoForm[data-mktofield_step="3"] .mktoFormRow.mktoFormRowTop[data-mktofield_step="3"].name {
     display: block;
     grid-column: span 2;
   }
