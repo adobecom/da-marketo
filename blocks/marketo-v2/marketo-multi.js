@@ -1,19 +1,8 @@
+/* eslint-disable camelcase */
 import { LIBS } from '../../scripts/scripts.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { debounce } = await import(`${LIBS}/utils/action.js`);
-
-const VALIDATION_STEP = {
-  name: '2',
-  phone: '2',
-  mktoFormsJobTitle: '2',
-  mktoFormsFunctionalArea: '2',
-  company: '3',
-  state: '3',
-  postcode: '3',
-  mktoFormsPrimaryProductInterest: '3',
-  mktoFormsCompanyType: '3',
-};
 
 function updateStepDetails(formEl, step, totalSteps) {
   formEl.classList.add('hide-errors');
@@ -60,20 +49,11 @@ export const formValidate = (formEl) => {
   return currentStep === totalSteps;
 };
 
-function setValidationSteps(formEl, totalSteps) {
-  formEl.querySelectorAll('.mktoFormRowTop').forEach((row) => {
-    const rowAttr = row.getAttribute('data-mktofield') || row.getAttribute('data-mkto_vis_src');
-    const step = VALIDATION_STEP[rowAttr] ? Math.min(VALIDATION_STEP[rowAttr], totalSteps) : 1;
-    row.dataset.step = rowAttr?.startsWith('adobe-privacy') ? totalSteps : step;
-  });
-}
-
 function onRender(formEl, totalSteps) {
-  const currentStep = parseInt(formEl.dataset.step, 10);
+  const currentStep = parseInt(formEl.dataset.mktofield_step, 10);
   const submitButton = formEl.querySelector('#mktoButton_new');
   if (submitButton) submitButton.textContent = currentStep === totalSteps ? 'Submit' : 'Next';
   formEl.querySelector('.step-details .step').textContent = `Step ${currentStep} of ${totalSteps}`;
-  // setValidationSteps(formEl, totalSteps);
 }
 
 const readyForm = (form, totalSteps) => {
@@ -96,6 +76,29 @@ export default (el) => {
   const totalSteps = el.classList.contains('multi-3') ? 3 : 2;
   formEl.dataset.mktofield_step = 1;
   formEl.dataset.mktofield_step_total = totalSteps;
+  const { mcz_marketoForm_pref } = window;
+
+  mcz_marketoForm_pref.form.fldStepPref = {
+    1: ['Email', 'Country'],
+    2: [
+      'FirstName',
+      'LastName',
+      'Phone',
+      'mktoFormsJobTitle',
+      'mktoFormsFunctionalArea',
+    ],
+    3: [
+      'Company',
+      'mktoFormsCompany',
+      'State',
+      'PostalCode',
+      'mktoFormsPrimaryProductInterest',
+      'mktoRequestProductDemo',
+      'mktoFormsComments',
+      'mktoFormsRevenue',
+      'mktoFormsEmployeeRange',
+    ],
+  };
 
   const { MktoForms2 } = window;
   MktoForms2.whenReady((form) => { readyForm(form, totalSteps); });
