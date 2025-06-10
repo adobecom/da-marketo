@@ -234,7 +234,6 @@ export const loadMarketo = (el, formData) => {
 };
 
 export default function init(el) {
-  el.classList.add('marketo');
   const children = Array.from(el.querySelectorAll(':scope > div'));
   const encodedConfigDiv = children.shift();
   const link = encodedConfigDiv.querySelector('a');
