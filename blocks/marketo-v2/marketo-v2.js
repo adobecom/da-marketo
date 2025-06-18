@@ -214,12 +214,31 @@ export const loadMarketo = (el, formData) => {
   const formID = formData[FORM_ID];
   const { base } = getConfig();
 
-  loadScript(`${base}/deps/forms2.min.js`)
-    .then(() => {
+  const mktoScript = `/deps/mkto-frms/${formID}/`;
+  const mcz = loadScript(`${mktoScript}marketo_form_setup_rules.js`)
+    .then(() => loadScript(`${mktoScript}template_rules.js`))
+    .then(() => loadScript(`${mktoScript}marketo_form_setup_process.js`))
+    .then(() => loadScript(`${mktoScript}privacy_validation_rules.js`))
+    .then(() => loadScript(`${mktoScript}privacy_validation_process.js`))
+    .then(() => loadScript(`${mktoScript}field_preferences.js`))
+    .then(() => loadScript(`${mktoScript}adobe_analytics.js`))
+    .then(() => loadScript(`${mktoScript}form_dynamics.js`))
+    .then(() => loadScript(`${mktoScript}template_manager.js`))
+    .then(() => loadScript(`${mktoScript}category_filters.js`))
+    .then(() => loadScript(`${mktoScript}cleaning_validation.js`))
+    .then(() => loadScript(`${mktoScript}general_translations.js`))
+    .then(() => loadScript(`${mktoScript}rendering_review.js`));
+  const forms2 = loadScript(`${base}/deps/forms2.min.js`);
+
+  Promise.all([mcz, forms2])
+    .then(async () => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
 
-      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID);
+      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID, () => {
+        // eslint-disable-next-line no-undef
+        marketoFormSetup('stage1');
+      });
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
       /* c8 ignore next 3 */
       if (el.classList.contains('multi-step')) {
@@ -299,7 +318,7 @@ export default function init(el) {
     formWrapper.append(description);
   }
 
-  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors', style: 'opacity:0;visibility:hidden;' });
+  const marketoForm = createTag('form', { ID: `mktoForm_${formID}`, class: 'hide-errors mktoForm', style: 'opacity:0;visibility:hidden;' });
   const span1 = createTag('span', { id: 'mktoForms2BaseStyle', style: 'display:none;' });
   const span2 = createTag('span', { id: 'mktoForms2ThemeStyle', style: 'display:none;' });
   formWrapper.append(span1, span2, marketoForm);
