@@ -208,29 +208,16 @@ const readyForm = (form, formData) => {
   form.onSuccess(() => formSuccess(formEl, formData));
 };
 
-export const loadMarketo = (el, formData) => {
+export const loadMarketo = async (el, formData) => {
   const baseURL = formData[BASE_URL];
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
   const { base } = getConfig();
+  const { default: initMarketoFormModules } = await import('./mcz/index.js');
+  const { marketoFormSetup } = await initMarketoFormModules();
+  const forms2 = loadScript('/deps/forms2.js');
 
-  const mktoScript = `/deps/mkto-frms/${formID}/`;
-  const mcz = loadScript(`${mktoScript}marketo_form_setup_rules.js`)
-    .then(() => loadScript(`${mktoScript}template_rules.js`))
-    .then(() => loadScript(`${mktoScript}marketo_form_setup_process.js`))
-    .then(() => loadScript(`${mktoScript}privacy_validation_rules.js`))
-    .then(() => loadScript(`${mktoScript}privacy_validation_process.js`))
-    .then(() => loadScript(`${mktoScript}field_preferences.js`))
-    .then(() => loadScript(`${mktoScript}adobe_analytics.js`))
-    .then(() => loadScript(`${mktoScript}form_dynamics.js`))
-    .then(() => loadScript(`${mktoScript}template_manager.js`))
-    .then(() => loadScript(`${mktoScript}category_filters.js`))
-    .then(() => loadScript(`${mktoScript}cleaning_validation.js`))
-    .then(() => loadScript(`${mktoScript}general_translations.js`))
-    .then(() => loadScript(`${mktoScript}rendering_review.js`));
-  const forms2 = loadScript(`${base}/deps/forms2.min.js`);
-
-  Promise.all([mcz, forms2])
+  Promise.all([forms2])
     .then(async () => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
@@ -238,6 +225,7 @@ export const loadMarketo = (el, formData) => {
       MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID, () => {
         // eslint-disable-next-line no-undef
         marketoFormSetup('stage1');
+        console.log(`Marketo form ${munchkinID}_${formID} loaded successfully`);
       });
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
       /* c8 ignore next 3 */
