@@ -10,6 +10,8 @@
 // ##
 // ##
 
+import { getMktoFormID, getUniqueId } from './global.js';
+
 export default async function init(mkfC) {
   mkfC.log('Adobe Analytics - Triggered');
 
@@ -103,7 +105,7 @@ export default async function init(mkfC) {
 
     const form = MktoForms2.getForm(formId);
     const formValues = form.getValues();
-    const unique_id = getUniqueID(formValues);
+    const uniqueId = getUniqueId(formValues);
     const mkto_formID = `${formValues.munchkinId}_${formValues.formid}`;
     const formfieldsVis = document.querySelectorAll(
       '.mktoFormRowTop:not(.mktoHidden) .mktoVisible.mktoField',
@@ -129,7 +131,7 @@ export default async function init(mkfC) {
               response: {},
               performance: {
                 // Interaction ID unique to each form load on the page
-                interactionID: unique_id,
+                interactionID: uniqueId,
                 interactionType: eventAction,
                 interactionName: eventName,
 
@@ -237,7 +239,7 @@ export default async function init(mkfC) {
     const responseItems = [
       {
         key: 'interactionID',
-        value: unique_id,
+        value: uniqueId,
         pii: false,
       },
       {
@@ -294,7 +296,7 @@ export default async function init(mkfC) {
     if (eventAction === 'formSubmission') {
       responseItems.push({
         key: 'submissionID',
-        value: unique_id,
+        value: uniqueId,
         pii: false,
       });
     }

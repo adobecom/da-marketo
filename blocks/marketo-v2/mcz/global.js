@@ -11,123 +11,113 @@ export default async function init() {
   if (window?.imsOrgId) {
     adobeOrg = `AMCV_${encodeURIComponent(window.imsOrgId)};`;
   }
+}
 
-  window.checkAdobePrivacy = function () {
-    if (typeof window?.adobePrivacy?.hasUserProvidedConsent === 'function') {
-      if (window?.adobePrivacy?.hasUserProvidedConsent()) {
-        return true;
-      }
-      return false;
+export function checkAdobePrivacy(adobePrivacy = window?.adobePrivacy) {
+  if (typeof adobePrivacy?.hasUserProvidedConsent === 'function') {
+    if (adobePrivacy.hasUserProvidedConsent()) {
+      return true;
     }
-    return true;
-  };
+    return false;
+  }
+  return true;
+}
 
-  window.checkCookie = function (incMunchkin = true) {
-    const cookieMatch = document.cookie.match(/_mkto_trk=([^;]+)/);
-    if (!cookieMatch) return null;
-    const cookieValue = cookieMatch[1];
-    const munch = cookieValue.match(/id:([^&]+)/)[0].replace('id:', '#m:');
-    if (incMunchkin === false) {
-      return munch ? `${munch}` : null;
+export function checkCookie(incMunchkin = true, cookieString = document.cookie) {
+  const cookieMatch = cookieString.match(/_mkto_trk=([^;]+)/);
+  if (!cookieMatch) return null;
+  const cookieValue = cookieMatch[1];
+  const munch = cookieValue.match(/id:([^&]+)/)[0].replace('id:', '#m:');
+  if (incMunchkin === false) {
+    return munch ? `${munch}` : null;
+  }
+  const tokenMatch = cookieValue.match(/&token:_mch-adobe\.com-([^&]+)/);
+  if (tokenMatch) {
+    const token = tokenMatch[1];
+    const parts = token.split('-');
+    if (parts.length === 2 && /^\d{9,}-\d{3,}$/.test(token)) {
+      return `#c:${parts[0]}#v:${parts[1]}`;
     }
-    const tokenMatch = cookieValue.match(/&token:_mch-adobe\.com-([^&]+)/);
-    if (tokenMatch) {
-      const token = tokenMatch[1];
-      const parts = token.split('-');
-      if (parts.length === 2 && /^\d{9,}-\d{3,}$/.test(token)) {
-        return `#c:${parts[0]}#v:${parts[1]}`;
+    return `#v:${token}`;
+  }
+  return null;
+}
+
+export function getMktoFormID(mczMarketoFormPref = window?.mcz_marketoForm_pref) {
+  if (mczMarketoFormPref?.form?.id !== undefined) {
+    return mczMarketoFormPref.form.id;
+  }
+  const mktoForm = document.querySelector('form.mktoForm');
+  if (mktoForm) {
+    let formId = document.querySelector('form.mktoForm')
+      ? document.querySelector('form.mktoForm').id
+      : null;
+    formId = formId.replace('mktoForm_', '');
+    formId = parseInt(formId, 10);
+    if (formId) {
+      if (mczMarketoFormPref?.form !== undefined) {
+        mczMarketoFormPref.form.id = formId;
       }
-      return `#v:${token}`;
+      return formId;
+    }
+    // mkf_c.log('ERROR: unable to get form ID');
+    if (mczMarketoFormPref?.form?.id !== undefined) {
+      mczMarketoFormPref.form.id = null;
     }
     return null;
-  };
+  }
+  // mkf_c.log('ERROR: no Marketo form found');
+  if (mczMarketoFormPref?.form) mczMarketoFormPref.form.id = null;
+  return null;
+}
 
-  window.getMktoFormID = function () {
-    if (window?.mcz_marketoForm_pref?.form?.id !== undefined) {
-      return window.mcz_marketoForm_pref.form.id;
+export function getUniqueId(formValues, bypass = false, mczMarketoFormPref = window?.mcz_marketoForm_pref) {
+  let uniqueIdTemp = '';
+  let uniqueId = mczMarketoFormPref?.profile?.unique_id;
+  if (!bypass && uniqueId !== '') {
+    if (uniqueId.indexOf('v:') > -1) {
+      return uniqueId;
     }
-    const mktoForm = document.querySelector('form.mktoForm');
-    if (mktoForm) {
-      let formId = document.querySelector('form.mktoForm')
-        ? document.querySelector('form.mktoForm').id
-        : null;
-      formId = formId.replace('mktoForm_', '');
-      formId = parseInt(formId);
-      if (formId) {
-        if (window?.mcz_marketoForm_pref?.form !== undefined) {
-          window.mcz_marketoForm_pref.form.id = formId;
-        }
-        return formId;
-      }
-      mkf_c.log('ERROR: unable to get form ID');
-      if (window?.mcz_marketoForm_pref?.form?.id !== undefined) {
-        window.mcz_marketoForm_pref.form.id = null;
-      }
-      return null;
+    const checkNew = getUniqueId(formValues, true, mczMarketoFormPref);
+    if (checkNew.indexOf('v:') > -1) {
+      uniqueId = checkNew;
+      return checkNew;
     }
-    mkf_c.log('ERROR: no Marketo form found');
-    window.mcz_marketoForm_pref.form.id = null;
-    return null;
-  };
+    return uniqueId;
+  }
+  if (window.activeCookie && uniqueId !== '' && !bypass) {
+    return uniqueId;
+  }
+  let munchkinId = '';
+  if (formValues && formValues.munchkinId) {
+    munchkinId = formValues.munchkinId;
+  } else {
+    const munchkinIdField = document.querySelector(".mktoForm[id] input[name='munchkinId']");
+    if (munchkinIdField) {
+      munchkinId = munchkinIdField.value;
+    }
+  }
+  uniqueIdTemp += `#m:${munchkinId}`;
+  uniqueIdTemp += `#f:${formValues.formid}`;
+  uniqueIdTemp += `#t:${new Date().getTime()}`;
 
-  window.getUniqueID = function (formValues, bypass = false) {
-    let unique_id_temp = '';
-    let unique_id = mcz_marketoForm_pref?.profile?.unique_id;
-    if (!bypass && unique_id !== '') {
-      if (unique_id.indexOf('v:') > -1) {
-        return unique_id;
-      }
-      const checkNew = getUniqueID(formValues, true);
-      if (checkNew.indexOf('v:') > -1) {
-        unique_id = checkNew;
-        return checkNew;
-      }
-      return unique_id;
-    }
-    if (activeCookie && unique_id !== '' && !bypass) {
-      return unique_id;
-    }
-    let munchkinId = '';
-    if (formValues && formValues.munchkinId) {
-      munchkinId = formValues.munchkinId;
-    } else {
-      const munchkinIdField = document.querySelector(".mktoForm[id] input[name='munchkinId']");
-      if (munchkinIdField) {
-        munchkinId = munchkinIdField.value;
-      }
-    }
-    unique_id_temp += `#m:${munchkinId}`;
-    unique_id_temp += `#f:${formValues.formid}`;
-    unique_id_temp += `#t:${new Date().getTime()}`;
+  if (checkAdobePrivacy()) {
+    window.activeCookie = true;
+    uniqueIdTemp += checkCookie(true);
+  } else {
+    window.activeCookie = false;
+    uniqueIdTemp += checkCookie(false);
+  }
 
-    if (checkAdobePrivacy()) {
-      activeCookie = true;
-      unique_id_temp += checkCookie(true);
-    } else {
-      activeCookie = false;
-      unique_id_temp += checkCookie(false);
-    }
-
-    unique_id_temp = unique_id_temp.replace(/null/g, '');
-    if (bypass) {
-      return unique_id_temp;
-    }
-    unique_id = unique_id_temp;
-    if (window?.mcz_marketoForm_pref?.profile !== undefined) {
-      window.mcz_marketoForm_pref.profile.unique_id = unique_id;
-    }
-    return unique_id;
-  };
-
-
-      const head = document.head || document.getElementsByTagName('head')[0];
-      const style = document.createElement('style');
-      head.appendChild(style);
-      style.appendChild(document.createTextNode(baseCss));
-
-      mktoForm.classList.add('mktoForm--styles-added');
-    }
-  };
+  uniqueIdTemp = uniqueIdTemp.replace(/null/g, '');
+  if (bypass) {
+    return uniqueIdTemp;
+  }
+  uniqueId = uniqueIdTemp;
+  if (mczMarketoFormPref?.profile !== undefined) {
+    mczMarketoFormPref.profile.unique_id = uniqueId;
+  }
+  return uniqueId;
 }
 
 // ##

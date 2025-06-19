@@ -6,6 +6,8 @@
 // ## Processing
 // ##
 
+import { getMktoFormID, getUniqueId, checkAdobePrivacy } from './global.js';
+
 const mkto_formsLoaded = {};
 const mktoFrmParams = new URLSearchParams(window.location.search);
 const mktoForm = document.querySelector('.mktoForm');
@@ -433,7 +435,7 @@ export function marketoFormSetup(lvl) {
   }
 
   function mkto_buildForm() {
-    const formId = window.getMktoFormID();
+    const formId = getMktoFormID();
     // check the size of the cookie for this session
     if (document.cookie.length > 4096) {
       mkfC.warn(`Cookie size > 4k, ${document.cookie.length}, formId: ${formId} #ll #cookie`);
@@ -536,7 +538,7 @@ export function marketoFormSetup(lvl) {
       const formId = getMktoFormID();
       const form = MktoForms2.getForm(formId);
       let fData = form.getValues();
-      const unique_id = getUniqueID(fData);
+      const uniqueId = getUniqueId(fData);
       const requiredFields = document.querySelectorAll(`#mktoForm_${formId} .mktoRequired`);
       const requiredFieldsData = {};
       let requiredFieldsFilled = true;

@@ -5,10 +5,12 @@
 // ##
 // ## Cleaning and Validation
 // ##
+import { getMktoFormID } from './global.js';
 
 let rendering_ready = false;
 let translateState = {};
 let mkfC;
+
 
 export function cleaning_validation() {
   mkfC.log('Cleaning & Validation - Loaded');

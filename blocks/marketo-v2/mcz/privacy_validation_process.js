@@ -8,7 +8,8 @@
 // ##
 // ##
 
-const {
+import { getMktoFormID, checkAdobePrivacy } from './global.js';
+import {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   adobeRegionalSite,
@@ -16,7 +17,7 @@ const {
   B2B_RFI_COUNTRIES,
   PRIVACY_CODE_DEFAULT,
   PRIVACY_CODE_RULES,
-} = await import('./privacy_validation_rules.js');
+} from './privacy_validation_rules.js';
 
 let mkfC;
 
