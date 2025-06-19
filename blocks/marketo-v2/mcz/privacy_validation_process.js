@@ -50,7 +50,7 @@ export function privacyValidation() {
   function generateTests(rules) {
     const subtypeRules = window?.mcz_marketoForm_pref?.form?.subtypeRules ?? {};
     const fieldRules = window?.mcz_marketoForm_pref?.field_visibility ?? {};
-    if (fieldRules == null) {
+    if (fieldRules === null) {
       mkfC.log('No Field Rules');
       return [];
     }
@@ -198,7 +198,7 @@ export function privacyValidation() {
         const field = document.querySelector(`[name="${formField}"]`);
         if (field) {
           if (field.tagName === 'SELECT') {
-            if (value == 'LAST') {
+            if (value === 'LAST') {
               value = field.options[field.options.length - 1].value;
             } else {
               const option = field.querySelector(`option[value="${value}"]`);
@@ -250,10 +250,10 @@ export function privacyValidation() {
               } else {
                 pending_currentKey = '';
               }
-              if (pending_currentKey == '') {
+              if (pending_currentKey === '') {
                 return;
               }
-              if (currentKey != pending_currentKey) {
+              if (currentKey !== pending_currentKey) {
                 currentKey = pending_currentKey;
                 privacy_text[currentKey] = '';
               }
@@ -262,11 +262,11 @@ export function privacyValidation() {
             let currentText_pending = privacydiv_row.innerText.trim();
             currentText_pending = currentText_pending.replace(/(\r\n|\n|\r|\t)/gm, '');
             currentText_pending = currentText_pending.replace(/  +/g, ' ');
-            if (currentText_pending != '') {
-              if (currentText != currentText_pending) {
+            if (currentText_pending !== '') {
+              if (currentText !== currentText_pending) {
                 currentText = currentText_pending;
               }
-              if (privacy_text[currentKey] == '') {
+              if (privacy_text[currentKey] === '') {
                 privacy_text[currentKey] = currentText;
               } else {
                 privacy_text[currentKey] = `${privacy_text[currentKey]}\n${currentText}`;
@@ -294,7 +294,7 @@ export function privacyValidation() {
 
   let mcz_marketoForm_pref_backup;
   async function runPrivacyCodeTest(test) {
-    if (mcz_marketoForm_pref_backup == null) {
+    if (mcz_marketoForm_pref_backup === null) {
       mcz_marketoForm_pref_backup = JSON.parse(JSON.stringify(window.mcz_marketoForm_pref));
     }
     const tests_full = [];
@@ -401,7 +401,7 @@ export function privacyValidation() {
     if (email_fld) {
       //
       //
-      if (email_fld.getAttribute('privacytest') == 'true') {
+      if (email_fld.getAttribute('privacytest') === 'true') {
         if (
           email_fld.value.includes('privacytest')
             && email_fld.value.includes('@adobetest.com')
@@ -413,7 +413,7 @@ export function privacyValidation() {
       } else {
         let testing_review = false;
         if (localStorage.getItem('mkto_test')) {
-          if (localStorage.getItem('mkto_test') == 'active') {
+          if (localStorage.getItem('mkto_test') === 'active') {
             testing_review = true;
           }
         } else if (
@@ -427,10 +427,10 @@ export function privacyValidation() {
           //
           //
           privacy_tests = [];
-          if (localStorage.getItem('mkto_test') == 'active') {
+          if (localStorage.getItem('mkto_test') === 'active') {
             privacy_tests = getTestData('mkto_tests');
           }
-          if (privacy_tests == null || privacy_tests.length == 0) {
+          if (privacy_tests === null || privacy_tests.length === 0) {
             mkfC.log('No tests found, generating new tests');
             privacy_tests = generateTests(PRIVACY_CODE_RULES_clean);
             localStorage.setItem('mkto_tests', JSON.stringify(privacy_tests));
@@ -489,12 +489,12 @@ export function privacyValidation() {
     let foundCode = null;
     for (let i = 0; i < SUPPORTED_LANGUAGES.length; i++) {
       const supportedLangCode = SUPPORTED_LANGUAGES[i];
-      if (supportedLangCode == normalizedLangCode) {
+      if (supportedLangCode === normalizedLangCode) {
         foundCode = supportedLangCode;
         break;
       }
     }
-    if (foundCode == null) {
+    if (foundCode === null) {
       for (let i = 0; i < SUPPORTED_LANGUAGES.length; i++) {
         const supportedLangCode = SUPPORTED_LANGUAGES[i];
         if (supportedLangCode.startsWith(baseLangCode)) {
@@ -510,7 +510,7 @@ export function privacyValidation() {
     const url = new URL(window.location.href);
     const isPreview = url.searchParams.get('isPreview');
     const lang = url.searchParams.get('lang');
-    if (lang && isPreview == '1') {
+    if (lang && isPreview === '1') {
       return lang.toLowerCase().replace(/-/g, '_');
     }
 
@@ -555,11 +555,11 @@ export function privacyValidation() {
       proposedBrowserLanguage = lang;
       proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
       if (
-        proposedBrowserLanguage != 'en'
-          && proposedBrowserLanguage != null
-          && proposedBrowserLanguage != ''
+        proposedBrowserLanguage !== 'en'
+          && proposedBrowserLanguage !== null
+          && proposedBrowserLanguage !== ''
       ) {
-        if (has_langbeenSet == false) {
+        if (has_langbeenSet === false) {
           dl_update_lang_pref(proposedBrowserLanguage);
           field_update_mktoFormsLocale(proposedBrowserLanguage);
         }
@@ -568,16 +568,16 @@ export function privacyValidation() {
     }
 
     proposedBrowserLanguage = window?.mcz_marketoForm_pref?.profile?.prefLanguage ?? null;
-    if (proposedBrowserLanguage != null && proposedBrowserLanguage != '') {
+    if (proposedBrowserLanguage !== null && proposedBrowserLanguage !== '') {
       proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
-      if (has_langbeenSet == false) {
+      if (has_langbeenSet === false) {
         dl_update_lang_pref(proposedBrowserLanguage);
         field_update_mktoFormsLocale(proposedBrowserLanguage);
       }
       return proposedBrowserLanguage;
     }
     proposedBrowserLanguage = check_content_lang();
-    if (proposedBrowserLanguage != null && proposedBrowserLanguage != '') {
+    if (proposedBrowserLanguage !== null && proposedBrowserLanguage !== '') {
       proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
       dl_update_lang_pref(proposedBrowserLanguage);
       field_update_mktoFormsLocale(proposedBrowserLanguage);
@@ -585,7 +585,7 @@ export function privacyValidation() {
       return proposedBrowserLanguage;
     }
     proposedBrowserLanguage = check_browser_lang();
-    if (proposedBrowserLanguage != null && proposedBrowserLanguage != '') {
+    if (proposedBrowserLanguage !== null && proposedBrowserLanguage !== '') {
       proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
       dl_update_lang_pref(proposedBrowserLanguage);
       field_update_mktoFormsLocale(proposedBrowserLanguage);
@@ -621,15 +621,15 @@ export function privacyValidation() {
       const d = new Date();
       const n = d.getTime();
       // we have a privacy code and it is different from the current value
-      if (privacycode != '' && temp != privacycode) {
+      if (privacycode !== '' && temp !== privacycode) {
         mktoConsentNoticeField.value = privacycode; // + "::" + n;
         logPrivacy('privacycode is set');
-      } else if (temp != '') {
+      } else if (temp !== '') {
         // we already have a privacy code so we will keep it
         temp = temp.split('::')[0];
         mktoConsentNoticeField.value = temp; // + "::" + n;
         logPrivacy('privacycode is kept');
-      } else if (privacycode == 'blank') {
+      } else if (privacycode === 'blank') {
         // we have no privacy code we will blank it out
         mktoConsentNoticeField.value = ''; // + "::" + n;
         logPrivacy('privacycode is removed');
@@ -661,7 +661,7 @@ export function privacyValidation() {
       proposedLanguage = proposedLanguage.trim();
       const d = new Date();
       const n = d.getTime();
-      if (proposedLanguage != '' && temp != proposedLanguage) {
+      if (proposedLanguage !== '' && temp !== proposedLanguage) {
         mktoFormsLocaleField.value = proposedLanguage; // + "::" + n;
       } else {
         temp = temp.split('::')[0];
@@ -693,12 +693,12 @@ export function privacyValidation() {
   let lastCountry = '';
   async function field_change_country(mainevent) {
     let country = mainevent.target.value.toLowerCase().trim();
-    if (country == '') {
+    if (country === '') {
       lastCountry = '';
       field_update_privacy_code('blank');
       return;
     }
-    if (country == lastCountry) {
+    if (country === lastCountry) {
       return;
     }
     lastCountry = country;
@@ -713,7 +713,7 @@ export function privacyValidation() {
     let subscriptionID = '';
     let subscriptionName = '';
     let localRules = [];
-    if ((PRIVACY_CODE_RULES_clean || []).length == 0) {
+    if ((PRIVACY_CODE_RULES_clean || []).length === 0) {
       let localRules_tmp = JSON.stringify(PRIVACY_CODE_RULES);
       localRules_tmp = localRules_tmp.toLowerCase();
       localRules = JSON.parse(localRules_tmp);
@@ -725,14 +725,14 @@ export function privacyValidation() {
         localRules[i].rule_no = `R${(i + 1).toString().padStart(3, '0')}`;
         if (rule.purpose.length) {
           for (let j = 0; j < rule.purpose.length; j++) {
-            if (rule.purpose[j].trim() == '') {
+            if (rule.purpose[j].trim() === '') {
               localRules[i].purpose.splice(j, 1);
             }
           }
         }
         if (rule.countries.length) {
           for (let j = 0; j < rule.countries.length; j++) {
-            if (rule.countries[j].trim() == '') {
+            if (rule.countries[j].trim() === '') {
               localRules[i].countries.splice(j, 1);
             }
           }
@@ -742,13 +742,13 @@ export function privacyValidation() {
         const rule = localRules[i];
         if (rule.methods.length) {
           for (let j = 0; j < rule.methods.length; j++) {
-            if (rule.methods[j].trim() == 'partner') {
+            if (rule.methods[j].trim() === 'partner') {
               localRules[i].partner = true;
             }
-            if (rule.methods[j].trim() == 'phone') {
+            if (rule.methods[j].trim() === 'phone') {
               localRules[i].phone = true;
             }
-            if (rule.methods[j].trim() == 'subscription') {
+            if (rule.methods[j].trim() === 'subscription') {
               localRules[i].subscription = true;
             }
           }
@@ -819,15 +819,15 @@ export function privacyValidation() {
         let phoneFieldParent = phoneField;
         while (phoneFieldParent) {
           if (
-            phoneFieldParent.style.display != 'none'
-              && phoneFieldParent.style.visibility != 'hidden'
-              && phoneFieldParent.style.opacity != '0'
-              && phoneFieldParent.style.height != '0px'
-              && phoneFieldParent.style.width != '0px'
-              && phoneFieldParent.style.maxHeight != '0px'
-              && phoneFieldParent.style.maxWidth != '0px'
-              && phoneFieldParent.style.minHeight != '0px'
-              && phoneFieldParent.style.minWidth != '0px'
+            phoneFieldParent.style.display !== 'none'
+              && phoneFieldParent.style.visibility !== 'hidden'
+              && phoneFieldParent.style.opacity !== '0'
+              && phoneFieldParent.style.height !== '0px'
+              && phoneFieldParent.style.width !== '0px'
+              && phoneFieldParent.style.maxHeight !== '0px'
+              && phoneFieldParent.style.maxWidth !== '0px'
+              && phoneFieldParent.style.minHeight !== '0px'
+              && phoneFieldParent.style.minWidth !== '0px'
           ) {
             phoneFieldVisible = true;
             break;
@@ -921,7 +921,7 @@ export function privacyValidation() {
       subscriptionID ?? '',
     );
 
-    if (matchingRule == null) {
+    if (matchingRule === null) {
       matchingRule = PRIVACY_CODE_DEFAULT;
       matches = [];
     } else {
@@ -937,10 +937,10 @@ export function privacyValidation() {
       privacycode = splitCode.join(';');
     }
     let confirmMsg = '';
-    if (matchingRule.partner == true) {
+    if (matchingRule.partner === true) {
       confirmMsg = `Partner [${copartnernames}] `;
     }
-    if (matchingRule.subscription == true) {
+    if (matchingRule.subscription === true) {
       confirmMsg = `${confirmMsg}Subscription [${subscriptionID}:${subscriptionName}] `;
     }
     confirmMsg = `${confirmMsg}Country [${country}] Form Purpose [${purpose}] `;
@@ -965,20 +965,20 @@ export function privacyValidation() {
       }
 
       let rSLChk = check_content_lang();
-      if (rSLChk == null || rSLChk == '') {
+      if (rSLChk === null || rSLChk === '') {
         rSLChk = 'en_us';
       }
       if (rSLChk.length < 3 || rSLChk.indexOf('_') < 0) {
         rSLChk = `${rSLChk}_${rSLChk}`;
       }
       let localRegionalSite = adobeRegionalSite[rSLChk];
-      if (typeof localRegionalSite === 'undefined' || localRegionalSite == null) {
+      if (typeof localRegionalSite === 'undefined' || localRegionalSite === null) {
         localRegionalSite = '';
       }
-      if (localRegionalSite == '') {
-        if (localRegionalSite.indexOf('en') != 0) {
+      if (localRegionalSite === '') {
+        if (localRegionalSite.indexOf('en') !== 0) {
           let rSLChk = check_content_lang();
-          if (rSLChk == null || rSLChk == '') {
+          if (rSLChk === null || rSLChk === '') {
             rSLChk = 'en_us';
           }
           rSLChk = rSLChk.substring(0, 2);
@@ -996,7 +996,7 @@ export function privacyValidation() {
         }
       }
       let base_site = `${mcz_marketoForm_pref?.form?.baseSite}`;
-      if (base_site == '' || base_site == 'undefined') {
+      if (base_site === '' || base_site === 'undefined') {
         base_site = 'https://www.adobe.com';
       }
 
@@ -1004,7 +1004,7 @@ export function privacyValidation() {
       for (const key in tempPrivacyLinks) {
         let privacy_link = tempPrivacyLinks[key];
         if (privacy_link.toLowerCase().indexOf('{adoberegionalsite}') > -1) {
-          if (localRegionalSite != '') {
+          if (localRegionalSite !== '') {
             privacy_link = privacy_link.replace(/{adobeRegionalSite}/gi, localRegionalSite);
           } else {
             privacy_link = privacy_link.replace(/{adobeRegionalSite}\//gi, '');
@@ -1027,7 +1027,7 @@ export function privacyValidation() {
       '<lc>',
       convertLangCodeToPrivacyLangCode(proposedBrowserLanguage),
     );
-    if (copartnernames == '') {
+    if (copartnernames === '') {
       privacycode = privacycode.replace('-<partner>', '');
     } else {
       privacycode = privacycode.replace('-<partner>', `-${copartnernames}`);
@@ -1050,13 +1050,13 @@ export function privacyValidation() {
   async function wait_for_field_country() {
     const mktoFormsLocale_fld = document.querySelector('[name="mktoFormsLocale"]');
     if (document.querySelectorAll('.mktoForm').length > 0) {
-      if (mktoFormsLocale_fld != null) {
+      if (mktoFormsLocale_fld !== null) {
         formObservmktoFormsLocale = true;
 
         const formId = getMktoFormID();
         const countryField = document.querySelector(`#mktoForm_${formId} [name="Country"]`);
         if (countryField) {
-          if (countryField.value == '') {
+          if (countryField.value === '') {
             const options = countryField.querySelectorAll('option');
             if (options && options.length > 0) {
               countryField.value = options[0].value;

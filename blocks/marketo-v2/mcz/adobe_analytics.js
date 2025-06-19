@@ -41,7 +41,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
       testRecord = false;
     }
   }
-  if (testRecord == true) {
+  if (testRecord === true) {
     eventName = `TEST ${eventName}`;
   }
 
@@ -70,8 +70,8 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
     mkfC.log('AA ERROR >> digitalData DL is not found.');
   }
 
-  if (error_aa == true) {
-    if (testRecord == false) {
+  if (error_aa === true) {
+    if (testRecord === false) {
       mkfC.log(`${consoleLabel} - error`);
       mkfC.groupEnd();
       return;
@@ -90,9 +90,9 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
   const entry = measureEntries[measureEntries.length - 1];
   if (entry) {
     if (
-      currentTime == 0
-        || currentTime == undefined
-        || currentTime == null
+      currentTime === 0
+        || currentTime === undefined
+        || currentTime === null
         || isNaN(currentTime)
     ) {
       currentTime = Math.round(entry.duration);
@@ -213,7 +213,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
     if (!value) {
       value = 'No Value';
     }
-    if (value == 'No Value') {
+    if (value === 'No Value') {
       return;
     }
     if (Array.isArray(value)) {
@@ -300,7 +300,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
     });
   }
   for (const item of responseItems) {
-    if ((item.pii === true && activeCookie == true) || item.pii === false) {
+    if ((item.pii === true && activeCookie === true) || item.pii === false) {
       setResponse(item.key, item.value || 'No Value');
     }
   }
@@ -317,7 +317,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
         }
       }
     }
-    if (testRecord == true) {
+    if (testRecord === true) {
       mkfC.info(`${consoleLabel} - would have sent...`);
       mkfC.info(JSON.stringify(eventSnapShot, undefined, 4));
       mkfC.groupEnd();

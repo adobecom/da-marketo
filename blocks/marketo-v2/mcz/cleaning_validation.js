@@ -50,10 +50,10 @@ export function cleaning_validation() {
         let veryTop = null;
         let localRow = null;
 
-        while (parentRow != null) {
+        while (parentRow !== null) {
           if (parentRow && parentRow.classList && parentRow.classList.contains('mktoFormRow')) {
             veryTop = parentRow;
-            if (localRow == null) {
+            if (localRow === null) {
               localRow = parentRow;
             }
           }
@@ -261,10 +261,10 @@ export function cleaning_validation() {
         if (
           document.querySelector(
             `.mktoFormRow[data-mktofield="${mktoField.getAttribute('name')}"]`,
-          ) == null
+          ) === null
         ) {
           let mktoFieldParent = mktoField.parentNode;
-          while (mktoFieldParent != null) {
+          while (mktoFieldParent !== null) {
             if (
               mktoFieldParent.classList
                 && mktoFieldParent.classList.contains('mktoFormRow')
@@ -314,10 +314,10 @@ export function cleaning_validation() {
             mktoFormRow.classList.add('mktoHtmlText');
           }
         }
-        if (mktoFormRowChild == null) {
+        if (mktoFormRowChild === null) {
           if (!mktoFormRow.hasAttribute('data-mktofield')) {
             const mktoField = mktoFormRow.querySelector('.mktoField');
-            if (mktoField && mktoField.length == 1) {
+            if (mktoField && mktoField.length === 1) {
               mktoFormRow.setAttribute('data-mktofield', mktoField.getAttribute('name'));
               const mktoFieldDescriptor = mktoFormRow.querySelector('.mktoFieldDescriptor');
               if (mktoFieldDescriptor) {
@@ -335,7 +335,7 @@ export function cleaning_validation() {
                     .toLowerCase();
                   let primaryRow = mktoFormRow;
                   let mktoFormRowParent = mktoFormRow.parentNode;
-                  while (mktoFormRowParent != null) {
+                  while (mktoFormRowParent !== null) {
                     if (
                       mktoFormRowParent.classList
                         && mktoFormRowParent.classList.contains('mktoFormRow')
@@ -355,7 +355,7 @@ export function cleaning_validation() {
           }
 
           const mktoFormRowScript = mktoFormRow.querySelector('script:not(.mktoCleanedScript)');
-          if (mktoFormRowScript != null) {
+          if (mktoFormRowScript !== null) {
             mktoFormRow.classList.add('mktoHidden');
             mktoFormRow.classList.add('mktoCleanedScript');
             normalizeMktoStyles_pass_scripts += 1;
@@ -423,12 +423,12 @@ export function cleaning_validation() {
             let mktoFormRowTop = mktoForm.querySelector(
               `.mktoFormRowTop[data-handleFieldRuleLegend='${fieldname}']`,
             );
-            if (mktoFormRowTop == null) {
+            if (mktoFormRowTop === null) {
               mktoFormRowTop = mktoSelect.closest(
                 '.mktoFormRowTop:not(.mktohandleFieldRuleLegend)',
               );
             }
-            if (mktoFormRowTop == null) {
+            if (mktoFormRowTop === null) {
               return;
             }
 
@@ -711,7 +711,7 @@ export function cleaning_validation() {
                     }
                   }
                   tentativeValue = tentativeValue.trim();
-                  if (tentativeValue == '') {
+                  if (tentativeValue === '') {
                     mkfC.log('Partner not found.');
                   }
                   tentativeValue = tentativeValue.replace(/\s\s+/g, ' ');
@@ -837,7 +837,7 @@ export function cleaning_validation() {
         focusFlds(mktoForm);
       }
 
-      if (window?.mcz_marketoForm_pref?.field_filters?.products == 'hidden') {
+      if (window?.mcz_marketoForm_pref?.field_filters?.products === 'hidden') {
         const formId = getMktoFormID();
         const form = MktoForms2.getForm(formId);
         uFFld(
@@ -874,7 +874,7 @@ export function cleaning_validation() {
         const review_optoinal_elem_field = review_optoinal_elem.querySelector(
           `[name="${review_optoinal_elem_name}"]`,
         );
-        if (review_optoinal_elem_field == null) {
+        if (review_optoinal_elem_field === null) {
           review_optoinal_elem.parentNode.classList.remove('mktoVisible');
         } else {
           review_optoinal_elem.parentNode.classList.add('mktoVisible');
@@ -1010,7 +1010,7 @@ export function cleaning_validation() {
         mktoButtons.forEach((mktoButton) => {
           let buttonContent = `${mktoButton.innerHTML}`;
           buttonContent = buttonContent.toLowerCase();
-          if (buttonContent.indexOf('undef') == -1) {
+          if (buttonContent.indexOf('undef') === -1) {
             if (buttonContent.indexOf('..') > -1) {
               let translateBTNText = translateFormElems?.pleasewait?.[language]
                   || translateFormElems?.pleasewait?.[language.substring(0, 2)]
@@ -1298,7 +1298,7 @@ export function cleaning_validation() {
         }
       }
       el = el.parentNode;
-      while (el != null && el.nodeType == 1) {
+      while (el !== null && el.nodeType === 1) {
         const style = window.getComputedStyle(el);
         if (style.display === 'none') return false;
         if (style.visibility !== 'visible') return false;

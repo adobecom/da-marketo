@@ -1,15 +1,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable max-len */
 /* eslint-disable no-restricted-syntax */
-// <![CDATA[
-// ##
-// ## Updated 20240117T235503
-// ##
-// ##
-// ##
-// ## Field Preferences
-// ##
-// ##
+// Field Preferences
 let mkfC;
 
 export function field_pref() {
@@ -39,7 +31,7 @@ export function field_pref() {
 
   const setRequired_attempts = 30;
   window.setRequired = function (fieldName, direction) {
-    if (fieldName == '' || fieldName == null || fieldName == undefined) {
+    if (fieldName === '' || fieldName === null || fieldName === undefined) {
       // mkfC.log("setRequired - fieldName is empty");
       return;
     }
@@ -64,7 +56,7 @@ export function field_pref() {
     if (field_active) {
       setRequired_set[fieldName] = 0;
       const field = document.querySelector(`[name="${fieldName}"]`);
-      if (direction == true) {
+      if (direction === true) {
         field.classList.remove('mktoValid');
         field.classList.add('mktoRequired');
         field.classList.add('mkto_toggle');
@@ -225,7 +217,7 @@ export function field_pref() {
     let formObservMKTO = false;
     const sessionAttributesQS_fld = document.querySelector('[name="sessionAttributesQS"]');
     if (document.querySelectorAll('.observMKTO').length > 0) {
-      if (sessionAttributesQS_fld != null) {
+      if (sessionAttributesQS_fld !== null) {
         formObservMKTO = true;
       }
     }

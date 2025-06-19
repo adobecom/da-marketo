@@ -39,7 +39,7 @@ function mktoCss_LP() {
         selectBox.value = mcz_marketoForm_pref.form.template || '';
       }
 
-      if (selectBox.value == 'subscription') {
+      if (selectBox.value === 'subscription') {
         const subId = `SUBSCRIPTION-TEST-${
           new Date()
             .toISOString()
@@ -179,7 +179,7 @@ function mktoCss_LP() {
           h2_txt = h2_txt.replace(/\s+/g, ' ').trim();
           h2_txt = h2_txt.trim();
 
-          if (select.name != h2_txt) {
+          if (select.name !== h2_txt) {
             h2_txt = `${h2_txt}<span class="marketo-field-name"> "${select.name}" </span>`;
           }
           h2.innerHTML = h2_txt;
@@ -452,7 +452,7 @@ export function templateManager() {
       .join(',');
     options = options
       .split(',')
-      .filter((item) => item.split(':')[0] != '')
+      .filter((item) => item.split(':')[0] !== '')
       .join(',');
     return [options];
   }
@@ -526,7 +526,7 @@ export function templateManager() {
   // This function checks if the option exists in the field on the page
   function checkOptionExists(fieldId, valOption, template) {
     const valOptionArray = valOption.split(':');
-    if (valOptionArray.length != 2) {
+    if (valOptionArray.length !== 2) {
       mkfC.log(
         `The value:option pair '${valOption}' is not valid in the field '${fieldId}'.`,
       );
