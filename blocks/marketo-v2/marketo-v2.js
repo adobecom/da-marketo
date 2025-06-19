@@ -212,15 +212,16 @@ export const loadMarketo = async (el, formData) => {
   const baseURL = formData[BASE_URL];
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
-  const { base } = getConfig();
-  const { default: initMarketoFormModules } = await import('./mcz/index.js');
-  const { marketoFormSetup } = await initMarketoFormModules();
   const forms2 = loadScript('/deps/forms2.js');
+  const mcz = import('./mcz/index.js');
 
-  Promise.all([forms2])
-    .then(async () => {
+  Promise.all([mcz, forms2])
+    .then(async ([mczModule]) => {
       const { MktoForms2 } = window;
       if (!MktoForms2) throw new Error('Marketo forms not loaded');
+      if (!mczModule?.default) throw new Error('Marketo modules not loaded');
+      const { default: initMarketoFormModules } = mczModule;
+      const { marketoFormSetup } = await initMarketoFormModules();
 
       MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID, () => {
         // eslint-disable-next-line no-undef
