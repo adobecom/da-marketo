@@ -1,4 +1,4 @@
-// Form Dynamics (Module Version)
+// Form Dynamics
 // Updated 20250617
 
 export function isSafariBrowser() {

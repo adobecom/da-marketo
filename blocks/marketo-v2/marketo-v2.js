@@ -234,9 +234,10 @@ export const loadMarketo = async (el, formData) => {
         import('./marketo-multi.js').then(({ default: multiStep }) => multiStep(el));
       }
     })
-    .catch(() => {
+    .catch((err) => {
       /* c8 ignore next 2 */
       el.style.display = 'none';
+      console.error(`Error loading Marketo form for ${munchkinID}_${formID}`, err);
       window.lana?.log(`Error loading Marketo form for ${munchkinID}_${formID}`, { tags: 'error,marketo' });
     });
 };

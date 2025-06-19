@@ -1,11 +1,8 @@
-// <![CDATA[
-// ##
-// ## Updated 20250221T214643
-// ##
-// ##
-// ##  Marketo Global Form Functions
-// ##
-// ##
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
+// Marketo Global Form Functions
+
 export default async function init() {
   let adobeOrg = '';
   if (window?.imsOrgId) {
@@ -119,7 +116,3 @@ export function getUniqueId(formValues, bypass = false, mczMarketoFormPref = win
   }
   return uniqueId;
 }
-
-// ##
-// ##
-// ]]>

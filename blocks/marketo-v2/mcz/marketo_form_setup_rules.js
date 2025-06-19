@@ -1,6 +1,8 @@
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable no-console */
-// Marketo Form Setup Rules (Module Version)
-// Updated 20250617
+// Marketo Form Setup Rules
 
 let mktoFrmLanaLogMasterSwitch = false;
 

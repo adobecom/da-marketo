@@ -1,16 +1,13 @@
-// <![CDATA[
-// ##
-// ## Updated 20241213T080000
-// ##
-// ##
-// ## Cleaning and Validation
-// ##
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
+// Cleaning and Validation
 import { getMktoFormID } from './global.js';
+import { uFFld } from './marketo_form_setup_process.js';
 
 let rendering_ready = false;
 let translateState = {};
 let mkfC;
-
 
 export function cleaning_validation() {
   mkfC.log('Cleaning & Validation - Loaded');
@@ -1440,7 +1437,3 @@ export function cleaning_validation() {
 export default async function init(mkfCm, form_dynamics) {
   mkfC = mkfCm;
 }
-
-// ##
-// ##
-// ]]>

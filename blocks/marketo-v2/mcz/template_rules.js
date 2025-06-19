@@ -1,5 +1,7 @@
-// Template Rules (Module Version)
-// Updated 20250617
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
+// Template Rules
 
 // Auto-complete fields constant
 export const AUTO_COMPLETE_FIELDS = [

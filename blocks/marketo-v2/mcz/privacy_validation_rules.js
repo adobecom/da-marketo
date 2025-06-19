@@ -1,3 +1,6 @@
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
 // <![CDATA[
 // ##
 // ## Updated 20241118T162401

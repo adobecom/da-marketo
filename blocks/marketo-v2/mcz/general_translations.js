@@ -1,10 +1,8 @@
-// <![CDATA[
-// ##
-// ## Updated 20250508T211304
-// ##
-// ##
-// ## General Form Translations
-// ##
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
+// General Form Translations
+
 export default async function init(mkfC) {
   mkfC.log('General Form Translations Added');
 

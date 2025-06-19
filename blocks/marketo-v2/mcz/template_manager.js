@@ -1,12 +1,7 @@
-// <![CDATA[
-// ##
-// ## Updated 20241118T190526
-// ##
-// ##
-// ##
-// ## Template Manager Module v0.5b
-// ##
-// ##
+/* eslint-disable camelcase */
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
+// Template Manager Module v0.5b
 
 let mkfC;
 
@@ -774,7 +769,3 @@ export function templateManager() {
 export default async function init(mkfCm, form_dynamics) {
   mkfC = mkfCm;
 }
-
-// ##
-// ##
-// ]]>

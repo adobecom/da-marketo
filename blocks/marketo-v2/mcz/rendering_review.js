@@ -1,12 +1,8 @@
 /* eslint-disable camelcase */
-// <![CDATA[
-// ##
-// ## Updated 20240507T183528
-// ##
-// ##
-// ## Rendering Review
-// ##
-// const { marketoFormSetup } = await import('./marketo_form_setup_process.js');
+/* eslint-disable max-len */
+/* eslint-disable no-restricted-syntax */
+// Rendering Review
+
 import { marketoFormSetup } from './marketo_form_setup_process.js';
 import { field_pref } from './field_preferences.js';
 import { categoryFilters } from './category_filters.js';
@@ -84,7 +80,3 @@ export function renderingReview() {
 export default async function init(mkfC) {
   mkfC.log('Rendering Review - Loaded');
 }
-
-// ##
-// ##
-// ]]>
