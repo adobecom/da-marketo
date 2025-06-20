@@ -17,10 +17,40 @@ let interval_wait_whenReady;
 function getMktoFormID1() {
   const mktoForm = document.querySelector('form.mktoForm');
   if (mktoForm && mktoForm.id) {
-    const formId = parseInt(mktoForm.id.replace('mktoForm_', ''));
-    return isNaN(formId) ? null : formId;
+    const formId = parseInt(mktoForm.id.replace('mktoForm_', ''), 10);
+    return Number.isNaN(formId) ? null : formId;
   }
   return null;
+}
+
+function wait_fields(form) {
+  const formSelector = `#mktoForm_${form.getId()} .fnc_field_change_country`;
+  const formElements = document.querySelectorAll(formSelector);
+  if (formElements.length > 0) {
+    const formParentId = `mktoForm_${form.getId()}`;
+    const formParentElem = document.getElementById(formParentId);
+    if (formParentElem.classList.contains('mktoWhenRendered')) {
+      // Already rendered, no need to reinitialize
+    } else {
+      formParentElem.classList.add('mktoWhenRendered');
+
+      marketoFormSetup();
+      field_pref();
+      categoryFilters();
+      cleaning_validation();
+      templateManager();
+    }
+  } else {
+    privacyValidation();
+
+    if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
+      mkfC.log('knownMktoVisitor is not defined');
+    } else {
+      setTimeout(() => {
+        wait_fields(form);
+      }, 10);
+    }
+  }
 }
 
 function wait_whenReady() {
@@ -28,45 +58,16 @@ function wait_whenReady() {
     const formId = getMktoFormID1();
     if (
       formId
-      && typeof MktoForms2.getForm === 'function'
-      && typeof MktoForms2.whenReady === 'function'
+      && typeof window.MktoForms2.getForm === 'function'
+      && typeof window.MktoForms2.whenReady === 'function'
     ) {
-      const form = MktoForms2.getForm(formId);
+      const form = window.MktoForms2.getForm(formId);
       if (form) {
         clearInterval(interval_wait_whenReady);
         translations_ready1 = true;
 
-        MktoForms2.whenReady((form) => {
-          function wait_fields(form) {
-            const formSelector = `#mktoForm_${form.getId()} .fnc_field_change_country`;
-            const formElements = document.querySelectorAll(formSelector);
-            if (formElements.length > 0) {
-              const formParentId = `mktoForm_${form.getId()}`;
-              const formParentElem = document.getElementById(formParentId);
-              if (formParentElem.classList.contains('mktoWhenRendered')) {
-                // Already rendered, no need to reinitialize
-              } else {
-                formParentElem.classList.add('mktoWhenRendered');
-
-                marketoFormSetup();
-                field_pref();
-                categoryFilters();
-                cleaning_validation();
-                templateManager();
-              }
-            } else {
-              privacyValidation();
-
-              if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
-                mkfC.log('knownMktoVisitor is not defined');
-              } else {
-                setTimeout(() => {
-                  wait_fields(form);
-                }, 10);
-              }
-            }
-          }
-          wait_fields(form);
+        window.MktoForms2.whenReady((marketoForm) => {
+          wait_fields(marketoForm);
         });
       }
     }

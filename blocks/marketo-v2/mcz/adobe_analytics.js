@@ -11,9 +11,9 @@ import { getMktoFormID, getUniqueId } from './global.js';
 import { MktoForms_onSuccess } from './marketo_form_setup_process.js';
 
 let markerNo = 0;
-let aaInteractionsActive = false;
 
 export default async function init() {
+  window.aaInteractionsActive = false;
   mkfC.log('Adobe Analytics - Triggered');
 
   window.addEventListener('alloy_sendEvent', (ev) => {
@@ -34,7 +34,6 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
   const aaEventName_prefill_action = 'formPrefill';
   const aaType = 'FormInteractions';
   let formType = 'marketo-Offer';
-  let formId;
   let error_aa = false;
   let testRecord = false;
   if (window?.mcz_marketoForm_pref?.profile?.testing !== undefined) {
@@ -81,8 +80,8 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
     mkfC.log(`${consoleLabel} - error, but will continue to build aa event record.`);
   }
 
-  aaInteractionsActive = true;
-  formId = !formid || MktoForms2.getForm(formid) === null ? getMktoFormID() : formid;
+  window.aaInteractionsActive = true;
+  const formId = !formid || window.MktoForms2.getForm(formid) === null ? getMktoFormID() : formid;
 
   markerNo += 1;
   const performanceMarker = `aaInteraction-${markerNo}`;
@@ -95,7 +94,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
       currentTime === 0
         || currentTime === undefined
         || currentTime === null
-        || isNaN(currentTime)
+        || Number.isNaN(currentTime)
     ) {
       currentTime = Math.round(entry.duration);
     }
@@ -227,11 +226,12 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
     eventSnapShot.data._adobe_corpnew.digitalData.form.response[name] = value;
   };
 
-  const demandbaseTracker = formValues.mktodemandbaseTracker === 'success'
-    ? 'yes'
-    : formValues.mktodemandbaseTracker === 'failure'
-      ? 'no'
-      : 'No Value';
+  let demandbaseTracker = 'No Value';
+  if (formValues.mktodemandbaseTracker === 'success') {
+    demandbaseTracker = 'yes';
+  } else if (formValues.mktodemandbaseTracker === 'failure') {
+    demandbaseTracker = 'no';
+  }
 
   const emailDomain = formValues.Email && formValues.Email.includes('@')
     ? formValues.Email.substring(formValues.Email.lastIndexOf('@') + 1)

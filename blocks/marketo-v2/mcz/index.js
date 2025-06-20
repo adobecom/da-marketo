@@ -11,7 +11,6 @@ import setupProcess, { marketoFormSetup } from './marketo_form_setup_process.js'
 import privacyProcess from './privacy_validation_process.js';
 import fieldPrefs from './field_preferences.js';
 import analytics from './adobe_analytics.js';
-import templateManager from './template_manager.js';
 import setupCategoryFilters from './category_filters.js';
 import translations from './general_translations.js';
 import { renderingReview } from './rendering_review.js';
@@ -31,10 +30,7 @@ export default async function initMarketoFormModules() {
   await fieldPrefs();
   await analytics();
 
-  // 4. Form dynamics and template manager
-  await templateManager();
-
-  // 5. Category filters, cleaning/validation, translations, rendering review
+  // 4. Category filters, cleaning/validation, translations, rendering review
   await setupCategoryFilters();
   await translations();
 

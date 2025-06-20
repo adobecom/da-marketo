@@ -1,10 +1,11 @@
+/* eslint-disable import/prefer-default-export */
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-use-before-define */
 /* eslint-disable camelcase */
 /* eslint-disable max-len */
 /* eslint-disable no-restricted-syntax */
 // Template Manager Module v0.5b
 
-import templateRules from './template_rules.js';
 import { mkfC } from './marketo_form_setup_rules.js';
 
 const templates = [];
@@ -39,15 +40,15 @@ function addSelectBox() {
   const selectBox = document.createElement('select');
   selectBox.id = 'form.template';
 
-  const activeTemps = templateRules.map((template) => Object.keys(template)[0]);
+  const activeTemps = window.templateRules.map((template) => Object.keys(template)[0]);
 
-  const option = document.createElement('option');
+  let option = document.createElement('option');
   option.value = '';
   option.textContent = 'Select Template';
   selectBox.appendChild(option);
 
   activeTemps.forEach((temp) => {
-    const option = document.createElement('option');
+    option = document.createElement('option');
     option.value = temp;
     option.textContent = temp;
     selectBox.appendChild(option);
@@ -59,7 +60,7 @@ function addSelectBox() {
       selectBox.value = currTemp;
     }
   } else {
-    selectBox.value = mcz_marketoForm_pref.form.template || '';
+    selectBox.value = window.mcz_marketoForm_pref.form.template || '';
   }
 
   if (selectBox.value === 'subscription') {
@@ -77,15 +78,15 @@ function addSelectBox() {
   selectBox.style.left = '20px';
   selectBox.style.margin = '20px';
 
-  selectBox.addEventListener('change', function () {
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
-    params.set('template', this.value);
-    params.set('isPreview', '1');
-    if (params.has('audit_translations')) {
-      params.set('audit_translations', 'true');
+  selectBox.addEventListener('change', () => {
+    const windowUrl = new URL(window.location.href);
+    const windowParams = windowUrl.searchParams;
+    windowParams.set('template', this.value);
+    windowParams.set('isPreview', '1');
+    if (windowParams.has('audit_translations')) {
+      windowParams.set('audit_translations', 'true');
     }
-    const newURL = `${url.origin}${url.pathname}?${params.toString()}`;
+    const newURL = `${windowUrl.origin}${windowUrl.pathname}?${windowParams.toString()}`;
     window.location.href = newURL;
   });
 
@@ -99,15 +100,15 @@ function addLangSelectBox() {
   const selectBox = document.createElement('select');
   selectBox.id = 'form.lang';
 
-  const activeLangs = Object.keys(translateFormElems.lang);
+  const activeLangs = Object.keys(window.translateFormElems.lang);
 
-  const option = document.createElement('option');
+  let option = document.createElement('option');
   option.value = '';
   option.textContent = 'Select Language';
   selectBox.appendChild(option);
 
   activeLangs.forEach((temp) => {
-    const option = document.createElement('option');
+    option = document.createElement('option');
     option.value = temp;
     option.textContent = temp;
     selectBox.appendChild(option);
@@ -119,7 +120,7 @@ function addLangSelectBox() {
       selectBox.value = currLang;
     }
   } else {
-    selectBox.value = mcz_marketoForm_pref.profile.prefLanguage || '';
+    selectBox.value = window.mcz_marketoForm_pref.profile.prefLanguage || '';
   }
 
   selectBox.style.position = 'absolute';
@@ -127,15 +128,15 @@ function addLangSelectBox() {
   selectBox.style.left = '20px';
   selectBox.style.margin = '20px';
 
-  selectBox.addEventListener('change', function () {
-    const url = new URL(window.location.href);
-    const params = url.searchParams;
-    params.set('lang', this.value);
-    params.set('isPreview', '1');
-    if (params.has('audit_translations')) {
-      params.set('audit_translations', 'true');
+  selectBox.addEventListener('change', () => {
+    const windowUrl = new URL(window.location.href);
+    const windowParams = windowUrl.searchParams;
+    windowParams.set('lang', this.value);
+    windowParams.set('isPreview', '1');
+    if (windowParams.has('audit_translations')) {
+      windowParams.set('audit_translations', 'true');
     }
-    const newURL = `${url.origin}${url.pathname}?${params.toString()}`;
+    const newURL = `${windowUrl.origin}${windowUrl.pathname}?${windowParams.toString()}`;
     window.location.href = newURL;
   });
 
@@ -151,7 +152,7 @@ function auditSelectTranslations() {
   const h1 = document.createElement('h1');
   h1.classList.add('mktoFormTranslationH1');
   h1.textContent = `${document.getElementById('form.template').value
-  } (${mcz_marketoForm_pref.profile.prefLanguage
+  } (${window.mcz_marketoForm_pref.profile.prefLanguage
   })`;
   document.querySelector('form').insertBefore(h1, document.querySelector('form').firstChild);
 
@@ -169,7 +170,7 @@ function auditSelectTranslations() {
       const thValue = document.createElement('th');
       thValue.textContent = 'Value';
       const thLabel = document.createElement('th');
-      thLabel.textContent = 'Label' + ` (${mcz_marketoForm_pref.profile.prefLanguage})`;
+      thLabel.textContent = `Label (${window.mcz_marketoForm_pref.profile.prefLanguage})`;
       headerRow.appendChild(thValue);
       headerRow.appendChild(thLabel);
       thead.appendChild(headerRow);
@@ -275,7 +276,7 @@ function mktoCss_LP() {
     setTimeout(addAuditButton, 2000);
 
     const styleSheets = document.getElementsByTagName('link');
-    for (let i = 0; i < styleSheets.length; i++) {
+    for (let i = 0; i < styleSheets.length; i += 1) {
       if (styleSheets[i].rel === 'stylesheet') {
         styleSheets[i].parentNode.removeChild(styleSheets[i]);
       }
@@ -528,9 +529,9 @@ function checkOptionExists(fieldId, valOption, template) {
     return false;
   }
   const optionValue = valOptionArray[0];
-  const optionText = valOptionArray[1];
+  // const optionText = valOptionArray[1];
   let fieldKey = '';
-  Object.keys(template_2_fields).find((key) => {
+  Object.keys(template_2_fields).forEach((key) => {
     if (key === fieldId) {
       fieldKey = template_2_fields[key];
     }
@@ -580,7 +581,7 @@ function checkFields(templateData, templateName, fieldName) {
       );
       delete templateData[fieldName];
     } else {
-      templateData[fieldName][0] = options[0];
+      [templateData[fieldName][0]] = options;
     }
   } else {
     mkfC.log(
@@ -628,11 +629,11 @@ function checkNestedFields(nestedFields, templateName, parentFieldName) {
 }
 
 function setTemplate(templateValue) {
-  templateValue = templateValue.split(':')[0];
+  [templateValue] = templateValue.split(':');
   if (!templateValue && templateValue !== '') {
     mkfC.log('Template is value is empty.');
   } else {
-    const myRules = templateRules.filter(
+    const myRules = window.templateRules.filter(
       (template) => Object.keys(template)[0] === templateValue,
     )[0][templateValue];
     if (!myRules) {
@@ -715,26 +716,26 @@ export function templateManager() {
     mkfC.log('Template Manager - Loaded');
     const templateSrc = document.getElementById('form.template');
     const templateOptions = templateSrc?.querySelectorAll('option');
-    if (templateRules.length > 0 && templateOptions.length > 0) {
+    if (window.templateRules.length > 0 && templateOptions.length > 0) {
       mkfC.log(
         '\n\n\n################################\n\n'
         + '## Marketo Config Interface exists. Starting Template Manager.\n\n'
         + '################################\n\n\n',
       );
       if (
-        typeof templateRules !== 'undefined'
-        && Array.isArray(templateRules)
-        && templateRules.length > 0
+        typeof window.templateRules !== 'undefined'
+        && Array.isArray(window.templateRules)
+        && window.templateRules.length > 0
       ) {
-        const checkRules = checkTemplateOptions(templateRules);
+        const checkRules = checkTemplateOptions(window.templateRules);
         if (checkRules) {
-          templateSrc.addEventListener('change', function () {
+          templateSrc.addEventListener('change', () => {
             setTemplate(this.value);
           });
         }
         buildTemplates();
-      } else if (typeof templateRules !== 'undefined') {
-        const errorMessage = templateRules
+      } else if (typeof window.templateRules !== 'undefined') {
+        const errorMessage = window.templateRules
           ? 'templateRules does not contain any templates, please review and fix.'
           : 'templateRules does not exist, please review and fix.';
         mkfC.log(errorMessage);
@@ -745,7 +746,4 @@ export function templateManager() {
       }
     }
   }
-}
-
-export default async function init() {
 }

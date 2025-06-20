@@ -10,8 +10,10 @@ let lastFieldVisibility = '';
 let fieldVisibilityCheckInterval;
 const setRequired_set = {};
 const setRequired_attempts = 30;
+const fieldMap = {};
+const field_dependance = {};
 
-function setRequired(fieldName, direction) {
+export function setRequired(fieldName, direction) {
   if (fieldName === '' || fieldName === null || fieldName === undefined) {
     // mkfC.log("setRequired - fieldName is empty");
     return;
@@ -115,7 +117,7 @@ function setRequired(fieldName, direction) {
               if (fieldDependanceParent) {
                 const event = new Event('change', { bubbles: true });
                 fieldDependanceElement.dispatchEvent(event);
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 10; i += 1) {
                   setTimeout(() => {
                     fieldDependanceElement.dispatchEvent(event);
                   }, 100 * i);
@@ -127,7 +129,7 @@ function setRequired(fieldName, direction) {
       }
     }, 20);
   } else {
-    setRequired_set[fieldName] = setRequired_set[fieldName] + 1;
+    setRequired_set[fieldName] += 1;
     if (setRequired_set[fieldName] < setRequired_attempts) {
       setTimeout(() => {
         setRequired(fieldName, direction);
@@ -144,13 +146,13 @@ function updateFieldPreferences() {
   );
   const fieldNames = [];
   for (const key in window?.mcz_marketoForm_pref?.field_visibility) {
-    if (window?.mcz_marketoForm_pref?.field_visibility.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.field_visibility, key)) {
       fieldNames.push(key);
     }
   }
   let newFieldPreferences = '';
   if (fieldNames.length > 0) {
-    for (let i = 0; i < fieldNames.length; i++) {
+    for (let i = 0; i < fieldNames.length; i += 1) {
       const checkDL = window?.mcz_marketoForm_pref?.field_visibility;
       if (checkDL && window?.mcz_marketoForm_pref?.field_visibility?.[fieldNames[i]]) {
         let setting = window?.mcz_marketoForm_pref?.field_visibility?.[fieldNames[i]];
@@ -167,7 +169,7 @@ function updateFieldPreferences() {
     mktoFieldPreferences.value = newFieldPreferences;
     const event = new Event('change', { bubbles: true });
     mktoFieldPreferences.dispatchEvent(event);
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i += 1) {
       setTimeout(() => {
         mktoFieldPreferences.dispatchEvent(event);
       }, 100 * i);
@@ -220,18 +222,16 @@ async function fieldPrefs_wait_fieldPreferences() {
 
 export function field_pref() {
   mkfC.log('Field Preferences - Triggered');
-  const fieldMap = {};
   if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-    for (var key in window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-      if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping.hasOwnProperty(key)) {
+    for (const key in window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
+      if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.value_setup?.field_mapping, key)) {
         fieldMap[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_mapping[key];
       }
     }
   }
-  const field_dependance = {};
   if (window?.mcz_marketoForm_pref?.value_setup?.field_dependance) {
-    for (var key in window?.mcz_marketoForm_pref?.value_setup?.field_dependance) {
-      if (window?.mcz_marketoForm_pref?.value_setup?.field_dependance.hasOwnProperty(key)) {
+    for (const key in window?.mcz_marketoForm_pref?.value_setup?.field_dependance) {
+      if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.value_setup?.field_dependance, key)) {
         field_dependance[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_dependance[key];
       }
     }

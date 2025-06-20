@@ -250,11 +250,11 @@ export default async function init() {
   } else {
     mkfC.log('General Form Translations found, checking for missing values');
     for (const key in translateFormElems_temp) {
-      if (translateFormElems_temp.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(translateFormElems_temp, key)) {
         mkfC.log(
           `Translation '${key}' not found, adding '${translateFormElems_temp[key]}'`,
         );
-        translateFormElems[key] = translateFormElems_temp[key];
+        window.translateFormElems[key] = translateFormElems_temp[key];
       }
     }
   }
@@ -275,8 +275,10 @@ export default async function init() {
         for (const verb of mcz_submit_verbs) {
           mkfC.log(`Overriding "${verb}" with "${override_submit}"`);
           try {
-            for (const lang in translateFormElems[verb]) {
-              translateFormElems[verb][lang] = override_submit;
+            for (const lang in window.translateFormElems[verb]) {
+              if (Object.prototype.hasOwnProperty.call(window.translateFormElems[verb], lang)) {
+                window.translateFormElems[verb][lang] = override_submit;
+              }
             }
           } catch (e) {
             mkfC.log(`Error overriding "${verb}" with "${override_submit}": ${e}`);

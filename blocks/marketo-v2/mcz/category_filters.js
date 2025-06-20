@@ -12,7 +12,7 @@ const dispatchChangeEvent = (element, value) => {
     element.value = value.trim();
     const event = new Event('change', { bubbles: true });
     element.dispatchEvent(event);
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 10; i += 1) {
       setTimeout(() => {
         element.dispatchEvent(event);
       }, 150 * i);

@@ -19,7 +19,6 @@ import {
   loadLink,
   localizeLink,
   createTag,
-  getConfig,
   createIntersectionObserver,
   SLD,
   MILO_EVENTS,
@@ -226,6 +225,7 @@ export const loadMarketo = async (el, formData) => {
       MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID, () => {
         // eslint-disable-next-line no-undef
         marketoFormSetup('stage1');
+        // eslint-disable-next-line no-console
         console.log(`Marketo form ${munchkinID}_${formID} loaded successfully`);
       });
       MktoForms2.whenReady((form) => { readyForm(form, formData); });
@@ -237,6 +237,7 @@ export const loadMarketo = async (el, formData) => {
     .catch((err) => {
       /* c8 ignore next 2 */
       el.style.display = 'none';
+      // eslint-disable-next-line no-console
       console.error(`Error loading Marketo form for ${munchkinID}_${formID}`, err);
       window.lana?.log(`Error loading Marketo form for ${munchkinID}_${formID}`, { tags: 'error,marketo' });
     });

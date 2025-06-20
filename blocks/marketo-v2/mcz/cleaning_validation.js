@@ -1,3 +1,6 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-param-reassign */
+/* eslint-disable import/prefer-default-export */
 /* eslint-disable no-use-before-define */
 /* eslint-disable camelcase */
 /* eslint-disable max-len */
@@ -6,6 +9,8 @@
 import { mkfC } from './marketo_form_setup_rules.js';
 import { getMktoFormID } from './global.js';
 import { uFFld } from './marketo_form_setup_process.js';
+import { setRequired } from './field_preferences.js';
+import { aaInteraction } from './adobe_analytics.js';
 
 let rendering_ready = false;
 const translateState = {};
@@ -23,6 +28,8 @@ let checkFormMsgs_pending = false;
 let nStyles_on = false;
 let isRequestedAgain = false;
 let chkFrmInt;
+let RuleLegend_try = 0;
+const handleFieldRuleLegend_max = 30;
 
 function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFieldset) {
   mktoFormRow.classList.add('mktoHidden');
@@ -50,11 +57,11 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
 
     const reference = textElem.innerText.toLowerCase().split('field_rule')[1].trim();
 
-    let [fieldname, valueset] = mktoFormRowLegend.innerText
+    const [fieldname, fieldValues] = mktoFormRowLegend.innerText
       .trim()
       .split('=')
       .map((str) => str.trim());
-    if (!fieldname || !valueset) return;
+    if (!fieldname || !fieldValues) return;
 
     const mktoSelect = mktoForm.querySelector(`select[name='${fieldname}']`);
     const mktoSelect_option = mktoForm.querySelector(`select[name='${fieldname}'] option`);
@@ -73,7 +80,7 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
       return;
     }
 
-    valueset = valueset.toLowerCase();
+    const valueset = fieldValues.toLowerCase();
 
     if (typeof setRequired !== 'function') {
       return;
@@ -100,9 +107,9 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
       if (mktoFormRowTop) {
         const mktoFieldDescriptor = mktoFormRowTop.querySelectorAll('.mktoFieldDescriptor');
         if (mktoFieldDescriptor) {
-          mktoFieldDescriptor.forEach((mktoFieldDescriptor) => {
-            mktoFieldDescriptor.classList.add('mktoFieldDescriptor__hidden');
-            mktoFieldDescriptor.classList.remove('mktoFieldDescriptor');
+          mktoFieldDescriptor.forEach((descriptor) => {
+            descriptor.classList.add('mktoFieldDescriptor__hidden');
+            descriptor.classList.remove('mktoFieldDescriptor');
           });
         }
         mktoFormRowTop.classList.add('mktoHidden', 'mktohandleFieldRuleLegend');
@@ -123,9 +130,9 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
         '.mktoFieldDescriptor__hidden',
       );
       if (mktoFieldDescriptor) {
-        mktoFieldDescriptor.forEach((mktoFieldDescriptor) => {
-          mktoFieldDescriptor.classList.add('mktoFieldDescriptor');
-          mktoFieldDescriptor.classList.remove('mktoFieldDescriptor__hidden');
+        mktoFieldDescriptor.forEach((descriptor) => {
+          descriptor.classList.add('mktoFieldDescriptor');
+          descriptor.classList.remove('mktoFieldDescriptor__hidden');
         });
       }
 
@@ -138,8 +145,8 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
           'select.mktoUpdated, input.mktoUpdated, textarea.mktoUpdated',
         );
         if (mktoFieldplaceHolder) {
-          mktoFieldplaceHolder.forEach((mktoFieldplaceHolder) => {
-            mktoFieldplaceHolder.classList.remove('mktoUpdated');
+          mktoFieldplaceHolder.forEach((holder) => {
+            holder.classList.remove('mktoUpdated');
           });
         }
       }, 100);
@@ -166,7 +173,7 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
     if (!mktoSelectClone) {
       mktoSelectClone = mktoSelect.cloneNode(true);
       mktoSelectClone.style = 'display:none;position:absolute;top:-1000px;left:-1000px;';
-      for (let i = mktoSelectClone.attributes.length - 1; i >= 0; i--) {
+      for (let i = mktoSelectClone.attributes.length - 1; i >= 0; i -= 1) {
         const attribute = mktoSelectClone.attributes[i];
         if (
           attribute.name !== 'name'
@@ -249,6 +256,7 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
           observedOptions.push(combinedValue);
         }
       } else if (reference === 'hide' && valuesetArray.includes(optionValue)) {
+        // do nothing
       } else {
         // do nothing
       }
@@ -274,11 +282,11 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
     if (newOptions.length) {
       newOptions.forEach((option) => {
         const optionValue = option.value.toLowerCase();
-        const mktoSelect_option = mktoSelect.querySelector(
+        const mktoSelect_option_byValue = mktoSelect.querySelector(
           `option[value='${optionValue}']`,
         );
-        if (mktoSelect_option) {
-          option.innerText = mktoSelect_option.innerText;
+        if (mktoSelect_option_byValue) {
+          option.innerText = mktoSelect_option_byValue.innerText;
         }
       });
       mktoSelect.innerHTML = '';
@@ -286,9 +294,9 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
         mktoSelect.add(option);
       });
 
-      const mktoSelect_option = mktoSelect.querySelector(`option[value='${backValue}']`);
-      if (mktoSelect_option) {
-        mktoSelect.selectedIndex = mktoSelect_option.index;
+      const mktoSelect_option_byValue = mktoSelect.querySelector(`option[value='${backValue}']`);
+      if (mktoSelect_option_byValue) {
+        mktoSelect.selectedIndex = mktoSelect_option_byValue.index;
       } else {
         mktoSelect.selectedIndex = 0;
       }
@@ -309,9 +317,9 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
       if (mktoFormRowTop) {
         const mktoFieldDescriptor = mktoFormRowTop.querySelectorAll('.mktoFieldDescriptor');
         if (mktoFieldDescriptor) {
-          mktoFieldDescriptor.forEach((mktoFieldDescriptor) => {
-            mktoFieldDescriptor.classList.add('mktoFieldDescriptor__hidden');
-            mktoFieldDescriptor.classList.remove('mktoFieldDescriptor');
+          mktoFieldDescriptor.forEach((descriptor) => {
+            descriptor.classList.add('mktoFieldDescriptor__hidden');
+            descriptor.classList.remove('mktoFieldDescriptor');
           });
         }
         mktoFormRowTop.classList.add('mktoHidden', 'mktohandleFieldRuleLegend');
@@ -350,7 +358,7 @@ function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset)
           }
           if (tentativeValue.trim().length === 0) {
             const fieldMappingToDL = window?.mcz_marketoForm_pref?.value_setup?.field_mapping_dl || {};
-            if (fieldMappingToDL.hasOwnProperty(fieldName)) {
+            if (Object.prototype.hasOwnProperty.call(fieldMappingToDL, fieldName)) {
               const tentativeValueLocation = fieldMappingToDL[fieldName].trim();
               if (tentativeValueLocation.length > 0) {
                 const tentativeValueLocationArray = tentativeValueLocation.split('.');
@@ -358,7 +366,7 @@ function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset)
                 for (const key of tentativeValueLocationArray) {
                   if (
                     tentativeValueLocationObj
-                          && tentativeValueLocationObj.hasOwnProperty(key)
+                          && Object.prototype.hasOwnProperty.call(tentativeValueLocationObj, key)
                   ) {
                     tentativeValueLocationObj = tentativeValueLocationObj[key];
                   }
@@ -379,7 +387,7 @@ function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset)
       );
       textElem.innerHTML = mktoFormRowLegend_html;
       if (reference.split('rule:').length > 1) {
-        reference = reference.split('rule:')[1];
+        [, reference] = reference.split('rule:');
         // mktoFormRowLegend.innerText = reference;
       }
     } else {
@@ -394,7 +402,7 @@ function handleHiddenLegend(mktoFormRowLegend, mktoFormRow) {
   mktoFormRow.classList.add('mktoHiddenLegend');
   let legendClassName = mktoFormRowLegend.innerText.split('-');
   if (legendClassName.length > 1) {
-    legendClassName = legendClassName[1];
+    [, legendClassName] = legendClassName;
     legendClassName = legendClassName.toLowerCase().replace(/[^a-z0-9-]/gi, '');
     legendClassName = legendClassName.substring(0, 20);
     mktoFormRow.setAttribute('data-mkto_vis_src', legendClassName);
@@ -408,7 +416,7 @@ function handleSetupLegend(mktoFormRowLegend, mktoFormRow) {
 
   let legendClassName = mktoFormRowLegend.innerText.split('-');
   if (legendClassName.length > 1) {
-    legendClassName = legendClassName[1];
+    [, legendClassName] = legendClassName;
     legendClassName = legendClassName.toLowerCase().replace(/[^a-z0-9-]/gi, '');
     legendClassName = legendClassName.substring(0, 20);
     mktoFormRow.setAttribute('data-mkto_vis_src', legendClassName);
@@ -447,7 +455,7 @@ export function cleaning_validation() {
         mktoButtonRow.setAttribute('data-buttonObserver', true);
         const validateForms = document.querySelectorAll('[id*="mktoForm_"]:not(.validationActive)');
         if (validateForms) {
-          for (var i = 0; i < validateForms.length; i++) {
+          for (let i = 0; i < validateForms.length; i += 1) {
             const validateForm = validateForms[i];
             validateForm.classList.add('validationActive');
           }
@@ -455,7 +463,7 @@ export function cleaning_validation() {
       }
       const requiredFields = document.querySelectorAll('.mktoRequired:not(.mktoRequiredVis)');
       if (requiredFields) {
-        for (var i = 0; i < requiredFields.length; i++) {
+        for (let i = 0; i < requiredFields.length; i += 1) {
           const field = requiredFields[i];
           if (isElementVisible(field)) {
             field.classList.add('mktoRequiredVis');
@@ -480,7 +488,7 @@ function makeHidden(fieldname, shouldHide = true) {
   const fieldMap = {};
   if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
     for (const key in window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-      if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.value_setup?.field_mapping, key)) {
         fieldMap[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_mapping[key];
       }
     }
@@ -565,8 +573,8 @@ function translateDDlbls(dropdownName, translateValues) {
 
     dropdownField.classList.add('translated');
 
-    if (translateFormElems.hasOwnProperty(dropdownName.toLowerCase())) {
-      let language = mcz_marketoForm_pref?.profile?.prefLanguage;
+    if (Object.prototype.hasOwnProperty.call(window.translateFormElems, dropdownName.toLowerCase())) {
+      let language = window.mcz_marketoForm_pref?.profile?.prefLanguage;
       if (language && language.length > 0) {
         language = language.toLowerCase();
         language = language.replace('-', '_');
@@ -574,7 +582,7 @@ function translateDDlbls(dropdownName, translateValues) {
         language = 'en_us';
       }
       if (language) {
-        let translatedElem = translateFormElems[dropdownName.toLowerCase()][language];
+        let translatedElem = window.translateFormElems[dropdownName.toLowerCase()][language];
         if (translatedElem) {
           const label = document.querySelector(`label[for="${dropdownName}"]`);
           if (label) {
@@ -590,7 +598,7 @@ function translateDDlbls(dropdownName, translateValues) {
               required = true;
             }
             const options = dropdownField.querySelectorAll('option');
-            for (let i = 0; i < options.length; i++) {
+            for (let i = 0; i < options.length; i += 1) {
               const option = options[i];
               if (
                 option.text.toLowerCase().replace(/\*/g, '').trim()
@@ -610,7 +618,7 @@ function translateDDlbls(dropdownName, translateValues) {
     let select_lbloption;
 
     optionsArray = optionsArray.filter((option) => {
-      if (translateValues.hasOwnProperty(option.value)) {
+      if (Object.prototype.hasOwnProperty.call(translateValues, option.value)) {
         if (!option.getAttribute('data-original-label')) {
           option.setAttribute('data-original-label', option.text);
         }
@@ -691,7 +699,7 @@ function normalizeMktoStyles() {
 
   const mktoFormElements = mktoForm.querySelectorAll('[style]:not(.mktoCleaned)');
   if (mktoFormElements.length > 0) {
-    for (var i = 0; i < mktoFormElements.length; i++) {
+    for (let i = 0; i < mktoFormElements.length; i += 1) {
       const mktoFormElement = mktoFormElements[i];
       if (mktoFormElement.hasAttribute('style')) {
         mktoFormElement.classList.add('mktoVisible');
@@ -705,7 +713,7 @@ function normalizeMktoStyles() {
 
   const mktoAsterix = mktoForm.querySelectorAll('.mktoAsterix');
   if (mktoAsterix.length > 0) {
-    for (var i = 0; i < mktoAsterix.length; i++) {
+    for (let i = 0; i < mktoAsterix.length; i += 1) {
       const mktoAsterixElement = mktoAsterix[i];
       mktoAsterixElement.parentNode.removeChild(mktoAsterixElement);
     }
@@ -713,7 +721,7 @@ function normalizeMktoStyles() {
 
   const mktoFields = mktoForm.querySelectorAll('.mktoField[name]:not(.mktofield_anchor)');
   if (mktoFields.length > 0) {
-    for (var i = 0; i < mktoFields.length; i++) {
+    for (let i = 0; i < mktoFields.length; i += 1) {
       const mktoField = mktoFields[i];
       if (
         document.querySelector(
@@ -738,7 +746,7 @@ function normalizeMktoStyles() {
   }
 
   const privacyRows = mktoForm.querySelectorAll('.mktoFormRowTop:not(.adobe-privacy)');
-  for (var i = 0; i < privacyRows.length; i++) {
+  for (let i = 0; i < privacyRows.length; i += 1) {
     const privacyRow = privacyRows[i];
     if (privacyRow.querySelector('[class*="adobe-privacy"]')) {
       privacyRow.classList.add('adobe-privacy');
@@ -749,7 +757,7 @@ function normalizeMktoStyles() {
 
   const mktoFormRowTops = mktoForm.querySelectorAll('.mktoFormRow:not(.mktoFormRowTop)');
   if (mktoFormRowTops.length > 0) {
-    for (var i = 0; i < mktoFormRowTops.length; i++) {
+    for (let i = 0; i < mktoFormRowTops.length; i += 1) {
       const mktoFormRowTop = mktoFormRowTops[i];
       if (mktoFormRowTop.parentNode.classList.contains('mktoForm')) {
         mktoFormRowTop.classList.add('mktoFormRowTop');
@@ -759,7 +767,7 @@ function normalizeMktoStyles() {
 
   const mktoFormRows = document.querySelectorAll('.mktoFormRow:not([data-mktofield])');
   if (mktoFormRows.length > 0) {
-    for (var i = 0; i < mktoFormRows.length; i++) {
+    for (let i = 0; i < mktoFormRows.length; i += 1) {
       const mktoFormRow = mktoFormRows[i];
       const mktoFormRowChild = mktoFormRow.querySelector('.mktoFormRow:not(.mktoFormRowTop)');
       if (mktoFormRow.parentNode.classList.contains('mktoForm')) {
@@ -819,9 +827,6 @@ function normalizeMktoStyles() {
         }
       }
 
-      const RuleLegend_try = 0;
-      const handleFieldRuleLegend_max = 30;
-
       const mktoFormRowLegends = mktoFormRow.querySelectorAll('legend:not(.mktoCleanedlegend)');
       if (mktoFormRowLegends.length) {
         mktoFormRowLegends.forEach((mktoFormRowLegend) => {
@@ -871,7 +876,7 @@ function normalizeMktoStyles() {
     const mktoFormCol_vis = mktoForm.querySelectorAll(
       '.mktoCleaned[data-mkto_vis_src] fieldset.mktoFormCol.mktoVisible',
     );
-    for (let i = 0; i < mktoFormCol_vis.length; i++) {
+    for (let i = 0; i < mktoFormCol_vis.length; i += 1) {
       const mktoPlaceholderHtmlText = mktoFormCol_vis[i].querySelector(
         "[class*='mktoPlaceholderHtmlText']",
       );
@@ -888,7 +893,7 @@ function normalizeMktoStyles() {
 
     if (window?.mcz_marketoForm_pref?.field_filters?.products === 'hidden') {
       const formId = getMktoFormID();
-      const form = MktoForms2.getForm(formId);
+      const form = window.MktoForms2.getForm(formId);
       uFFld(
         form,
         'mktoFormsPrimaryProductInterest',
@@ -917,7 +922,7 @@ function mkt_optionals(mktoForm) {
     '.mktoFormRow:not(.mktoHidden) fieldset.mktoFormCol .mktoFormRow[data-mktofield]',
   );
   if (review_optoinal.length > 0) {
-    for (let i = 0; i < review_optoinal.length; i++) {
+    for (let i = 0; i < review_optoinal.length; i += 1) {
       const review_optoinal_elem = review_optoinal[i];
       const review_optoinal_elem_name = review_optoinal_elem.getAttribute('data-mktofield');
       const review_optoinal_elem_field = review_optoinal_elem.querySelector(
@@ -936,7 +941,7 @@ function updatePlaceholders() {
   const formFields = document.querySelectorAll(
     '.mktoFormRow  .mktoVisible input:not([type="hidden"]):not([placeholder]), .mktoFormRow .mktoVisible textarea:not([placeholder])',
   );
-  for (var i = 0, len = formFields.length; i < len; i++) {
+  for (let i = 0, len = formFields.length; i < len; i += 1) {
     const label = document.querySelectorAll(`label[for="${formFields[i].name}"]`)[0];
     if (label) {
       let labelText = label.innerText;
@@ -956,7 +961,7 @@ function updatePlaceholders() {
   const selectFields = document.querySelectorAll(
     '.mktoFormRow  .mktoVisible select:not(.placeholder)',
   );
-  for (var i = 0, len = selectFields.length; i < len; i++) {
+  for (let i = 0, len = selectFields.length; i < len; i += 1) {
     const label = document.querySelectorAll(`label[for="${selectFields[i].name}"]`)[0];
     if (label) {
       let labelText = label.innerText;
@@ -970,7 +975,7 @@ function updatePlaceholders() {
 
         const options = selectFields[i].querySelectorAll('option');
         let foundBlank = false;
-        for (let j = 0; j < options.length; j++) {
+        for (let j = 0; j < options.length; j += 1) {
           if (options[j].value === '') {
             foundBlank = true;
             options[j].text = labelText;
@@ -990,7 +995,7 @@ function updatePlaceholders() {
   }
 
   const mktoFormCols = document.querySelectorAll('.mktoFormCol');
-  for (let i = 0; i < mktoFormCols.length; i++) {
+  for (let i = 0; i < mktoFormCols.length; i += 1) {
     const mktoFormCol = mktoFormCols[i];
     const mktoFormColParent = mktoFormCol.parentNode;
     if (mktoFormColParent && mktoFormColParent.hasAttribute('data-mkto_vis_src')) {
@@ -1025,7 +1030,7 @@ function addPOIListeners() {
 
 function updateLabels() {
   const options = document.querySelectorAll(".mktoFormRow option[value='_']");
-  for (let i = 0; i < options.length; i++) {
+  for (let i = 0; i < options.length; i += 1) {
     options[i].value = '';
   }
   const links = document.querySelectorAll('.mktoFormRow a:not(.targetchecked)');
@@ -1039,17 +1044,17 @@ function updateLabels() {
   });
 
   let new_mktoUpdated = false;
-  let language = mcz_marketoForm_pref?.profile?.prefLanguage;
-  let subtype = mcz_marketoForm_pref?.form?.subtype;
-  if (translateFormElems) {
+  let language = window.mcz_marketoForm_pref?.profile?.prefLanguage;
+  let subtype = window.mcz_marketoForm_pref?.form?.subtype;
+  if (window.translateFormElems) {
     if (!language) {
       language = 'en_us';
     }
     if (subtype && language) {
-      if (mcz_marketoForm_pref?.subtypeRules?.[subtype]) {
-        subtype = mcz_marketoForm_pref?.subtypeRules?.[subtype];
+      if (window.mcz_marketoForm_pref?.subtypeRules?.[subtype]) {
+        subtype = window.mcz_marketoForm_pref?.subtypeRules?.[subtype];
       }
-      if (!translateFormElems?.[subtype]) {
+      if (!window.translateFormElems?.[subtype]) {
         subtype = 'submit';
       }
       const mktoButtons = document.querySelectorAll('.mktoButton:not(.mktoUpdatedBTN)');
@@ -1058,8 +1063,8 @@ function updateLabels() {
         buttonContent = buttonContent.toLowerCase();
         if (buttonContent.indexOf('undef') === -1) {
           if (buttonContent.indexOf('..') > -1) {
-            let translateBTNText = translateFormElems?.pleasewait?.[language]
-              || translateFormElems?.pleasewait?.[language.substring(0, 2)]
+            let translateBTNText = window.translateFormElems?.pleasewait?.[language]
+              || window.translateFormElems?.pleasewait?.[language.substring(0, 2)]
               || null;
             if (translateBTNText) {
               if (!translateBTNText.endsWith('...')) {
@@ -1069,10 +1074,10 @@ function updateLabels() {
                 mktoButton.innerHTML = translateBTNText;
               }
             }
-          } else if (translateFormElems?.[subtype]?.[language]) {
-            const translateBTNText = translateFormElems[subtype][language]
-              || translateFormElems[subtype][language.substring(0, 2)]
-              || translateFormElems[subtype].en_us;
+          } else if (window.translateFormElems?.[subtype]?.[language]) {
+            const translateBTNText = window.translateFormElems[subtype][language]
+              || window.translateFormElems[subtype][language.substring(0, 2)]
+              || window.translateFormElems[subtype].en_us;
             if (translateBTNText !== mktoButton.innerHTML) {
               mktoButton.innerHTML = translateBTNText;
             }
@@ -1084,13 +1089,13 @@ function updateLabels() {
   }
 
   const selectElements = document.querySelectorAll('.mktoFormRow select:not(.mktoUpdated)');
-  for (let s = 0; s < selectElements.length; s++) {
+  for (let s = 0; s < selectElements.length; s += 1) {
     if (selectElements[s].options.length > 1) {
       const selectElement = selectElements[s];
       selectElement.classList.add('mktoUpdated');
       if (!selectElement.value) {
         let foundBlank = false;
-        for (let i = 0; i < selectElement.options.length; i++) {
+        for (let i = 0; i < selectElement.options.length; i += 1) {
           const option = selectElement.options[i];
           if (option.value === '') {
             const sourceId = selectElement.getAttribute('id');
@@ -1129,7 +1134,7 @@ function updateLabels() {
   }
 
   const formRows = document.querySelectorAll('.mktoFormRow label:not(.labelUpdated)[id*="_0"]');
-  for (let i = 0; i < formRows.length; i++) {
+  for (let i = 0; i < formRows.length; i += 1) {
     const row = formRows[i];
     const sourceId = row.getAttribute('for');
     if (sourceId) {
@@ -1161,7 +1166,7 @@ function updateLabels() {
   }
 
   const updatedLabels = document.querySelectorAll('.labelUpdatedSRC');
-  for (let i = 0; i < updatedLabels.length; i++) {
+  for (let i = 0; i < updatedLabels.length; i += 1) {
     updatedLabels[i].innerHTML = '';
     updatedLabels[i].classList.add('labelUpdated');
     updatedLabels[i].classList.remove('labelUpdatedSRC');
@@ -1169,14 +1174,16 @@ function updateLabels() {
 
   if (window.mcz_marketoForm_pref.profile.privacy_links) {
     for (const key in window.mcz_marketoForm_pref.profile.privacy_links) {
-      const privacy_links = document.querySelectorAll(`.mktoFormRow a[href*="{${key}}"]`);
-      privacy_links.forEach((link) => {
-        link.href = window.mcz_marketoForm_pref.profile.privacy_links[key];
-      });
+      if (Object.prototype.hasOwnProperty.call(window.mcz_marketoForm_pref.profile.privacy_links, key)) {
+        const privacy_links = document.querySelectorAll(`.mktoFormRow a[href*="{${key}}"]`);
+        privacy_links.forEach((link) => {
+          link.href = window.mcz_marketoForm_pref.profile.privacy_links[key];
+        });
+      }
     }
   }
   const labels = document.querySelectorAll('.labelUpdated');
-  for (let i = 0; i < labels.length; i++) {
+  for (let i = 0; i < labels.length; i += 1) {
     const label = labels[i];
     if (label.innerHTML.indexOf('{country}') !== -1) {
       label.innerHTML = label.innerHTML.replace(
@@ -1217,7 +1224,7 @@ function checkFormMsgs() {
   let mktoRequiredFields_invalid = document.querySelectorAll(
     '.mktoRequired.mktoValid:not(.warningMessage)',
   );
-  for (var i = 0; i < mktoRequiredFields_invalid.length; i++) {
+  for (let i = 0; i < mktoRequiredFields_invalid.length; i += 1) {
     const field = mktoRequiredFields_invalid[i];
     if (field?.value.length === 0) {
       field.classList.remove('mktoValid');
@@ -1238,7 +1245,7 @@ function checkFormMsgs() {
     '.mktoRequiredVis.mktoValid.warningMessage',
   );
   if (mktoRequiredFields_invalid instanceof Array) {
-    for (var i = 0; i < mktoRequiredFields_invalid.length; i++) {
+    for (let i = 0; i < mktoRequiredFields_invalid.length; i += 1) {
       const field = mktoRequiredFields_invalid[i];
       if (field) {
         field.classList.remove('successMessage');
@@ -1247,7 +1254,7 @@ function checkFormMsgs() {
     }
   }
   if (mktoRequiredFields_valid instanceof Array) {
-    for (var i = 0; i < mktoRequiredFields_valid.length; i++) {
+    for (let i = 0; i < mktoRequiredFields_valid.length; i += 1) {
       const field = mktoRequiredFields_valid[i];
       if (field) {
         field.classList.remove('warningMessage');
@@ -1256,7 +1263,7 @@ function checkFormMsgs() {
     }
   }
   if (mktoRequiredFields_invalid_withSuccessMessage instanceof Array) {
-    for (var i = 0; i < mktoRequiredFields_invalid_withSuccessMessage.length; i++) {
+    for (let i = 0; i < mktoRequiredFields_invalid_withSuccessMessage.length; i += 1) {
       const field = mktoRequiredFields_invalid_withSuccessMessage[i];
       if (field) {
         field.classList.remove('successMessage');
@@ -1265,7 +1272,7 @@ function checkFormMsgs() {
     }
   }
   if (mktoRequiredFields_valid_withWarningMessage instanceof Array) {
-    for (var i = 0; i < mktoRequiredFields_valid_withWarningMessage.length; i++) {
+    for (let i = 0; i < mktoRequiredFields_valid_withWarningMessage.length; i += 1) {
       const field = mktoRequiredFields_valid_withWarningMessage[i];
       if (field) {
         field.classList.remove('warningMessage');
@@ -1279,7 +1286,7 @@ function checkFormMsgs() {
 
   const mktoButtons = document.querySelectorAll('.mktoButton:not([data-checkFormMsgs_throttle])');
   if (mktoButtons) {
-    for (var i = 0; i < mktoButtons.length; i++) {
+    for (let i = 0; i < mktoButtons.length; i += 1) {
       const button = mktoButtons[i];
       if (button) {
         button.setAttribute('data-checkFormMsgs_throttle', true);
@@ -1339,11 +1346,11 @@ function isElementVisible(el) {
     }
     el = el.parentNode;
     while (el !== null && el.nodeType === 1) {
-      const style = window.getComputedStyle(el);
-      if (style.display === 'none') return false;
-      if (style.visibility !== 'visible') return false;
-      if (style.opacity < 0.1) return false;
-      if (style.overflow !== 'visible') {
+      const parentStyle = window.getComputedStyle(el);
+      if (parentStyle.display === 'none') return false;
+      if (parentStyle.visibility !== 'visible') return false;
+      if (parentStyle.opacity < 0.1) return false;
+      if (parentStyle.overflow !== 'visible') {
         if (
           el.offsetWidth
           + el.offsetHeight
