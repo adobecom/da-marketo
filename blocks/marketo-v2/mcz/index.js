@@ -5,8 +5,8 @@
 // Ensures correct load order and initialization
 
 import { loadStyle } from '../../../utils/utils.js';
-import setupRules, { mkfC, defaultMarketoFormPref } from './marketo_form_setup_rules.js';
-import templateRules, { AUTO_COMPLETE_FIELDS, TEMPLATE_RULES } from './template_rules.js';
+import setupRules, { mkfC } from './marketo_form_setup_rules.js';
+import templateRules from './template_rules.js';
 import setupProcess, { marketoFormSetup } from './marketo_form_setup_process.js';
 import privacyProcess from './privacy_validation_process.js';
 import fieldPrefs from './field_preferences.js';

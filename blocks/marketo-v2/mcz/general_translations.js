@@ -284,9 +284,3 @@ export default async function init(mkfC) {
     }
   }
 }
-
-// ##
-// ##
-// ##
-// ##
-// ]]>
