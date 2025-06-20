@@ -3,6 +3,8 @@
 /* eslint-disable no-restricted-syntax */
 // Template Rules
 
+import { mkfC } from './marketo_form_setup_rules.js';
+
 // Auto-complete fields constant
 export const AUTO_COMPLETE_FIELDS = [
   'Email',
@@ -478,7 +480,7 @@ export const TEMPLATE_RULES = [
   },
 ];
 
-export default function init(mkfC) {
+export default function init() {
   window.templateRules = TEMPLATE_RULES;
   mkfC.log('Template Rules - Loaded');
 }

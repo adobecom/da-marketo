@@ -4,6 +4,7 @@
 /* eslint-disable no-restricted-syntax */
 // Privacy Validation - Rule Processing
 
+import { mkfC } from './marketo_form_setup_rules.js';
 import { getMktoFormID, checkAdobePrivacy } from './global.js';
 import {
   DEFAULT_LANGUAGE,
@@ -15,7 +16,6 @@ import {
   PRIVACY_CODE_RULES,
 } from './privacy_validation_rules.js';
 
-let mkfC;
 let PRIVACY_CODE_RULES_clean = [];
 let privacy_tests = [];
 const privacy_test_results = [];
@@ -1109,8 +1109,7 @@ export function privacyValidation() {
   wait_for_field_country();
 }
 
-export default async function init(mkfCm, marketoFormSetup) {
-  mkfC = mkfCm;
+export default async function init(marketoFormSetup) {
   if (typeof form_dynamics !== 'undefined') {
     if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
       mkfC.log('Known Visitor - Privacy Validation - Skip');

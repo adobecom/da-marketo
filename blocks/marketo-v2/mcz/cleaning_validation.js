@@ -3,12 +3,12 @@
 /* eslint-disable max-len */
 /* eslint-disable no-restricted-syntax */
 // Cleaning and Validation
+import { mkfC } from './marketo_form_setup_rules.js';
 import { getMktoFormID } from './global.js';
 import { uFFld } from './marketo_form_setup_process.js';
 
 let rendering_ready = false;
 const translateState = {};
-let mkfC;
 
 let firstrun = true;
 
@@ -1431,8 +1431,4 @@ function cleaning_validation_main() {
       normalizeStyles(observer, mktoForm, config);
     }
   }
-}
-
-export default async function init(mkfCm) {
-  mkfC = mkfCm;
 }

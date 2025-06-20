@@ -3,7 +3,8 @@
 /* eslint-disable no-restricted-syntax */
 // Category Filters
 
-let mkfC;
+import { mkfC } from './marketo_form_setup_rules.js';
+
 let fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval;
 
 const dispatchChangeEvent = (element, value) => {
@@ -67,7 +68,6 @@ export function categoryFilters() {
   fld_push_mktoFormsFunctionalAreaCategory();
 }
 
-export default async function init(mkfCm) {
-  mkfC = mkfCm;
+export default async function init() {
   mkfC.log('Category Filters - Loaded');
 }

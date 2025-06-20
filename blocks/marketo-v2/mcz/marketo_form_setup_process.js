@@ -4,6 +4,7 @@
 /* eslint-disable no-restricted-syntax */
 // Processing
 
+import { mkfC } from './marketo_form_setup_rules.js';
 import { getMktoFormID, getUniqueId, checkAdobePrivacy } from './global.js';
 import { aaInteraction } from './adobe_analytics.js';
 import { privacyValidation } from './privacy_validation_process.js';
@@ -14,15 +15,13 @@ const mktoForm = document.querySelector('.mktoForm');
 mktoForm.setAttribute('style', 'opacity:0');
 mktoForm.classList.add('starting_fieldset');
 let consStyl = 'font-size: 1.2em; color: green; font-weight: bold; ';
-let mkfC;
 let renderingReview;
 let unique_id = '';
 let templateLog = '';
 const activeCookie = false;
 let mktoFormConfirm;
 
-export default async function init(mkfCm, renderingReviewS) {
-  mkfC = mkfCm;
+export default async function init(renderingReviewS) {
   renderingReview = renderingReviewS;
   mkfC.log('Form - Begin');
 

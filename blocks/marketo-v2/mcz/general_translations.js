@@ -3,7 +3,9 @@
 /* eslint-disable no-restricted-syntax */
 // General Form Translations
 
-export default async function init(mkfC) {
+import { mkfC } from './marketo_form_setup_rules.js';
+
+export default async function init() {
   mkfC.log('General Form Translations Added');
 
   const mcz_submit_verbs = ['submit', 'download', 'register', 'join'];

@@ -1,8 +1,11 @@
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-param-reassign */
 /* eslint-disable camelcase */
 /* eslint-disable max-len */
 /* eslint-disable no-restricted-syntax */
 // Field Preferences
-let mkfC;
+import { mkfC } from './marketo_form_setup_rules.js';
+
 let lastFieldVisibility = '';
 let fieldVisibilityCheckInterval;
 const setRequired_set = {};
@@ -240,8 +243,7 @@ export function field_pref() {
   fieldPrefs_wait_fieldPreferences();
 }
 
-export default async function init(mkfm) {
-  mkfC = mkfm;
+export default async function init() {
   mkfC.log('Field Preferences - Begin');
 
   mkfC.log('Field Preferences - End');
