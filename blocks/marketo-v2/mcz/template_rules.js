@@ -1,6 +1,3 @@
-/* eslint-disable camelcase */
-/* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Template Rules
 
 import { mkfC } from './marketo_form_setup_rules.js';

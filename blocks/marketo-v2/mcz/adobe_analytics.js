@@ -1,14 +1,10 @@
-/* eslint-disable no-param-reassign */
 /* eslint-disable no-underscore-dangle */
-/* eslint-disable no-unused-vars */
-/* eslint-disable camelcase */
 /* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Adobe Analytics - Form Interactions
 
 import { mkfC } from './marketo_form_setup_rules.js';
 import { getMktoFormID, getUniqueId } from './global.js';
-import { MktoForms_onSuccess } from './marketo_form_setup_process.js';
+import { MktoFormsOnSuccess } from './marketo_form_setup_process.js';
 
 let markerNo = 0;
 
@@ -22,19 +18,14 @@ export default async function init() {
       || ev.detail?.event?.data?.web?.webInteraction?.name === 'Marketo Form Prefill'
     ) {
       mkfC.log('formSubmission event was received');
-      MktoForms_onSuccess();
+      MktoFormsOnSuccess();
     }
   });
 }
 
-export async function aaInteraction(eventName, eventAction, formid, currentTime = 0) {
+export async function aaInteraction(aEventName, eventAction, formid, currentTime = 0) {
   const consoleLabel = 'Adobe Analytics Form Interaction';
-  const aaEventName = 'Marketo Form Submission';
-  const aaEventName_prefill = 'Marketo Form Prefill';
-  const aaEventName_prefill_action = 'formPrefill';
-  const aaType = 'FormInteractions';
-  let formType = 'marketo-Offer';
-  let error_aa = false;
+  let aaError = false;
   let testRecord = false;
   if (window?.mcz_marketoForm_pref?.profile?.testing !== undefined) {
     testRecord = window.mcz_marketoForm_pref.profile.testing;
@@ -42,36 +33,31 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
       testRecord = false;
     }
   }
-  if (testRecord === true) {
-    eventName = `TEST ${eventName}`;
-  }
+  const eventName = testRecord === true ? `TEST ${aEventName}` : aEventName;
 
   mkfC.groupCollapsed(`${consoleLabel} - ${eventName}`);
-  if (typeof mcz_marketoForm_pref !== 'object') {
+  if (typeof window.mcz_marketoForm_pref !== 'object') {
     mkfC.log('AA ERROR >> mcz_marketoForm_pref is not found.');
-    error_aa = true;
+    aaError = true;
   }
   if (!window.marketingtech || !window.marketingtech.adobe || !window.marketingtech.adobe.alloy) {
     mkfC.log('AA ERROR >> alloy is not found.');
-    error_aa = true;
-  }
-  if (window.mcz_marketoForm_pref && window.mcz_marketoForm_pref.form && window.mcz_marketoForm_pref.form.subtype) {
-    formType = window.mcz_marketoForm_pref.form.subtype;
+    aaError = true;
   }
   if (!window.alloy) {
-    error_aa = true;
+    aaError = true;
     mkfC.log('AA ERROR >> primary alloy is not found.');
   }
   if (!window.alloy_all) {
-    error_aa = true;
+    aaError = true;
     mkfC.log('AA ERROR >> primary alloy_all is not found.');
   }
   if (!window.digitalData) {
-    error_aa = true;
+    aaError = true;
     mkfC.log('AA ERROR >> digitalData DL is not found.');
   }
 
-  if (error_aa === true) {
+  if (aaError === true) {
     if (testRecord === false) {
       mkfC.log(`${consoleLabel} - error`);
       mkfC.groupEnd();
@@ -89,24 +75,25 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
   performance.measure('aaInteraction', 'MarketoFormStart', performanceMarker);
   const measureEntries = performance.getEntriesByName('aaInteraction');
   const entry = measureEntries[measureEntries.length - 1];
+  let currentTimestamp = currentTime;
   if (entry) {
     if (
-      currentTime === 0
-        || currentTime === undefined
-        || currentTime === null
-        || Number.isNaN(currentTime)
+      currentTimestamp === 0
+        || currentTimestamp === undefined
+        || currentTimestamp === null
+        || Number.isNaN(currentTimestamp)
     ) {
-      currentTime = Math.round(entry.duration);
+      currentTimestamp = Math.round(entry.duration);
     }
-    const currentTimeBucket = Math.round(currentTime / 500) * 500;
-    window.mcz_marketoForm_pref.performance.currentTime = currentTime;
+    const currentTimeBucket = Math.round(currentTimestamp / 500) * 500;
+    window.mcz_marketoForm_pref.performance.currentTime = currentTimestamp;
     window.mcz_marketoForm_pref.performance.currentTimeBucket = currentTimeBucket;
   }
 
   const form = window.MktoForms2.getForm(formId);
   const formValues = form.getValues();
   const uniqueId = getUniqueId(formValues);
-  const mkto_formID = `${formValues.munchkinId}_${formValues.formid}`;
+  const mktoFormID = `${formValues.munchkinId}_${formValues.formid}`;
   const formfieldsVis = document.querySelectorAll(
     '.mktoFormRowTop:not(.mktoHidden) .mktoVisible.mktoField',
   ).length;
@@ -124,7 +111,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
           form: {
             primaryForm: {
               formInfo: {
-                id: mkto_formID,
+                id: mktoFormID,
                 type: window?.mcz_marketoForm_pref?.form?.subtype,
               },
             },
@@ -136,7 +123,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
               interactionName: eventName,
 
               // Form Version, Form Type
-              frmID: mkto_formID, // form type
+              frmID: mktoFormID, // form type
               frmType: window?.mcz_marketoForm_pref?.form?.subtype, // form type
               frmTemplate: window?.mcz_marketoForm_pref?.form?.template, // form template
               frmVersion: window?.mcz_marketoForm_pref?.form?.version, // form version
@@ -211,19 +198,20 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
     if (!eventSnapShot?.data?._adobe_corpnew?.digitalData?.form?.response) {
       return;
     }
-    if (!value) {
-      value = 'No Value';
+    let responseValue = value;
+    if (!responseValue) {
+      responseValue = 'No Value';
     }
-    if (value === 'No Value') {
+    if (responseValue === 'No Value') {
       return;
     }
-    if (Array.isArray(value)) {
-      value = value.join(',');
+    if (Array.isArray(responseValue)) {
+      responseValue = responseValue.join(',');
     }
-    if (typeof value === 'object') {
-      value = JSON.stringify(value);
+    if (typeof responseValue === 'object') {
+      responseValue = JSON.stringify(responseValue);
     }
-    eventSnapShot.data._adobe_corpnew.digitalData.form.response[name] = value;
+    eventSnapShot.data._adobe_corpnew.digitalData.form.response[name] = responseValue;
   };
 
   let demandbaseTracker = 'No Value';
@@ -301,15 +289,15 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
       pii: false,
     });
   }
-  for (const item of responseItems) {
+  responseItems.forEach((item) => {
     if ((item.pii === true && window.activeCookie === true) || item.pii === false) {
       setResponse(item.key, item.value || 'No Value');
     }
-  }
+  });
   if (eventSnapShot) {
     const performanceObj = eventSnapShot?.data?._adobe_corpnew?.digitalData?.form?.performance;
     if (performanceObj) {
-      for (const key in performanceObj) {
+      Object.keys(performanceObj).forEach((key) => {
         if (
           performanceObj[key] === undefined
             || performanceObj[key] === null
@@ -317,7 +305,7 @@ export async function aaInteraction(eventName, eventAction, formid, currentTime 
         ) {
           delete performanceObj[key];
         }
-      }
+      });
     }
     if (testRecord === true) {
       mkfC.info(`${consoleLabel} - would have sent...`);

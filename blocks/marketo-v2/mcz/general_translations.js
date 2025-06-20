@@ -1,6 +1,3 @@
-/* eslint-disable camelcase */
-/* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // General Form Translations
 
 import { mkfC } from './marketo_form_setup_rules.js';
@@ -8,8 +5,8 @@ import { mkfC } from './marketo_form_setup_rules.js';
 export default async function init() {
   mkfC.log('General Form Translations Added');
 
-  const mcz_submit_verbs = ['submit', 'download', 'register', 'join'];
-  const translateFormElems_temp = {
+  const mczSubmitVerbs = ['submit', 'download', 'register', 'join'];
+  const translateFormElemsTemp = {
     submit: {
       en_us: 'Submit',
       en_gb: 'Submit',
@@ -246,44 +243,40 @@ export default async function init() {
   };
   if (typeof window.translateFormElems === 'undefined') {
     mkfC.log('General Form Translations not found, adding values');
-    window.translateFormElems = translateFormElems_temp;
+    window.translateFormElems = translateFormElemsTemp;
   } else {
     mkfC.log('General Form Translations found, checking for missing values');
-    for (const key in translateFormElems_temp) {
-      if (Object.prototype.hasOwnProperty.call(translateFormElems_temp, key)) {
-        mkfC.log(
-          `Translation '${key}' not found, adding '${translateFormElems_temp[key]}'`,
-        );
-        window.translateFormElems[key] = translateFormElems_temp[key];
-      }
-    }
+    Object.keys(translateFormElemsTemp).forEach((key) => {
+      mkfC.log(
+        `Translation '${key}' not found, adding '${translateFormElemsTemp[key]}'`,
+      );
+      window.translateFormElems[key] = translateFormElemsTemp[key];
+    });
   }
 
   // Do we have a global override for the submit button text?
-  let override_submit = window.mcz_marketoForm_pref?.form?.cta?.override;
-  if (typeof override_submit !== 'undefined' && override_submit !== null) {
-    if (override_submit.trim() !== '') {
+  let overrideSubmit = window.mcz_marketoForm_pref?.form?.cta?.override;
+  if (typeof overrideSubmit !== 'undefined' && overrideSubmit !== null) {
+    if (overrideSubmit.trim() !== '') {
       // make sure it's a string and no over 45 characters
-      if (typeof override_submit !== 'string' || override_submit.length > 45) {
+      if (typeof overrideSubmit !== 'string' || overrideSubmit.length > 45) {
         mkfC.log(
-          `Override submit with "${override_submit}" is not a string or is over 45 characters, skipping`,
+          `Override submit with "${overrideSubmit}" is not a string or is over 45 characters, skipping`,
         );
       } else {
-        override_submit = override_submit.charAt(0).toUpperCase() + override_submit.slice(1);
-        mkfC.log(`Overriding submit with "${override_submit}"`);
+        overrideSubmit = overrideSubmit.charAt(0).toUpperCase() + overrideSubmit.slice(1);
+        mkfC.log(`Overriding submit with "${overrideSubmit}"`);
 
-        for (const verb of mcz_submit_verbs) {
-          mkfC.log(`Overriding "${verb}" with "${override_submit}"`);
+        mczSubmitVerbs.forEach((verb) => {
+          mkfC.log(`Overriding "${verb}" with "${overrideSubmit}"`);
           try {
-            for (const lang in window.translateFormElems[verb]) {
-              if (Object.prototype.hasOwnProperty.call(window.translateFormElems[verb], lang)) {
-                window.translateFormElems[verb][lang] = override_submit;
-              }
-            }
+            Object.keys(window.translateFormElems[verb]).forEach((lang) => {
+              window.translateFormElems[verb][lang] = overrideSubmit;
+            });
           } catch (e) {
-            mkfC.log(`Error overriding "${verb}" with "${override_submit}": ${e}`);
+            mkfC.log(`Error overriding "${verb}" with "${overrideSubmit}": ${e}`);
           }
-        }
+        });
       }
     }
   }

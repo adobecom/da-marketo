@@ -1,15 +1,4 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable camelcase */
-/* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Marketo Global Form Functions
-
-export default async function init() {
-  let adobeOrg = '';
-  if (window?.imsOrgId) {
-    adobeOrg = `AMCV_${encodeURIComponent(window.imsOrgId)};`;
-  }
-}
 
 export function checkAdobePrivacy(adobePrivacy = window?.adobePrivacy) {
   if (typeof adobePrivacy?.hasUserProvidedConsent === 'function') {
@@ -69,7 +58,11 @@ export function getMktoFormID(mczMarketoFormPref = window?.mcz_marketoForm_pref)
   return null;
 }
 
-export function getUniqueId(formValues, bypass = false, mczMarketoFormPref = window?.mcz_marketoForm_pref) {
+export function getUniqueId(
+  formValues,
+  bypass = false,
+  mczMarketoFormPref = window?.mcz_marketoForm_pref,
+) {
   let uniqueIdTemp = '';
   let uniqueId = mczMarketoFormPref?.profile?.unique_id;
   if (!bypass && uniqueId !== '') {

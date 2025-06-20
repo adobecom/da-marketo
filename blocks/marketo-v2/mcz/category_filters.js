@@ -1,11 +1,8 @@
-/* eslint-disable camelcase */
-/* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Category Filters
 
 import { mkfC } from './marketo_form_setup_rules.js';
 
-let fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval;
+let fldWaitMktoFormsFunctionalAreaCategoryCheckInterval;
 
 const dispatchChangeEvent = (element, value) => {
   if (value.trim() !== element.value) {
@@ -30,8 +27,8 @@ function updateCategoryFilter(selector, property) {
 
 function refreshCategoryFilters() {
   const marketoConfigExists = document.querySelector('.marketo-config') !== null;
-  if (!marketoConfigExists && fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval) {
-    clearInterval(fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval);
+  if (!marketoConfigExists && fldWaitMktoFormsFunctionalAreaCategoryCheckInterval) {
+    clearInterval(fldWaitMktoFormsFunctionalAreaCategoryCheckInterval);
     mkfC.log(
       'Marketo Config Interface no longer exists. Stopping field visibility check.',
     );
@@ -42,7 +39,7 @@ function refreshCategoryFilters() {
   updateCategoryFilter('[name="mktoprimaryProductInterestCategory"]', 'products');
 }
 
-async function fld_push_mktoFormsFunctionalAreaCategory() {
+async function fldPushMktoFormsFunctionalAreaCategory() {
   const mktoFormsFunctionalAreaCategory = document.querySelector(
     '[name="mktoFormsFunctionalAreaCategory"]',
   );
@@ -50,8 +47,8 @@ async function fld_push_mktoFormsFunctionalAreaCategory() {
     refreshCategoryFilters();
     if (document.querySelector('.marketo-config')) {
       mkfC.log('Marketo Config Interface Found');
-      if (fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval === undefined) {
-        fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval = setInterval(
+      if (fldWaitMktoFormsFunctionalAreaCategoryCheckInterval === undefined) {
+        fldWaitMktoFormsFunctionalAreaCategoryCheckInterval = setInterval(
           refreshCategoryFilters,
           1000,
         );
@@ -60,12 +57,12 @@ async function fld_push_mktoFormsFunctionalAreaCategory() {
   } else if (window?.mcz_marketoForm_pref?.profile?.known_visitor) {
     mkfC.log('Known Visitor - mktoFormsFunctionalAreaCategory');
   } else {
-    setTimeout(fld_push_mktoFormsFunctionalAreaCategory, 20);
+    setTimeout(fldPushMktoFormsFunctionalAreaCategory, 20);
   }
 }
 
 export function categoryFilters() {
-  fld_push_mktoFormsFunctionalAreaCategory();
+  fldPushMktoFormsFunctionalAreaCategory();
 }
 
 export default async function init() {

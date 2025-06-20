@@ -1,15 +1,10 @@
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-use-before-define */
-/* eslint-disable camelcase */
 /* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Template Manager Module v0.5b
 
 import { mkfC } from './marketo_form_setup_rules.js';
 
 const templates = [];
-const template_2_fields = {
+const template2Fields = {
   templates: 'form.template',
   purpose: 'form.subtype',
   formSuccessType: 'form.success.type',
@@ -192,14 +187,14 @@ function auditSelectTranslations() {
 
       const h2 = document.createElement('h2');
       h2.classList.add('mktoFormTranslationH2');
-      let h2_txt = label.textContent;
-      h2_txt = h2_txt.replace(/\s+/g, ' ').trim();
-      h2_txt = h2_txt.trim();
+      let h2Txt = label.textContent;
+      h2Txt = h2Txt.replace(/\s+/g, ' ').trim();
+      h2Txt = h2Txt.trim();
 
-      if (select.name !== h2_txt) {
-        h2_txt = `${h2_txt}<span class="marketo-field-name"> "${select.name}" </span>`;
+      if (select.name !== h2Txt) {
+        h2Txt = `${h2Txt}<span class="marketo-field-name"> "${select.name}" </span>`;
       }
-      h2.innerHTML = h2_txt;
+      h2.innerHTML = h2Txt;
       select.parentNode.insertBefore(h2, table);
     }
   });
@@ -265,7 +260,7 @@ function addAuditButton() {
   }
 }
 
-function mktoCss_LP() {
+function mktoCssLP() {
   const url = new URL(window.location.href);
   const params = url.searchParams;
   if (params.has('isPreview') && window.location.href?.indexOf('/landingPage/formContent') > -1) {
@@ -415,30 +410,6 @@ function mktoCss_LP() {
   }
 }
 
-// This function will generate the template example with options available on the configurator
-function generateTemplateElem(templateSrc) {
-  const templateExample = {
-    [templateSrc]: {
-      formVersion: getSelectOptions(template_2_fields.formVersion),
-      purpose: getSelectOptions(template_2_fields.purpose),
-      formSuccessType: getSelectOptions(template_2_fields.formSuccessType),
-      field_visibility: {},
-      field_filters: {},
-    },
-  };
-  const populateFields = (fields, category) => {
-    Object.keys(fields).forEach((key) => {
-      const fieldId = fields[key];
-      if (fieldId) {
-        templateExample[templateSrc][category][key] = getSelectOptions(fieldId);
-      }
-    });
-  };
-  populateFields(template_2_fields.field_visibility, 'field_visibility');
-  populateFields(template_2_fields.field_filters, 'field_filters');
-  templates.push(templateExample);
-}
-
 // This function will get the options available in the field on the page
 function getSelectOptions(fieldId) {
   const selectElement = document.getElementById(fieldId);
@@ -451,6 +422,30 @@ function getSelectOptions(fieldId) {
     .filter((item) => item.split(':')[0] !== '')
     .join(',');
   return [options];
+}
+
+// This function will generate the template example with options available on the configurator
+function generateTemplateElem(templateSrc) {
+  const templateExample = {
+    [templateSrc]: {
+      formVersion: getSelectOptions(template2Fields.formVersion),
+      purpose: getSelectOptions(template2Fields.purpose),
+      formSuccessType: getSelectOptions(template2Fields.formSuccessType),
+      field_visibility: {},
+      field_filters: {},
+    },
+  };
+  const populateFields = (fields, category) => {
+    Object.keys(fields).forEach((key) => {
+      const fieldId = fields[key];
+      if (fieldId) {
+        templateExample[templateSrc][category][key] = getSelectOptions(fieldId);
+      }
+    });
+  };
+  populateFields(template2Fields.field_visibility, 'field_visibility');
+  populateFields(template2Fields.field_filters, 'field_filters');
+  templates.push(templateExample);
 }
 
 // Output the template example file.
@@ -474,49 +469,38 @@ function buildTemplates() {
   mkfC.groupEnd();
 }
 
-// This is a function that checks the template options and returns an error message if there are any issues
-function checkTemplateOptions(templateRules) {
-  const errors = [];
-  templateRules.forEach((template) => {
-    Object.keys(template).forEach((templateName) => {
-      const templateData = template[templateName];
-      const templateNameError = checkFields(templateData, templateName, 'formVersion');
-      const purposeError = checkFields(templateData, templateName, 'purpose');
-      const formSuccessTypeError = checkFields(templateData, templateName, 'formSuccessType');
-      const fieldVisibilityError = checkNestedFields(
-        templateData.field_visibility,
-        templateName,
-        'field_visibility',
-      );
-      const fieldFiltersError = checkNestedFields(
-        templateData.field_filters,
-        templateName,
-        'field_filters',
-      );
-      if (
-        templateNameError
-        || purposeError
-        || formSuccessTypeError
-        || fieldVisibilityError
-        || fieldFiltersError
-      ) {
-        errors.push(
-          templateNameError,
-          purposeError,
-          formSuccessTypeError,
-          fieldVisibilityError,
-          fieldFiltersError,
+// This function checks the nested fields and returns an error message
+// if there are any issues as well as removing the field if it does not exist
+function checkNestedFields(nestedFields, templateName, parentFieldName) {
+  Object.keys(nestedFields).forEach((fieldName) => {
+    if (nestedFields[fieldName][0].split(',').length > 1) {
+      const options = nestedFields[fieldName][0].split(',');
+      const firstOption = options[0];
+      if (firstOption) {
+        mkfC.log(
+          `Template: ${templateName
+          }, Preference: ${parentFieldName
+          }.${fieldName
+          },\n`
+          + `contains more than one option:\n${options.join(',\n')
+          }\nWe can only use the first one: ${firstOption
+          }\n`
+          + 'Please check your templateRules file.\n\n',
         );
+        nestedFields[fieldName][0] = firstOption;
+      } else {
+        mkfC.log(
+          `Template: ${templateName
+          }, Preference: ${parentFieldName
+          }.${fieldName
+          },\n`
+          + 'contains no options and will be removed.\n'
+          + 'Please check your templateRules file.\n\n',
+        );
+        delete nestedFields[fieldName];
       }
-    });
+    }
   });
-  if (errors.length > 0) {
-    mkfC.log('Bad News, Errors found in templateRules.js file, please review and fix.');
-    mkfC.log(errors);
-    return false;
-  }
-  mkfC.log('Good News. No errors found in templateRules.js file.');
-  return true;
 }
 
 // This function checks if the option exists in the field on the page
@@ -531,9 +515,9 @@ function checkOptionExists(fieldId, valOption, template) {
   const optionValue = valOptionArray[0];
   // const optionText = valOptionArray[1];
   let fieldKey = '';
-  Object.keys(template_2_fields).forEach((key) => {
+  Object.keys(template2Fields).forEach((key) => {
     if (key === fieldId) {
-      fieldKey = template_2_fields[key];
+      fieldKey = template2Fields[key];
     }
   });
   if (!fieldKey) {
@@ -594,42 +578,53 @@ function checkFields(templateData, templateName, fieldName) {
   }
 }
 
-// This function checks the nested fields and returns an error message
-// if there are any issues as well as removing the field if it does not exist
-function checkNestedFields(nestedFields, templateName, parentFieldName) {
-  Object.keys(nestedFields).forEach((fieldName) => {
-    if (nestedFields[fieldName][0].split(',').length > 1) {
-      const options = nestedFields[fieldName][0].split(',');
-      const firstOption = options[0];
-      if (firstOption) {
-        mkfC.log(
-          `Template: ${templateName
-          }, Preference: ${parentFieldName
-          }.${fieldName
-          },\n`
-          + `contains more than one option:\n${options.join(',\n')
-          }\nWe can only use the first one: ${firstOption
-          }\n`
-          + 'Please check your templateRules file.\n\n',
+// This is a function that checks the template options and returns an error message if there are any issues
+function checkTemplateOptions(templateRules) {
+  const errors = [];
+  templateRules.forEach((template) => {
+    Object.keys(template).forEach((templateName) => {
+      const templateData = template[templateName];
+      const templateNameError = checkFields(templateData, templateName, 'formVersion');
+      const purposeError = checkFields(templateData, templateName, 'purpose');
+      const formSuccessTypeError = checkFields(templateData, templateName, 'formSuccessType');
+      const fieldVisibilityError = checkNestedFields(
+        templateData.field_visibility,
+        templateName,
+        'field_visibility',
+      );
+      const fieldFiltersError = checkNestedFields(
+        templateData.field_filters,
+        templateName,
+        'field_filters',
+      );
+      if (
+        templateNameError
+        || purposeError
+        || formSuccessTypeError
+        || fieldVisibilityError
+        || fieldFiltersError
+      ) {
+        errors.push(
+          templateNameError,
+          purposeError,
+          formSuccessTypeError,
+          fieldVisibilityError,
+          fieldFiltersError,
         );
-        nestedFields[fieldName][0] = firstOption;
-      } else {
-        mkfC.log(
-          `Template: ${templateName
-          }, Preference: ${parentFieldName
-          }.${fieldName
-          },\n`
-          + 'contains no options and will be removed.\n'
-          + 'Please check your templateRules file.\n\n',
-        );
-        delete nestedFields[fieldName];
       }
-    }
+    });
   });
+  if (errors.length > 0) {
+    mkfC.log('Bad News, Errors found in templateRules.js file, please review and fix.');
+    mkfC.log(errors);
+    return false;
+  }
+  mkfC.log('Good News. No errors found in templateRules.js file.');
+  return true;
 }
 
-function setTemplate(templateValue) {
-  [templateValue] = templateValue.split(':');
+function setTemplate(value) {
+  const [templateValue] = value.split(':');
   if (!templateValue && templateValue !== '') {
     mkfC.log('Template is value is empty.');
   } else {
@@ -675,9 +670,9 @@ function setTemplate(templateValue) {
       }
       if (myRules.field_visibility) {
         templateLog += '## \n## Field Visibility:\n';
-        const { field_visibility } = myRules;
-        Object.keys(field_visibility).forEach((key) => {
-          const fieldId = field_visibility[key][0].split(':')[0];
+        const { field_visibility: fieldVisibility } = myRules;
+        Object.keys(fieldVisibility).forEach((key) => {
+          const fieldId = fieldVisibility[key][0].split(':')[0];
           if (fieldId) {
             templateLog += `##  -${key} = "${fieldId}"\n`;
             document.getElementById(`field_visibility.${key}`).value = fieldId;
@@ -688,9 +683,9 @@ function setTemplate(templateValue) {
       }
       if (myRules.field_filters) {
         templateLog += '## \n## Field Filters:\n';
-        const { field_filters } = myRules;
-        Object.keys(field_filters).forEach((key) => {
-          const fieldId = field_filters[key][0].split(':')[0];
+        const { field_filters: fieldFilters } = myRules;
+        Object.keys(fieldFilters).forEach((key) => {
+          const fieldId = fieldFilters[key][0].split(':')[0];
           if (fieldId) {
             templateLog += `##  -${key} = "${fieldId}"\n`;
             document.getElementById(`field_filters.${key}`).value = fieldId;
@@ -707,8 +702,8 @@ function setTemplate(templateValue) {
   }
 }
 
-export function templateManager() {
-  mktoCss_LP();
+export default function templateManager() {
+  mktoCssLP();
 
   // Kick things off by checking if the configurator exists on the page
   const marketoConfigExists = document.querySelector('.marketo-config') !== null;

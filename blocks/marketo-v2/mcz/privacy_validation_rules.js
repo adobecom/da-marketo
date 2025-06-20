@@ -1,19 +1,9 @@
 /* eslint-disable camelcase */
 /* eslint-disable max-len */
 /* eslint-disable no-restricted-syntax */
-// <![CDATA[
-// ##
-// ## Updated 20241118T162401
-// ##
-// ##
-// ##
-// ## Privacy Validation - Rules
-// ##
-// ##
-// ####################################################################
-//
+// Privacy Validation - Rules
+
 // Supported Languages, this must align with Marketo Segmentation
-//
 export const DEFAULT_LANGUAGE = 'en_us';
 export const SUPPORTED_LANGUAGES = [
   'en_us', // English (United States)
@@ -172,7 +162,7 @@ export const adobeRegionalSite = {
 // Special Rule for language codes which don't match up with Privacy Code Format
 // If language code matches the left change it to the right.
 //
-export const langCode_to_privacylangCode = {
+export const langCodeToPrivacylangCode = {
   zh_cn: 'cn',
   zh_tw: 'tw',
   cy_en: 'en',

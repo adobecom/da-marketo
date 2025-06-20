@@ -1,18 +1,15 @@
-/* eslint-disable camelcase */
-/* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Rendering Review
 
 import { mkfC } from './marketo_form_setup_rules.js';
 import { marketoFormSetup } from './marketo_form_setup_process.js';
-import { field_pref } from './field_preferences.js';
+import { fieldPref } from './field_preferences.js';
 import { categoryFilters } from './category_filters.js';
-import { cleaning_validation } from './cleaning_validation.js';
-import { templateManager } from './template_manager.js';
+import cleaningValidation from './cleaning_validation.js';
+import templateManager from './template_manager.js';
 import { privacyValidation } from './privacy_validation_process.js';
 
-let translations_ready1 = false;
-let interval_wait_whenReady;
+let translationsReady1 = false;
+let intervalWaitWhenReady;
 
 function getMktoFormID1() {
   const mktoForm = document.querySelector('form.mktoForm');
@@ -23,7 +20,7 @@ function getMktoFormID1() {
   return null;
 }
 
-function wait_fields(form) {
+function waitFields(form) {
   const formSelector = `#mktoForm_${form.getId()} .fnc_field_change_country`;
   const formElements = document.querySelectorAll(formSelector);
   if (formElements.length > 0) {
@@ -35,9 +32,9 @@ function wait_fields(form) {
       formParentElem.classList.add('mktoWhenRendered');
 
       marketoFormSetup();
-      field_pref();
+      fieldPref();
       categoryFilters();
-      cleaning_validation();
+      cleaningValidation();
       templateManager();
     }
   } else {
@@ -47,14 +44,14 @@ function wait_fields(form) {
       mkfC.log('knownMktoVisitor is not defined');
     } else {
       setTimeout(() => {
-        wait_fields(form);
+        waitFields(form);
       }, 10);
     }
   }
 }
 
-function wait_whenReady() {
-  if (!translations_ready1 && typeof MktoForms2 === 'object') {
+function waitWhenReady() {
+  if (!translationsReady1 && typeof MktoForms2 === 'object') {
     const formId = getMktoFormID1();
     if (
       formId
@@ -63,11 +60,11 @@ function wait_whenReady() {
     ) {
       const form = window.MktoForms2.getForm(formId);
       if (form) {
-        clearInterval(interval_wait_whenReady);
-        translations_ready1 = true;
+        clearInterval(intervalWaitWhenReady);
+        translationsReady1 = true;
 
         window.MktoForms2.whenReady((marketoForm) => {
-          wait_fields(marketoForm);
+          waitFields(marketoForm);
         });
       }
     }
@@ -75,8 +72,8 @@ function wait_whenReady() {
 }
 
 export function renderingReview() {
-  interval_wait_whenReady = setInterval(() => {
-    setTimeout(wait_whenReady, 10);
+  intervalWaitWhenReady = setInterval(() => {
+    setTimeout(waitWhenReady, 10);
   }, 10);
 }
 

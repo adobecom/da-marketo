@@ -1,43 +1,40 @@
-/* eslint-disable no-use-before-define */
-/* eslint-disable no-param-reassign */
-/* eslint-disable camelcase */
 /* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Field Preferences
 import { mkfC } from './marketo_form_setup_rules.js';
 
 let lastFieldVisibility = '';
 let fieldVisibilityCheckInterval;
-const setRequired_set = {};
-const setRequired_attempts = 30;
+const setRequiredSet = {};
+const setRequiredAttempts = 30;
 const fieldMap = {};
-const field_dependance = {};
+const fieldDependance = {};
 
-export function setRequired(fieldName, direction) {
+export function setRequired(targetField, direction) {
+  let fieldName = targetField;
   if (fieldName === '' || fieldName === null || fieldName === undefined) {
     // mkfC.log("setRequired - fieldName is empty");
     return;
   }
 
-  let field_active = false;
+  let fieldActive = false;
   let mktoFormRowInput = document.querySelector(`[name="${fieldName}"]`);
   if (mktoFormRowInput && mktoFormRowInput !== null) {
-    field_active = true;
+    fieldActive = true;
   } else if (fieldMap[fieldName]) {
     fieldName = fieldMap[fieldName];
     mktoFormRowInput = document.querySelector(`[name="${fieldName}"]`);
 
     if (mktoFormRowInput && mktoFormRowInput !== null) {
-      field_active = true;
+      fieldActive = true;
     }
   }
 
-  if (setRequired_set[fieldName] === undefined) {
-    setRequired_set[fieldName] = 0;
+  if (setRequiredSet[fieldName] === undefined) {
+    setRequiredSet[fieldName] = 0;
   }
 
-  if (field_active) {
-    setRequired_set[fieldName] = 0;
+  if (fieldActive) {
+    setRequiredSet[fieldName] = 0;
     const field = document.querySelector(`[name="${fieldName}"]`);
     if (direction === true) {
       field.classList.remove('mktoValid');
@@ -98,8 +95,8 @@ export function setRequired(fieldName, direction) {
         const mktoInstruction = row.querySelector('.mktoInstruction');
         if (mktoInstruction) {
           mktoInstruction.remove();
-          if (field_dependance[fieldName.toLowerCase()]) {
-            const fieldDependanceName = field_dependance[fieldName.toLowerCase()];
+          if (fieldDependance[fieldName.toLowerCase()]) {
+            const fieldDependanceName = fieldDependance[fieldName.toLowerCase()];
             const fieldDependanceElement = document.querySelector(
               `.mktoFormRow [name="${fieldDependanceName}"]`,
             );
@@ -107,6 +104,7 @@ export function setRequired(fieldName, direction) {
               if (!fieldDependanceElement.classList.contains('mktoDependant')) {
                 fieldDependanceElement.classList.add('mktoDependant');
                 fieldDependanceElement.addEventListener('change', () => {
+                  // eslint-disable-next-line no-use-before-define
                   updateFieldPreferences();
                 });
               }
@@ -129,8 +127,8 @@ export function setRequired(fieldName, direction) {
       }
     }, 20);
   } else {
-    setRequired_set[fieldName] += 1;
-    if (setRequired_set[fieldName] < setRequired_attempts) {
+    setRequiredSet[fieldName] += 1;
+    if (setRequiredSet[fieldName] < setRequiredAttempts) {
       setTimeout(() => {
         setRequired(fieldName, direction);
       }, 30);
@@ -144,12 +142,7 @@ function updateFieldPreferences() {
   const mktoFieldPreferences = document.querySelector(
     '.mktoFormRow [name="__mktoFieldPreferences"]',
   );
-  const fieldNames = [];
-  for (const key in window?.mcz_marketoForm_pref?.field_visibility) {
-    if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.field_visibility, key)) {
-      fieldNames.push(key);
-    }
-  }
+  const fieldNames = Object.keys(window?.mcz_marketoForm_pref?.field_visibility || {});
   let newFieldPreferences = '';
   if (fieldNames.length > 0) {
     for (let i = 0; i < fieldNames.length; i += 1) {
@@ -196,17 +189,17 @@ function checkDataLayer() {
   }
 }
 
-async function fieldPrefs_wait_fieldPreferences() {
+async function fieldPrefsWaitFieldPreferences() {
   let formObservMKTO = false;
-  const sessionAttributesQS_fld = document.querySelector('[name="sessionAttributesQS"]');
+  const sessionAttributesQSFld = document.querySelector('[name="sessionAttributesQS"]');
   if (document.querySelectorAll('.observMKTO').length > 0) {
-    if (sessionAttributesQS_fld !== null) {
+    if (sessionAttributesQSFld !== null) {
       formObservMKTO = true;
     }
   }
   if (formObservMKTO) {
-    sessionAttributesQS_fld.name = '__mktoFieldPreferences';
-    sessionAttributesQS_fld.id = '__mktoFieldPreferences';
+    sessionAttributesQSFld.name = '__mktoFieldPreferences';
+    sessionAttributesQSFld.id = '__mktoFieldPreferences';
     setTimeout(updateFieldPreferences, 25);
 
     if (document.querySelector('.marketo-config')) {
@@ -216,35 +209,25 @@ async function fieldPrefs_wait_fieldPreferences() {
   } else if (window?.mcz_marketoForm_pref?.profile?.known_visitor) {
     // mkfC.log("Known Visitor - fieldPrefs_wait_fieldPreferences");
   } else {
-    setTimeout(fieldPrefs_wait_fieldPreferences, 20);
+    setTimeout(fieldPrefsWaitFieldPreferences, 20);
   }
 }
 
-export function field_pref() {
+export function fieldPref() {
   mkfC.log('Field Preferences - Triggered');
   if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-    for (const key in window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-      if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.value_setup?.field_mapping, key)) {
-        fieldMap[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_mapping[key];
-      }
-    }
+    Object.keys(window.mcz_marketoForm_pref.value_setup.field_mapping).forEach((key) => {
+      fieldMap[key.toLowerCase()] = window.mcz_marketoForm_pref.value_setup.field_mapping[key];
+    });
   }
   if (window?.mcz_marketoForm_pref?.value_setup?.field_dependance) {
-    for (const key in window?.mcz_marketoForm_pref?.value_setup?.field_dependance) {
-      if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.value_setup?.field_dependance, key)) {
-        field_dependance[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_dependance[key];
-      }
-    }
+    Object.keys(window.mcz_marketoForm_pref.value_setup.field_dependance).forEach((key) => {
+      fieldDependance[key.toLowerCase()] = window.mcz_marketoForm_pref.value_setup.field_dependance[key];
+    });
   }
   //
   //
   //
 
-  fieldPrefs_wait_fieldPreferences();
-}
-
-export default async function init() {
-  mkfC.log('Field Preferences - Begin');
-
-  mkfC.log('Field Preferences - End');
+  fieldPrefsWaitFieldPreferences();
 }

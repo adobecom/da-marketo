@@ -1,10 +1,4 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-param-reassign */
-/* eslint-disable import/prefer-default-export */
-/* eslint-disable no-use-before-define */
-/* eslint-disable camelcase */
 /* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Cleaning and Validation
 import { mkfC } from './marketo_form_setup_rules.js';
 import { getMktoFormID } from './global.js';
@@ -12,24 +6,22 @@ import { uFFld } from './marketo_form_setup_process.js';
 import { setRequired } from './field_preferences.js';
 import { aaInteraction } from './adobe_analytics.js';
 
-let rendering_ready = false;
+let renderingReady = false;
 const translateState = {};
 
 let firstrun = true;
 
-const lbl_rendering = { temp: 'temp' };
-let normalizeMktoStyles_run = 0;
-let normalizeMktoStyles_pass_scripts = 0;
-let normalizeMktoStyles_pass_descriptor = 0;
-const checkFormMsgs_rateLimit = 500;
-let checkFormMsgs_lastCall = 0;
-let checkFormMsgs_now = new Date().getTime();
-let checkFormMsgs_pending = false;
-let nStyles_on = false;
+const lblRendering = { temp: 'temp' };
+let normalizeMktoStylesRun = 0;
+const checkFormMsgsRateLimit = 500;
+let checkFormMsgsLastCall = 0;
+let checkFormMsgsNow = new Date().getTime();
+let checkFormMsgsPending = false;
+let nStylesOn = false;
 let isRequestedAgain = false;
 let chkFrmInt;
-let RuleLegend_try = 0;
-const handleFieldRuleLegend_max = 30;
+let RuleLegendTry = 0;
+const handleFieldRuleLegendMax = 30;
 
 function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFieldset) {
   mktoFormRow.classList.add('mktoHidden');
@@ -64,17 +56,17 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
     if (!fieldname || !fieldValues) return;
 
     const mktoSelect = mktoForm.querySelector(`select[name='${fieldname}']`);
-    const mktoSelect_option = mktoForm.querySelector(`select[name='${fieldname}'] option`);
-    if (!mktoSelect || !mktoSelect_option) {
-      RuleLegend_try += 1;
-      if (RuleLegend_try < handleFieldRuleLegend_max) {
+    const mktoSelectOption = mktoForm.querySelector(`select[name='${fieldname}'] option`);
+    if (!mktoSelect || !mktoSelectOption) {
+      RuleLegendTry += 1;
+      if (RuleLegendTry < handleFieldRuleLegendMax) {
         setTimeout(() => {
           handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFieldset);
         }, 25);
         return;
       }
       mkfC.log(
-        `handleFieldRuleLegend >> fieldname not found after ${RuleLegend_try
+        `handleFieldRuleLegend >> fieldname not found after ${RuleLegendTry
         } attempts.`,
       );
       return;
@@ -117,9 +109,9 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
       return;
     }
 
-    const starting_option = [];
+    const startingOption = [];
     let newOptions = [];
-    let other_option = [];
+    let otherOption = [];
     if (
       mktoFormRowTop
             && mktoFormRowTop.classList.contains('mktohandleFieldRuleLegend')
@@ -154,17 +146,17 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
 
     if (valueset === 'all') {
       // lets clean the select
-      const empty_option = mktoSelect.querySelector("option[value='']");
-      if (empty_option) {
-        mktoSelect.removeChild(empty_option);
-        mktoSelect.prepend(empty_option);
+      const emptyOption = mktoSelect.querySelector("option[value='']");
+      if (emptyOption) {
+        mktoSelect.removeChild(emptyOption);
+        mktoSelect.prepend(emptyOption);
       }
-      other_option = mktoSelect.querySelector(
+      otherOption = mktoSelect.querySelector(
         "option[value='other'], option[value='Other'], option[value='OTHER']",
       );
-      if (other_option) {
-        mktoSelect.removeChild(other_option);
-        mktoSelect.appendChild(other_option);
+      if (otherOption) {
+        mktoSelect.removeChild(otherOption);
+        mktoSelect.appendChild(otherOption);
       }
       return;
     }
@@ -215,9 +207,9 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
                 || optionValue === null
                 || optionValue === '_'
         ) {
-          starting_option.push(option);
+          startingOption.push(option);
         } else if (optionValue.trim().toLowerCase() === 'other') {
-          other_option.push(option);
+          otherOption.push(option);
         } else {
           newOptions.push(option);
         }
@@ -276,17 +268,17 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
       }
       return 0;
     });
-    newOptions = starting_option.concat(newOptions);
-    newOptions = newOptions.concat(other_option);
+    newOptions = startingOption.concat(newOptions);
+    newOptions = newOptions.concat(otherOption);
 
     if (newOptions.length) {
       newOptions.forEach((option) => {
         const optionValue = option.value.toLowerCase();
-        const mktoSelect_option_byValue = mktoSelect.querySelector(
+        const mktoSelectOptionByValue = mktoSelect.querySelector(
           `option[value='${optionValue}']`,
         );
-        if (mktoSelect_option_byValue) {
-          option.innerText = mktoSelect_option_byValue.innerText;
+        if (mktoSelectOptionByValue) {
+          option.innerText = mktoSelectOptionByValue.innerText;
         }
       });
       mktoSelect.innerHTML = '';
@@ -294,23 +286,23 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
         mktoSelect.add(option);
       });
 
-      const mktoSelect_option_byValue = mktoSelect.querySelector(`option[value='${backValue}']`);
-      if (mktoSelect_option_byValue) {
-        mktoSelect.selectedIndex = mktoSelect_option_byValue.index;
+      const mktoSelectOptionByValue = mktoSelect.querySelector(`option[value='${backValue}']`);
+      if (mktoSelectOptionByValue) {
+        mktoSelect.selectedIndex = mktoSelectOptionByValue.index;
       } else {
         mktoSelect.selectedIndex = 0;
       }
-      const empty_option = mktoSelect.querySelector("option[value='']");
-      if (empty_option) {
-        mktoSelect.removeChild(empty_option);
-        mktoSelect.prepend(empty_option);
+      const emptyOption = mktoSelect.querySelector("option[value='']");
+      if (emptyOption) {
+        mktoSelect.removeChild(emptyOption);
+        mktoSelect.prepend(emptyOption);
       }
-      other_option = mktoSelect.querySelector(
+      otherOption = mktoSelect.querySelector(
         "option[value='other'], option[value='Other'], option[value='OTHER']",
       );
-      if (other_option) {
-        mktoSelect.removeChild(other_option);
-        mktoSelect.appendChild(other_option);
+      if (otherOption) {
+        mktoSelect.removeChild(otherOption);
+        mktoSelect.appendChild(otherOption);
       }
     } else {
       setRequired(fieldname, false);
@@ -333,7 +325,7 @@ function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFie
 function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset) {
   const mktoHtmlTexts = mktoFieldset.querySelectorAll('.mktoHtmlText');
   let rulefound = false;
-  mktoHtmlTexts.forEach((textElem, index) => {
+  mktoHtmlTexts.forEach((textElem) => {
     if (textElem.innerText.trim().length > 0 && !rulefound) {
       rulefound = true;
       let reference = textElem.innerText.toLowerCase().split('fieldset_label')[1];
@@ -343,9 +335,9 @@ function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset)
       legendClassName = legendClassName.substring(0, 20);
       mktoFormRow.setAttribute('data-mkto_vis_src', legendClassName);
       mktoFormRow.classList.add('htmlRow');
-      let mktoFormRowLegend_html = mktoFormRowLegend?.innerHTML || '';
+      let mktoFormRowLegendHtml = mktoFormRowLegend?.innerHTML || '';
       const regex = /__([a-zA-Z0-9]+)__/g;
-      mktoFormRowLegend_html = mktoFormRowLegend_html.replace(
+      mktoFormRowLegendHtml = mktoFormRowLegendHtml.replace(
         regex,
         (match, fieldName) => {
           let tentativeValue = '';
@@ -363,7 +355,8 @@ function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset)
               if (tentativeValueLocation.length > 0) {
                 const tentativeValueLocationArray = tentativeValueLocation.split('.');
                 let tentativeValueLocationObj = window?.mcz_marketoForm_pref;
-                for (const key of tentativeValueLocationArray) {
+                for (let idx = 0; idx < tentativeValueLocationArray.length; idx += 1) {
+                  const key = tentativeValueLocationArray[idx];
                   if (
                     tentativeValueLocationObj
                           && Object.prototype.hasOwnProperty.call(tentativeValueLocationObj, key)
@@ -385,7 +378,7 @@ function handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset)
           return tentativeValue;
         },
       );
-      textElem.innerHTML = mktoFormRowLegend_html;
+      textElem.innerHTML = mktoFormRowLegendHtml;
       if (reference.split('rule:').length > 1) {
         [, reference] = reference.split('rule:');
         // mktoFormRowLegend.innerText = reference;
@@ -440,58 +433,190 @@ function handleOtherLegends(mktoFormRowLegend, mktoFormRow) {
   }
 }
 
-export function cleaning_validation() {
-  mkfC.log('Cleaning & Validation - Loaded');
-  // ##
-  // ## validation messages
-  // ##
-
-  const mktoButtonRow = document.querySelector('.mktoButtonRow:not(.mktoButtonRow--observed)');
-  if (mktoButtonRow) {
-    mktoButtonRow.classList.add('mktoButtonRow--observed');
-
-    mktoButtonRow.addEventListener('click', (e) => {
-      if (!mktoButtonRow.hasAttribute('data-buttonObserver')) {
-        mktoButtonRow.setAttribute('data-buttonObserver', true);
-        const validateForms = document.querySelectorAll('[id*="mktoForm_"]:not(.validationActive)');
-        if (validateForms) {
-          for (let i = 0; i < validateForms.length; i += 1) {
-            const validateForm = validateForms[i];
-            validateForm.classList.add('validationActive');
-          }
-        }
-      }
-      const requiredFields = document.querySelectorAll('.mktoRequired:not(.mktoRequiredVis)');
-      if (requiredFields) {
-        for (let i = 0; i < requiredFields.length; i += 1) {
-          const field = requiredFields[i];
-          if (isElementVisible(field)) {
-            field.classList.add('mktoRequiredVis');
-          }
-        }
-        if (requiredFields.length > 0) {
-          setTimeout(checkFormMsgs_throttle, 10);
-        }
-      }
-    });
-  }
-
-  // ###########################################
-
-  cleaning_validation_main();
-  if (!rendering_ready) {
-    chkFrmInt = setInterval(cleaning_validation_main, 10);
+function checkFormMsgsThrottle() {
+  checkFormMsgsNow = new Date().getTime();
+  if (checkFormMsgsNow - checkFormMsgsLastCall > checkFormMsgsRateLimit) {
+    checkFormMsgsLastCall = checkFormMsgsNow;
+    // eslint-disable-next-line no-use-before-define
+    checkFormMsgs();
+  } else {
+    checkFormMsgsPending = true;
   }
 }
 
-function makeHidden(fieldname, shouldHide = true) {
-  const fieldMap = {};
-  if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-    for (const key in window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
-      if (Object.prototype.hasOwnProperty.call(window?.mcz_marketoForm_pref?.value_setup?.field_mapping, key)) {
-        fieldMap[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_mapping[key];
+function clickCallValidation() {
+  setTimeout(() => {
+    checkFormMsgsThrottle();
+  }, 600);
+}
+
+function checkFormMsgs() {
+  let mktoRequiredFieldsInvalid = document.querySelectorAll(
+    '.mktoRequired.mktoValid:not(.warningMessage)',
+  );
+  for (let i = 0; i < mktoRequiredFieldsInvalid.length; i += 1) {
+    const field = mktoRequiredFieldsInvalid[i];
+    if (field?.value.length === 0) {
+      field.classList.remove('mktoValid');
+      field.classList.add('mktoInvalid');
+    }
+  }
+
+  mktoRequiredFieldsInvalid = document.querySelectorAll(
+    '.mktoRequiredVis.mktoInvalid:not(.warningMessage)',
+  );
+  const mktoRequiredFieldsValid = document.querySelectorAll(
+    '.mktoRequiredVis.mktoValid:not(.successMessage)',
+  );
+  const mktoRequiredFieldsInvalidWithSuccessMessage = document.querySelectorAll(
+    '.mktoRequiredVis.mktoInvalid.successMessage',
+  );
+  const mktoRequiredFieldsValidWithWarningMessage = document.querySelectorAll(
+    '.mktoRequiredVis.mktoValid.warningMessage',
+  );
+  if (mktoRequiredFieldsInvalid instanceof Array) {
+    for (let i = 0; i < mktoRequiredFieldsInvalid.length; i += 1) {
+      const field = mktoRequiredFieldsInvalid[i];
+      if (field) {
+        field.classList.remove('successMessage');
+        field.classList.add('warningMessage');
       }
     }
+  }
+  if (mktoRequiredFieldsValid instanceof Array) {
+    for (let i = 0; i < mktoRequiredFieldsValid.length; i += 1) {
+      const field = mktoRequiredFieldsValid[i];
+      if (field) {
+        field.classList.remove('warningMessage');
+        field.classList.add('successMessage');
+      }
+    }
+  }
+  if (mktoRequiredFieldsInvalidWithSuccessMessage instanceof Array) {
+    for (let i = 0; i < mktoRequiredFieldsInvalidWithSuccessMessage.length; i += 1) {
+      const field = mktoRequiredFieldsInvalidWithSuccessMessage[i];
+      if (field) {
+        field.classList.remove('successMessage');
+        field.classList.add('warningMessage');
+      }
+    }
+  }
+  if (mktoRequiredFieldsValidWithWarningMessage instanceof Array) {
+    for (let i = 0; i < mktoRequiredFieldsValidWithWarningMessage.length; i += 1) {
+      const field = mktoRequiredFieldsValidWithWarningMessage[i];
+      if (field) {
+        field.classList.remove('warningMessage');
+        field.classList.add('successMessage');
+      }
+    }
+  }
+  const mktoRequiredFields = document.querySelectorAll(
+    '.mktoRequiredVis:not([data-checkFormMsgs_throttle])',
+  );
+
+  const mktoButtons = document.querySelectorAll('.mktoButton:not([data-checkFormMsgs_throttle])');
+  if (mktoButtons) {
+    for (let i = 0; i < mktoButtons.length; i += 1) {
+      const button = mktoButtons[i];
+      if (button) {
+        button.setAttribute('data-checkFormMsgs_throttle', true);
+        button.addEventListener('mouseout', checkFormMsgsThrottle);
+        button.addEventListener('click', clickCallValidation);
+      }
+    }
+  }
+
+  mktoRequiredFields.forEach((element) => {
+    if (element && !element.hasAttribute('data-checkFormMsgs_throttle')) {
+      element.setAttribute('data-checkFormMsgs_throttle', true);
+      element.addEventListener('blur', checkFormMsgsThrottle);
+      element.addEventListener('change', checkFormMsgsThrottle);
+      element.addEventListener('mouseout', checkFormMsgsThrottle);
+      element.addEventListener('keyup', checkFormMsgsThrottle);
+    }
+  });
+  if (checkFormMsgsPending) {
+    checkFormMsgsPending = false;
+    checkFormMsgs();
+  }
+}
+
+const addAutocompleteAttribute = (() => {
+  const mktoForm = document.querySelector('.mktoForm[id]');
+  // Turning off autocomplete on form. Whitelist selected inputs individually.
+  mktoForm.setAttribute('autocomplete', 'off');
+
+  const fieldNameMapToAutocomplete = window?.mcz_marketoForm_pref?.value_setup?.field_mapping_ac || {};
+  const templateName = window?.mcz_marketoForm_pref?.form?.template;
+  const templateRule = (window?.templateRules || []).find((template) => template[templateName]) || {};
+  const autoCompleteFields = templateRule[templateName]?.auto_complete || [];
+
+  return (mktoFormElement) => {
+    const fieldName = mktoFormElement.name;
+    const autocompleteToken = fieldNameMapToAutocomplete[fieldName] || null;
+    if (autocompleteToken && autoCompleteFields.includes(fieldName)) {
+      mktoFormElement.setAttribute('autocomplete', autocompleteToken);
+    }
+  };
+})();
+
+function mktOptionals(mktoForm) {
+  if (!mktoForm) {
+    return;
+  }
+  const reviewOptoinal = mktoForm.querySelectorAll(
+    '.mktoFormRow:not(.mktoHidden) fieldset.mktoFormCol .mktoFormRow[data-mktofield]',
+  );
+  if (reviewOptoinal.length > 0) {
+    for (let i = 0; i < reviewOptoinal.length; i += 1) {
+      const reviewOptoinalElem = reviewOptoinal[i];
+      const reviewOptoinalElemName = reviewOptoinalElem.getAttribute('data-mktofield');
+      const reviewOptoinalElemField = reviewOptoinalElem.querySelector(
+        `[name="${reviewOptoinalElemName}"]`,
+      );
+      if (reviewOptoinalElemField === null) {
+        reviewOptoinalElem.parentNode.classList.remove('mktoVisible');
+      } else {
+        reviewOptoinalElem.parentNode.classList.add('mktoVisible');
+      }
+    }
+  }
+}
+
+function handleFirstFocus() {
+  const mktoForm = document.querySelector('.mktoWhenRendered.mktoForm[id]');
+  if (!mktoForm.classList.contains('focusActive')) {
+    mktoForm.classList.add('focusActive');
+    if (window?.mcz_marketoForm_pref?.profile !== undefined) {
+      const nameoffield = this.getAttribute('name');
+      if (nameoffield) {
+        window.mcz_marketoForm_pref.profile.first_field = nameoffield;
+      }
+    }
+    aaInteraction('Marketo Form Interaction', 'formInteraction', null, null);
+  }
+}
+
+function focusFlds(mktoForm) {
+  const formFocusFields = mktoForm.querySelectorAll(
+    '.mktoFormRowTop:not(.mktoHidden) .mktoField',
+  );
+  if (formFocusFields.length > 1) {
+    mktoForm.classList.add('focusReady');
+    formFocusFields.forEach((field) => {
+      field.addEventListener('focus', handleFirstFocus, true);
+    });
+  }
+}
+
+function makeHidden(targetField, hideField = true) {
+  let fieldname = targetField;
+  let shouldHide = hideField;
+  const fieldMap = {};
+  if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
+    Object.keys(window?.mcz_marketoForm_pref?.value_setup?.field_mapping || {}).forEach((key) => {
+      fieldMap[key.toLowerCase()] = window?.mcz_marketoForm_pref?.value_setup?.field_mapping[key];
+    });
   }
 
   const setting = `${window?.mcz_marketoForm_pref?.field_visibility?.[fieldname]}`;
@@ -586,7 +711,6 @@ function translateDDlbls(dropdownName, translateValues) {
         if (translatedElem) {
           const label = document.querySelector(`label[for="${dropdownName}"]`);
           if (label) {
-            let required = false;
             let originalElemTxt = label.innerText;
             originalElemTxt = originalElemTxt.trim();
             translatedElem = translatedElem.replace(':', '').trim();
@@ -595,7 +719,6 @@ function translateDDlbls(dropdownName, translateValues) {
             if (originalElemTxt.indexOf('*') > -1) {
               originalElemTxt = originalElemTxt.replace(/\*/g, '');
               translatedElem += '*';
-              required = true;
             }
             const options = dropdownField.querySelectorAll('option');
             for (let i = 0; i < options.length; i += 1) {
@@ -615,7 +738,7 @@ function translateDDlbls(dropdownName, translateValues) {
 
     const unsortedOptions = [];
     const selectedValue = dropdownField.value;
-    let select_lbloption;
+    let selectLbloption;
 
     optionsArray = optionsArray.filter((option) => {
       if (Object.prototype.hasOwnProperty.call(translateValues, option.value)) {
@@ -625,24 +748,24 @@ function translateDDlbls(dropdownName, translateValues) {
         option.text = translateValues[option.value];
         return true;
       } if (option.value === '' || option.value === '_' || option?.value === null) {
-        select_lbloption = option;
+        selectLbloption = option;
         return false;
       }
       unsortedOptions.push(option);
       return false;
     });
 
-    if (!select_lbloption) {
-      select_lbloption = document.createElement('option');
-      select_lbloption.value = '';
+    if (!selectLbloption) {
+      selectLbloption = document.createElement('option');
+      selectLbloption.value = '';
       const label = document.querySelector(`label[for="${dropdownName}"]`);
 
       if (label) {
-        select_lbloption.text = label.innerText;
+        selectLbloption.text = label.innerText;
       } else {
-        select_lbloption.text = 'Select';
+        selectLbloption.text = 'Select';
       }
-      dropdownField.add(select_lbloption);
+      dropdownField.add(selectLbloption);
     }
 
     optionsArray = optionsArray.concat(unsortedOptions);
@@ -659,8 +782,8 @@ function translateDDlbls(dropdownName, translateValues) {
       return 0;
     });
 
-    if (select_lbloption) {
-      optionsArray.unshift(select_lbloption);
+    if (selectLbloption) {
+      optionsArray.unshift(selectLbloption);
     }
 
     dropdownField.innerHTML = '';
@@ -670,361 +793,6 @@ function translateDDlbls(dropdownName, translateValues) {
     });
 
     dropdownField.value = selectedValue;
-  }
-}
-
-const addAutocompleteAttribute = (() => {
-  const mktoForm = document.querySelector('.mktoForm[id]');
-  // Turning off autocomplete on form. Whitelist selected inputs individually.
-  mktoForm.setAttribute('autocomplete', 'off');
-
-  const fieldNameMapToAutocomplete = window?.mcz_marketoForm_pref?.value_setup?.field_mapping_ac || {};
-  const templateName = window?.mcz_marketoForm_pref?.form?.template;
-  const templateRule = (window?.templateRules || []).find((template) => template[templateName]) || {};
-  const autoCompleteFields = templateRule[templateName]?.auto_complete || [];
-
-  return (mktoFormElement) => {
-    const fieldName = mktoFormElement.name;
-    const autocompleteToken = fieldNameMapToAutocomplete[fieldName] || null;
-    if (autocompleteToken && autoCompleteFields.includes(fieldName)) {
-      mktoFormElement.setAttribute('autocomplete', autocompleteToken);
-    }
-  };
-})();
-
-function normalizeMktoStyles() {
-  normalizeMktoStyles_run += 1;
-
-  const mktoForm = document.querySelector('.mktoForm[id]');
-
-  const mktoFormElements = mktoForm.querySelectorAll('[style]:not(.mktoCleaned)');
-  if (mktoFormElements.length > 0) {
-    for (let i = 0; i < mktoFormElements.length; i += 1) {
-      const mktoFormElement = mktoFormElements[i];
-      if (mktoFormElement.hasAttribute('style')) {
-        mktoFormElement.classList.add('mktoVisible');
-        mktoFormElement.removeAttribute('style');
-
-        addAutocompleteAttribute(mktoFormElement);
-      }
-      mktoFormElement.classList.remove('mktoHasWidth');
-    }
-  }
-
-  const mktoAsterix = mktoForm.querySelectorAll('.mktoAsterix');
-  if (mktoAsterix.length > 0) {
-    for (let i = 0; i < mktoAsterix.length; i += 1) {
-      const mktoAsterixElement = mktoAsterix[i];
-      mktoAsterixElement.parentNode.removeChild(mktoAsterixElement);
-    }
-  }
-
-  const mktoFields = mktoForm.querySelectorAll('.mktoField[name]:not(.mktofield_anchor)');
-  if (mktoFields.length > 0) {
-    for (let i = 0; i < mktoFields.length; i += 1) {
-      const mktoField = mktoFields[i];
-      if (
-        document.querySelector(
-          `.mktoFormRow[data-mktofield="${mktoField.getAttribute('name')}"]`,
-        ) === null
-      ) {
-        let mktoFieldParent = mktoField.parentNode;
-        while (mktoFieldParent !== null) {
-          if (
-            mktoFieldParent.classList
-            && mktoFieldParent.classList.contains('mktoFormRow')
-            && !mktoFieldParent.hasAttribute('data-mktofield')
-          ) {
-            mktoField.classList.add('mktofield_anchor');
-            mktoFieldParent.setAttribute('data-mktofield', mktoField.getAttribute('name'));
-            break;
-          }
-          mktoFieldParent = mktoFieldParent.parentNode;
-        }
-      }
-    }
-  }
-
-  const privacyRows = mktoForm.querySelectorAll('.mktoFormRowTop:not(.adobe-privacy)');
-  for (let i = 0; i < privacyRows.length; i += 1) {
-    const privacyRow = privacyRows[i];
-    if (privacyRow.querySelector('[class*="adobe-privacy"]')) {
-      privacyRow.classList.add('adobe-privacy');
-    }
-  }
-
-  mkt_optionals(mktoForm);
-
-  const mktoFormRowTops = mktoForm.querySelectorAll('.mktoFormRow:not(.mktoFormRowTop)');
-  if (mktoFormRowTops.length > 0) {
-    for (let i = 0; i < mktoFormRowTops.length; i += 1) {
-      const mktoFormRowTop = mktoFormRowTops[i];
-      if (mktoFormRowTop.parentNode.classList.contains('mktoForm')) {
-        mktoFormRowTop.classList.add('mktoFormRowTop');
-      }
-    }
-  }
-
-  const mktoFormRows = document.querySelectorAll('.mktoFormRow:not([data-mktofield])');
-  if (mktoFormRows.length > 0) {
-    for (let i = 0; i < mktoFormRows.length; i += 1) {
-      const mktoFormRow = mktoFormRows[i];
-      const mktoFormRowChild = mktoFormRow.querySelector('.mktoFormRow:not(.mktoFormRowTop)');
-      if (mktoFormRow.parentNode.classList.contains('mktoForm')) {
-        mktoFormRow.classList.add('mktoFormRowTop');
-        const mktoPlaceholderHtmlText = mktoFormRow.querySelector(
-          "[class*='mktoPlaceholderHtmlText']",
-        );
-        if (mktoPlaceholderHtmlText) {
-          mktoFormRow.classList.add('mktoHtmlText');
-        }
-      }
-      if (mktoFormRowChild === null) {
-        if (!mktoFormRow.hasAttribute('data-mktofield')) {
-          const mktoField = mktoFormRow.querySelector('.mktoField');
-          if (mktoField && mktoField.length === 1) {
-            mktoFormRow.setAttribute('data-mktofield', mktoField.getAttribute('name'));
-            const mktoFieldDescriptor = mktoFormRow.querySelector('.mktoFieldDescriptor');
-            if (mktoFieldDescriptor) {
-              mktoFieldDescriptor.setAttribute(
-                'data-mktofield',
-                mktoField.getAttribute('name'),
-              );
-              const mktoFieldDescriptorLabel = mktoFieldDescriptor.querySelector(
-                `label[for='${mktoField.getAttribute('name')}']`,
-              );
-              if (mktoFieldDescriptorLabel) {
-                const lblText = mktoFieldDescriptorLabel.innerText
-                  .replace(/\*/g, '')
-                  .replace(':', '')
-                  .toLowerCase();
-                let primaryRow = mktoFormRow;
-                let mktoFormRowParent = mktoFormRow.parentNode;
-                while (mktoFormRowParent !== null) {
-                  if (
-                    mktoFormRowParent.classList
-                    && mktoFormRowParent.classList.contains('mktoFormRow')
-                    && !mktoFormRowParent.hasAttribute('data-mktofield')
-                  ) {
-                    primaryRow = mktoFormRowParent;
-                  }
-                  mktoFormRowParent = mktoFormRowParent.parentNode;
-                }
-                primaryRow.setAttribute('data-mktofield', mktoField.getAttribute('name'));
-                primaryRow.setAttribute('data-mktolbl', lblText);
-              }
-              mktoFieldDescriptor.classList.add('mktoVisible');
-              normalizeMktoStyles_pass_descriptor += 1;
-            }
-          }
-        }
-
-        const mktoFormRowScript = mktoFormRow.querySelector('script:not(.mktoCleanedScript)');
-        if (mktoFormRowScript !== null) {
-          mktoFormRow.classList.add('mktoHidden');
-          mktoFormRow.classList.add('mktoCleanedScript');
-          normalizeMktoStyles_pass_scripts += 1;
-        }
-      }
-
-      const mktoFormRowLegends = mktoFormRow.querySelectorAll('legend:not(.mktoCleanedlegend)');
-      if (mktoFormRowLegends.length) {
-        mktoFormRowLegends.forEach((mktoFormRowLegend) => {
-          const mktoFieldset = mktoFormRowLegend.closest('fieldset');
-          const mktoHtmlText = mktoFieldset.querySelector('.mktoHtmlText');
-          const innerTextLower = mktoFormRowLegend.innerText.toLowerCase();
-
-          if (mktoHtmlText && mktoHtmlText.innerText.toLowerCase().includes('privacy')) {
-            mktoFormRow.classList.add('adobe-privacy');
-          }
-
-          if (mktoHtmlText && mktoHtmlText.innerText.toLowerCase().includes('field_rule')) {
-            handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFieldset);
-          } else if (
-            mktoHtmlText
-            && mktoHtmlText.innerText.toLowerCase().includes('fieldset_label')
-          ) {
-            handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset);
-          } else if (innerTextLower.includes('hidden')) {
-            handleHiddenLegend(mktoFormRowLegend, mktoFormRow);
-          } else if (innerTextLower.includes('setup')) {
-            handleSetupLegend(mktoFormRowLegend, mktoFormRow);
-          } else {
-            handleOtherLegends(mktoFormRowLegend, mktoFormRow);
-          }
-
-          mktoFormRowLegend.classList.add('mktoLegend');
-        });
-      }
-    }
-  }
-
-  translateDDlbls('State', translateState);
-  updateLabels();
-  addPOIListeners();
-  updatePlaceholders();
-
-  if (mktoForm.classList.contains('validationActive')) {
-    checkFormMsgs_throttle();
-  }
-
-  if (!mktoForm.classList.contains('mktoVisible') && firstrun === false) {
-    //
-    // Focus Logic for first interactions
-    //
-
-    const mktoFormCol_vis = mktoForm.querySelectorAll(
-      '.mktoCleaned[data-mkto_vis_src] fieldset.mktoFormCol.mktoVisible',
-    );
-    for (let i = 0; i < mktoFormCol_vis.length; i += 1) {
-      const mktoPlaceholderHtmlText = mktoFormCol_vis[i].querySelector(
-        "[class*='mktoPlaceholderHtmlText']",
-      );
-      if (mktoPlaceholderHtmlText) {
-        // wait for the form to be visible
-      } else {
-        mktoFormCol_vis[i].classList.remove('mktoVisible');
-      }
-    }
-
-    if (!mktoForm.classList.contains('focusReady')) {
-      focusFlds(mktoForm);
-    }
-
-    if (window?.mcz_marketoForm_pref?.field_filters?.products === 'hidden') {
-      const formId = getMktoFormID();
-      const form = window.MktoForms2.getForm(formId);
-      uFFld(
-        form,
-        'mktoFormsPrimaryProductInterest',
-        window?.mcz_marketoForm_pref?.program?.poi,
-        true,
-      );
-    }
-
-    performance.mark('MarketoFormEnd');
-    performance.measure('MarketoFormVisible', 'MarketoFormStart', 'MarketoFormEnd');
-
-    mktoForm.removeAttribute('style');
-    mktoForm.classList.add('mktoForm--fade-in');
-
-    mktoForm.classList.add('mktoVisible');
-  }
-
-  // end normalizeMktoStyles
-}
-
-function mkt_optionals(mktoForm) {
-  if (!mktoForm) {
-    return;
-  }
-  const review_optoinal = mktoForm.querySelectorAll(
-    '.mktoFormRow:not(.mktoHidden) fieldset.mktoFormCol .mktoFormRow[data-mktofield]',
-  );
-  if (review_optoinal.length > 0) {
-    for (let i = 0; i < review_optoinal.length; i += 1) {
-      const review_optoinal_elem = review_optoinal[i];
-      const review_optoinal_elem_name = review_optoinal_elem.getAttribute('data-mktofield');
-      const review_optoinal_elem_field = review_optoinal_elem.querySelector(
-        `[name="${review_optoinal_elem_name}"]`,
-      );
-      if (review_optoinal_elem_field === null) {
-        review_optoinal_elem.parentNode.classList.remove('mktoVisible');
-      } else {
-        review_optoinal_elem.parentNode.classList.add('mktoVisible');
-      }
-    }
-  }
-}
-
-function updatePlaceholders() {
-  const formFields = document.querySelectorAll(
-    '.mktoFormRow  .mktoVisible input:not([type="hidden"]):not([placeholder]), .mktoFormRow .mktoVisible textarea:not([placeholder])',
-  );
-  for (let i = 0, len = formFields.length; i < len; i += 1) {
-    const label = document.querySelectorAll(`label[for="${formFields[i].name}"]`)[0];
-    if (label) {
-      let labelText = label.innerText;
-      if (labelText.length > 0) {
-        labelText = labelText.replace(':', '').trim();
-        labelText = labelText.replace(/\*/g, '').trim();
-        label.innerHTML = labelText;
-
-        if (formFields[i].classList.contains('mktoRequired')) {
-          labelText += '*';
-        }
-        formFields[i].placeholder = labelText;
-      }
-    }
-  }
-
-  const selectFields = document.querySelectorAll(
-    '.mktoFormRow  .mktoVisible select:not(.placeholder)',
-  );
-  for (let i = 0, len = selectFields.length; i < len; i += 1) {
-    const label = document.querySelectorAll(`label[for="${selectFields[i].name}"]`)[0];
-    if (label) {
-      let labelText = label.innerText;
-      if (labelText.length > 0) {
-        labelText = labelText.replace(':', '').trim();
-        labelText = labelText.replace(/\*/g, '').trim();
-        label.innerHTML = labelText;
-        if (selectFields[i].classList.contains('mktoRequired')) {
-          labelText += '*';
-        }
-
-        const options = selectFields[i].querySelectorAll('option');
-        let foundBlank = false;
-        for (let j = 0; j < options.length; j += 1) {
-          if (options[j].value === '') {
-            foundBlank = true;
-            options[j].text = labelText;
-            break;
-          }
-        }
-        if (!foundBlank) {
-          const blankOption = document.createElement('option');
-          blankOption.value = '';
-          blankOption.text = labelText;
-          selectFields[i].insertBefore(blankOption, selectFields[i].firstChild);
-        }
-
-        selectFields[i].classList.add('placeholder');
-      }
-    }
-  }
-
-  const mktoFormCols = document.querySelectorAll('.mktoFormCol');
-  for (let i = 0; i < mktoFormCols.length; i += 1) {
-    const mktoFormCol = mktoFormCols[i];
-    const mktoFormColParent = mktoFormCol.parentNode;
-    if (mktoFormColParent && mktoFormColParent.hasAttribute('data-mkto_vis_src')) {
-      const mktoPlaceholderTxt = mktoFormCol.querySelector("[class*='HtmlText']");
-      if (!mktoPlaceholderTxt) {
-        const mktoField = mktoFormCol.querySelector('.mktoField');
-        if (!mktoField) {
-          mktoFormCol.classList.remove('mktoVisible');
-        } else {
-          mktoFormCol.classList.add('mktoVisible');
-        }
-      }
-    }
-  }
-}
-
-function addPOIListeners() {
-  const mktoFormsPrimaryProductInterest = document.querySelector(
-    '[name="mktoFormsPrimaryProductInterest"]:not(.changeListenerAdded)',
-  );
-  if (mktoFormsPrimaryProductInterest) {
-    mktoFormsPrimaryProductInterest.addEventListener('change', () => {
-      const poiValue = mktoFormsPrimaryProductInterest.value;
-      const mcz_marketoForm_pref = window.mcz_marketoForm_pref || {};
-      mcz_marketoForm_pref.program = mcz_marketoForm_pref.program || {};
-      mcz_marketoForm_pref.program.poi = poiValue;
-      window.mcz_marketoForm_pref = mcz_marketoForm_pref;
-    });
-    mktoFormsPrimaryProductInterest.classList.add('changeListenerAdded');
   }
 }
 
@@ -1043,7 +811,6 @@ function updateLabels() {
     }
   });
 
-  let new_mktoUpdated = false;
   let language = window.mcz_marketoForm_pref?.profile?.prefLanguage;
   let subtype = window.mcz_marketoForm_pref?.form?.subtype;
   if (window.translateFormElems) {
@@ -1128,7 +895,6 @@ function updateLabels() {
             selectElement.selectedIndex = 0;
           }
         }
-        new_mktoUpdated = true;
       }
     }
   }
@@ -1147,10 +913,10 @@ function updateLabels() {
           if (sourceLabelText) {
             const currentText = sourceLabelText.id;
             if (currentText && currentText.length > 0) {
-              if (lbl_rendering && lbl_rendering[currentText]) {
-                row.innerHTML = lbl_rendering[currentText];
+              if (lblRendering && lblRendering[currentText]) {
+                row.innerHTML = lblRendering[currentText];
               } else {
-                lbl_rendering[currentText] = sourceLabelText.innerHTML;
+                lblRendering[currentText] = sourceLabelText.innerHTML;
                 row.innerHTML = sourceLabelText.innerHTML;
               }
               sourceLabelText.classList.add('labelUpdatedSRC');
@@ -1161,7 +927,6 @@ function updateLabels() {
       }
     } else {
       row.classList.add('labelUpdated');
-      new_mktoUpdated = true;
     }
   }
 
@@ -1173,14 +938,12 @@ function updateLabels() {
   }
 
   if (window.mcz_marketoForm_pref.profile.privacy_links) {
-    for (const key in window.mcz_marketoForm_pref.profile.privacy_links) {
-      if (Object.prototype.hasOwnProperty.call(window.mcz_marketoForm_pref.profile.privacy_links, key)) {
-        const privacy_links = document.querySelectorAll(`.mktoFormRow a[href*="{${key}}"]`);
-        privacy_links.forEach((link) => {
-          link.href = window.mcz_marketoForm_pref.profile.privacy_links[key];
-        });
-      }
-    }
+    Object.keys(window.mcz_marketoForm_pref.profile.privacy_links).forEach((key) => {
+      const privacyLinks = document.querySelectorAll(`.mktoFormRow a[href*="{${key}}"]`);
+      privacyLinks.forEach((link) => {
+        link.href = window.mcz_marketoForm_pref.profile.privacy_links[key];
+      });
+    });
   }
   const labels = document.querySelectorAll('.labelUpdated');
   for (let i = 0; i < labels.length; i += 1) {
@@ -1194,136 +957,383 @@ function updateLabels() {
   }
 }
 
-function handleFirstFocus() {
-  const mktoForm = document.querySelector('.mktoWhenRendered.mktoForm[id]');
-  if (!mktoForm.classList.contains('focusActive')) {
-    mktoForm.classList.add('focusActive');
-    if (window?.mcz_marketoForm_pref?.profile !== undefined) {
-      const nameoffield = this.getAttribute('name');
-      if (nameoffield) {
-        window.mcz_marketoForm_pref.profile.first_field = nameoffield;
-      }
-    }
-    aaInteraction('Marketo Form Interaction', 'formInteraction', null, null);
-  }
-}
-
-function focusFlds(mktoForm) {
-  const formFocusFields = mktoForm.querySelectorAll(
-    '.mktoFormRowTop:not(.mktoHidden) .mktoField',
+function addPOIListeners() {
+  const mktoFormsPrimaryProductInterest = document.querySelector(
+    '[name="mktoFormsPrimaryProductInterest"]:not(.changeListenerAdded)',
   );
-  if (formFocusFields.length > 1) {
-    mktoForm.classList.add('focusReady');
-    formFocusFields.forEach((field) => {
-      field.addEventListener('focus', handleFirstFocus, true);
+  if (mktoFormsPrimaryProductInterest) {
+    mktoFormsPrimaryProductInterest.addEventListener('change', () => {
+      const poiValue = mktoFormsPrimaryProductInterest.value;
+      const mczMarketoFormPref = window.mcz_marketoForm_pref || {};
+      mczMarketoFormPref.program = mczMarketoFormPref.program || {};
+      mczMarketoFormPref.program.poi = poiValue;
+      window.mcz_marketoForm_pref = mczMarketoFormPref;
     });
+    mktoFormsPrimaryProductInterest.classList.add('changeListenerAdded');
   }
 }
 
-function checkFormMsgs() {
-  let mktoRequiredFields_invalid = document.querySelectorAll(
-    '.mktoRequired.mktoValid:not(.warningMessage)',
+function updatePlaceholders() {
+  const formFields = document.querySelectorAll(
+    '.mktoFormRow  .mktoVisible input:not([type="hidden"]):not([placeholder]), .mktoFormRow .mktoVisible textarea:not([placeholder])',
   );
-  for (let i = 0; i < mktoRequiredFields_invalid.length; i += 1) {
-    const field = mktoRequiredFields_invalid[i];
-    if (field?.value.length === 0) {
-      field.classList.remove('mktoValid');
-      field.classList.add('mktoInvalid');
-    }
-  }
+  for (let i = 0, len = formFields.length; i < len; i += 1) {
+    const label = document.querySelectorAll(`label[for="${formFields[i].name}"]`)[0];
+    if (label) {
+      let labelText = label.innerText;
+      if (labelText.length > 0) {
+        labelText = labelText.replace(':', '').trim();
+        labelText = labelText.replace(/\*/g, '').trim();
+        label.innerHTML = labelText;
 
-  mktoRequiredFields_invalid = document.querySelectorAll(
-    '.mktoRequiredVis.mktoInvalid:not(.warningMessage)',
-  );
-  const mktoRequiredFields_valid = document.querySelectorAll(
-    '.mktoRequiredVis.mktoValid:not(.successMessage)',
-  );
-  const mktoRequiredFields_invalid_withSuccessMessage = document.querySelectorAll(
-    '.mktoRequiredVis.mktoInvalid.successMessage',
-  );
-  const mktoRequiredFields_valid_withWarningMessage = document.querySelectorAll(
-    '.mktoRequiredVis.mktoValid.warningMessage',
-  );
-  if (mktoRequiredFields_invalid instanceof Array) {
-    for (let i = 0; i < mktoRequiredFields_invalid.length; i += 1) {
-      const field = mktoRequiredFields_invalid[i];
-      if (field) {
-        field.classList.remove('successMessage');
-        field.classList.add('warningMessage');
-      }
-    }
-  }
-  if (mktoRequiredFields_valid instanceof Array) {
-    for (let i = 0; i < mktoRequiredFields_valid.length; i += 1) {
-      const field = mktoRequiredFields_valid[i];
-      if (field) {
-        field.classList.remove('warningMessage');
-        field.classList.add('successMessage');
-      }
-    }
-  }
-  if (mktoRequiredFields_invalid_withSuccessMessage instanceof Array) {
-    for (let i = 0; i < mktoRequiredFields_invalid_withSuccessMessage.length; i += 1) {
-      const field = mktoRequiredFields_invalid_withSuccessMessage[i];
-      if (field) {
-        field.classList.remove('successMessage');
-        field.classList.add('warningMessage');
-      }
-    }
-  }
-  if (mktoRequiredFields_valid_withWarningMessage instanceof Array) {
-    for (let i = 0; i < mktoRequiredFields_valid_withWarningMessage.length; i += 1) {
-      const field = mktoRequiredFields_valid_withWarningMessage[i];
-      if (field) {
-        field.classList.remove('warningMessage');
-        field.classList.add('successMessage');
-      }
-    }
-  }
-  const mktoRequiredFields = document.querySelectorAll(
-    '.mktoRequiredVis:not([data-checkFormMsgs_throttle])',
-  );
-
-  const mktoButtons = document.querySelectorAll('.mktoButton:not([data-checkFormMsgs_throttle])');
-  if (mktoButtons) {
-    for (let i = 0; i < mktoButtons.length; i += 1) {
-      const button = mktoButtons[i];
-      if (button) {
-        button.setAttribute('data-checkFormMsgs_throttle', true);
-        button.addEventListener('mouseout', checkFormMsgs_throttle);
-        button.addEventListener('click', clickCallValidation);
+        if (formFields[i].classList.contains('mktoRequired')) {
+          labelText += '*';
+        }
+        formFields[i].placeholder = labelText;
       }
     }
   }
 
-  mktoRequiredFields.forEach((element) => {
-    if (element && !element.hasAttribute('data-checkFormMsgs_throttle')) {
-      element.setAttribute('data-checkFormMsgs_throttle', true);
-      element.addEventListener('blur', checkFormMsgs_throttle);
-      element.addEventListener('change', checkFormMsgs_throttle);
-      element.addEventListener('mouseout', checkFormMsgs_throttle);
-      element.addEventListener('keyup', checkFormMsgs_throttle);
+  const selectFields = document.querySelectorAll(
+    '.mktoFormRow  .mktoVisible select:not(.placeholder)',
+  );
+  for (let i = 0, len = selectFields.length; i < len; i += 1) {
+    const label = document.querySelectorAll(`label[for="${selectFields[i].name}"]`)[0];
+    if (label) {
+      let labelText = label.innerText;
+      if (labelText.length > 0) {
+        labelText = labelText.replace(':', '').trim();
+        labelText = labelText.replace(/\*/g, '').trim();
+        label.innerHTML = labelText;
+        if (selectFields[i].classList.contains('mktoRequired')) {
+          labelText += '*';
+        }
+
+        const options = selectFields[i].querySelectorAll('option');
+        let foundBlank = false;
+        for (let j = 0; j < options.length; j += 1) {
+          if (options[j].value === '') {
+            foundBlank = true;
+            options[j].text = labelText;
+            break;
+          }
+        }
+        if (!foundBlank) {
+          const blankOption = document.createElement('option');
+          blankOption.value = '';
+          blankOption.text = labelText;
+          selectFields[i].insertBefore(blankOption, selectFields[i].firstChild);
+        }
+
+        selectFields[i].classList.add('placeholder');
+      }
     }
-  });
-  if (checkFormMsgs_pending) {
-    checkFormMsgs_pending = false;
-    checkFormMsgs();
+  }
+
+  const mktoFormCols = document.querySelectorAll('.mktoFormCol');
+  for (let i = 0; i < mktoFormCols.length; i += 1) {
+    const mktoFormCol = mktoFormCols[i];
+    const mktoFormColParent = mktoFormCol.parentNode;
+    if (mktoFormColParent && mktoFormColParent.hasAttribute('data-mkto_vis_src')) {
+      const mktoPlaceholderTxt = mktoFormCol.querySelector("[class*='HtmlText']");
+      if (!mktoPlaceholderTxt) {
+        const mktoField = mktoFormCol.querySelector('.mktoField');
+        if (!mktoField) {
+          mktoFormCol.classList.remove('mktoVisible');
+        } else {
+          mktoFormCol.classList.add('mktoVisible');
+        }
+      }
+    }
   }
 }
 
-function clickCallValidation() {
-  setTimeout(() => {
-    checkFormMsgs_throttle();
-  }, 600);
+function normalizeMktoStyles() {
+  normalizeMktoStylesRun += 1;
+
+  const mktoForm = document.querySelector('.mktoForm[id]');
+
+  const mktoFormElements = mktoForm.querySelectorAll('[style]:not(.mktoCleaned)');
+  if (mktoFormElements.length > 0) {
+    for (let i = 0; i < mktoFormElements.length; i += 1) {
+      const mktoFormElement = mktoFormElements[i];
+      if (mktoFormElement.hasAttribute('style')) {
+        mktoFormElement.classList.add('mktoVisible');
+        mktoFormElement.removeAttribute('style');
+
+        addAutocompleteAttribute(mktoFormElement);
+      }
+      mktoFormElement.classList.remove('mktoHasWidth');
+    }
+  }
+
+  const mktoAsterix = mktoForm.querySelectorAll('.mktoAsterix');
+  if (mktoAsterix.length > 0) {
+    for (let i = 0; i < mktoAsterix.length; i += 1) {
+      const mktoAsterixElement = mktoAsterix[i];
+      mktoAsterixElement.parentNode.removeChild(mktoAsterixElement);
+    }
+  }
+
+  const mktoFields = mktoForm.querySelectorAll('.mktoField[name]:not(.mktofield_anchor)');
+  if (mktoFields.length > 0) {
+    for (let i = 0; i < mktoFields.length; i += 1) {
+      const mktoField = mktoFields[i];
+      if (
+        document.querySelector(
+          `.mktoFormRow[data-mktofield="${mktoField.getAttribute('name')}"]`,
+        ) === null
+      ) {
+        let mktoFieldParent = mktoField.parentNode;
+        while (mktoFieldParent !== null) {
+          if (
+            mktoFieldParent.classList
+            && mktoFieldParent.classList.contains('mktoFormRow')
+            && !mktoFieldParent.hasAttribute('data-mktofield')
+          ) {
+            mktoField.classList.add('mktofield_anchor');
+            mktoFieldParent.setAttribute('data-mktofield', mktoField.getAttribute('name'));
+            break;
+          }
+          mktoFieldParent = mktoFieldParent.parentNode;
+        }
+      }
+    }
+  }
+
+  const privacyRows = mktoForm.querySelectorAll('.mktoFormRowTop:not(.adobe-privacy)');
+  for (let i = 0; i < privacyRows.length; i += 1) {
+    const privacyRow = privacyRows[i];
+    if (privacyRow.querySelector('[class*="adobe-privacy"]')) {
+      privacyRow.classList.add('adobe-privacy');
+    }
+  }
+
+  mktOptionals(mktoForm);
+
+  const mktoFormRowTops = mktoForm.querySelectorAll('.mktoFormRow:not(.mktoFormRowTop)');
+  if (mktoFormRowTops.length > 0) {
+    for (let i = 0; i < mktoFormRowTops.length; i += 1) {
+      const mktoFormRowTop = mktoFormRowTops[i];
+      if (mktoFormRowTop.parentNode.classList.contains('mktoForm')) {
+        mktoFormRowTop.classList.add('mktoFormRowTop');
+      }
+    }
+  }
+
+  const mktoFormRows = document.querySelectorAll('.mktoFormRow:not([data-mktofield])');
+  if (mktoFormRows.length > 0) {
+    for (let i = 0; i < mktoFormRows.length; i += 1) {
+      const mktoFormRow = mktoFormRows[i];
+      const mktoFormRowChild = mktoFormRow.querySelector('.mktoFormRow:not(.mktoFormRowTop)');
+      if (mktoFormRow.parentNode.classList.contains('mktoForm')) {
+        mktoFormRow.classList.add('mktoFormRowTop');
+        const mktoPlaceholderHtmlText = mktoFormRow.querySelector(
+          "[class*='mktoPlaceholderHtmlText']",
+        );
+        if (mktoPlaceholderHtmlText) {
+          mktoFormRow.classList.add('mktoHtmlText');
+        }
+      }
+      if (mktoFormRowChild === null) {
+        if (!mktoFormRow.hasAttribute('data-mktofield')) {
+          const mktoField = mktoFormRow.querySelector('.mktoField');
+          if (mktoField && mktoField.length === 1) {
+            mktoFormRow.setAttribute('data-mktofield', mktoField.getAttribute('name'));
+            const mktoFieldDescriptor = mktoFormRow.querySelector('.mktoFieldDescriptor');
+            if (mktoFieldDescriptor) {
+              mktoFieldDescriptor.setAttribute(
+                'data-mktofield',
+                mktoField.getAttribute('name'),
+              );
+              const mktoFieldDescriptorLabel = mktoFieldDescriptor.querySelector(
+                `label[for='${mktoField.getAttribute('name')}']`,
+              );
+              if (mktoFieldDescriptorLabel) {
+                const lblText = mktoFieldDescriptorLabel.innerText
+                  .replace(/\*/g, '')
+                  .replace(':', '')
+                  .toLowerCase();
+                let primaryRow = mktoFormRow;
+                let mktoFormRowParent = mktoFormRow.parentNode;
+                while (mktoFormRowParent !== null) {
+                  if (
+                    mktoFormRowParent.classList
+                    && mktoFormRowParent.classList.contains('mktoFormRow')
+                    && !mktoFormRowParent.hasAttribute('data-mktofield')
+                  ) {
+                    primaryRow = mktoFormRowParent;
+                  }
+                  mktoFormRowParent = mktoFormRowParent.parentNode;
+                }
+                primaryRow.setAttribute('data-mktofield', mktoField.getAttribute('name'));
+                primaryRow.setAttribute('data-mktolbl', lblText);
+              }
+              mktoFieldDescriptor.classList.add('mktoVisible');
+            }
+          }
+        }
+
+        const mktoFormRowScript = mktoFormRow.querySelector('script:not(.mktoCleanedScript)');
+        if (mktoFormRowScript !== null) {
+          mktoFormRow.classList.add('mktoHidden');
+          mktoFormRow.classList.add('mktoCleanedScript');
+        }
+      }
+
+      const mktoFormRowLegends = mktoFormRow.querySelectorAll('legend:not(.mktoCleanedlegend)');
+      if (mktoFormRowLegends.length) {
+        mktoFormRowLegends.forEach((mktoFormRowLegend) => {
+          const mktoFieldset = mktoFormRowLegend.closest('fieldset');
+          const mktoHtmlText = mktoFieldset.querySelector('.mktoHtmlText');
+          const innerTextLower = mktoFormRowLegend.innerText.toLowerCase();
+
+          if (mktoHtmlText && mktoHtmlText.innerText.toLowerCase().includes('privacy')) {
+            mktoFormRow.classList.add('adobe-privacy');
+          }
+
+          if (mktoHtmlText && mktoHtmlText.innerText.toLowerCase().includes('field_rule')) {
+            handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFieldset);
+          } else if (
+            mktoHtmlText
+            && mktoHtmlText.innerText.toLowerCase().includes('fieldset_label')
+          ) {
+            handleFieldsetLabelLegend(mktoFormRowLegend, mktoFormRow, mktoFieldset);
+          } else if (innerTextLower.includes('hidden')) {
+            handleHiddenLegend(mktoFormRowLegend, mktoFormRow);
+          } else if (innerTextLower.includes('setup')) {
+            handleSetupLegend(mktoFormRowLegend, mktoFormRow);
+          } else {
+            handleOtherLegends(mktoFormRowLegend, mktoFormRow);
+          }
+
+          mktoFormRowLegend.classList.add('mktoLegend');
+        });
+      }
+    }
+  }
+
+  translateDDlbls('State', translateState);
+  updateLabels();
+  addPOIListeners();
+  updatePlaceholders();
+
+  if (mktoForm.classList.contains('validationActive')) {
+    checkFormMsgsThrottle();
+  }
+
+  if (!mktoForm.classList.contains('mktoVisible') && firstrun === false) {
+    //
+    // Focus Logic for first interactions
+    //
+
+    const mktoFormColVis = mktoForm.querySelectorAll(
+      '.mktoCleaned[data-mkto_vis_src] fieldset.mktoFormCol.mktoVisible',
+    );
+    for (let i = 0; i < mktoFormColVis.length; i += 1) {
+      const mktoPlaceholderHtmlText = mktoFormColVis[i].querySelector(
+        "[class*='mktoPlaceholderHtmlText']",
+      );
+      if (mktoPlaceholderHtmlText) {
+        // wait for the form to be visible
+      } else {
+        mktoFormColVis[i].classList.remove('mktoVisible');
+      }
+    }
+
+    if (!mktoForm.classList.contains('focusReady')) {
+      focusFlds(mktoForm);
+    }
+
+    if (window?.mcz_marketoForm_pref?.field_filters?.products === 'hidden') {
+      const formId = getMktoFormID();
+      const form = window.MktoForms2.getForm(formId);
+      uFFld(
+        form,
+        'mktoFormsPrimaryProductInterest',
+        window?.mcz_marketoForm_pref?.program?.poi,
+        true,
+      );
+    }
+
+    performance.mark('MarketoFormEnd');
+    performance.measure('MarketoFormVisible', 'MarketoFormStart', 'MarketoFormEnd');
+
+    mktoForm.removeAttribute('style');
+    mktoForm.classList.add('mktoForm--fade-in');
+
+    mktoForm.classList.add('mktoVisible');
+  }
+
+  // end normalizeMktoStyles
 }
 
-function checkFormMsgs_throttle() {
-  checkFormMsgs_now = new Date().getTime();
-  if (checkFormMsgs_now - checkFormMsgs_lastCall > checkFormMsgs_rateLimit) {
-    checkFormMsgs_lastCall = checkFormMsgs_now;
-    checkFormMsgs();
-  } else {
-    checkFormMsgs_pending = true;
+function normalizeStyles(observer, mktoForm, config) {
+  if (nStylesOn) {
+    isRequestedAgain = true;
+    return;
+  }
+
+  if (document.querySelector('#mktoFormsCompany')) {
+    document.getElementById('mktoFormsCompany').id = 'mkto_FormsCompany';
+  }
+
+  nStylesOn = true;
+  observer.disconnect();
+  try {
+    normalizeMktoStyles();
+  } catch (error) {
+    mkfC.log('normalizeMktoStyles > ', error);
+  }
+
+  observer.observe(mktoForm, config);
+  nStylesOn = false;
+
+  if (isRequestedAgain) {
+    isRequestedAgain = false;
+    normalizeStyles(observer, mktoForm, config);
+  }
+  if (firstrun && normalizeMktoStylesRun > 1) {
+    firstrun = false;
+    normalizeStyles(observer, mktoForm, config);
+  }
+}
+
+function cleaningValidationMain() {
+  const mktoForm = document.querySelector('.mktoWhenRendered.mktoForm[id]');
+  if (mktoForm) {
+    if (chkFrmInt) {
+      clearInterval(chkFrmInt);
+    }
+    renderingReady = true;
+
+    if (document.querySelector('#mktoFormsCompany')) {
+      document.getElementById('mktoFormsCompany').id = 'mkto_FormsCompany';
+    }
+
+    if (mktoForm && !mktoForm.classList.contains('observMKTO')) {
+      mktoForm.classList.add('observMKTO');
+
+      if (document.querySelector('#mktoFormsCompany')) {
+        document.getElementById('mktoFormsCompany').id = 'mkto_FormsCompany';
+      }
+
+      const config = {
+        attributes: true,
+        childList: true,
+        characterData: false,
+        subtree: true,
+      };
+
+      const observer = new MutationObserver((mutations) => {
+        if (mutations && mutations.length > 0) {
+          normalizeStyles(observer, mktoForm, config);
+        }
+      });
+
+      observer.observe(mktoForm, config);
+      normalizeStyles(observer, mktoForm, config);
+    }
   }
 }
 
@@ -1344,24 +1354,24 @@ function isElementVisible(el) {
         return false;
       }
     }
-    el = el.parentNode;
-    while (el !== null && el.nodeType === 1) {
-      const parentStyle = window.getComputedStyle(el);
+    let parentElement = el.parentNode;
+    while (parentElement !== null && parentElement.nodeType === 1) {
+      const parentStyle = window.getComputedStyle(parentElement);
       if (parentStyle.display === 'none') return false;
       if (parentStyle.visibility !== 'visible') return false;
       if (parentStyle.opacity < 0.1) return false;
       if (parentStyle.overflow !== 'visible') {
         if (
-          el.offsetWidth
-          + el.offsetHeight
-          + el.getBoundingClientRect().height
-          + el.getBoundingClientRect().width
+          parentElement.offsetWidth
+          + parentElement.offsetHeight
+          + parentElement.getBoundingClientRect().height
+          + parentElement.getBoundingClientRect().width
           === 0
         ) {
           return false;
         }
       }
-      el = el.parentNode;
+      parentElement = parentElement.parentNode;
     }
     return true;
   } catch (e) {
@@ -1369,73 +1379,46 @@ function isElementVisible(el) {
   }
 }
 
-function normalizeStyles(observer, mktoForm, config) {
-  if (nStyles_on) {
-    isRequestedAgain = true;
-    return;
-  }
+export default function cleaningValidation() {
+  mkfC.log('Cleaning & Validation - Loaded');
+  // ##
+  // ## validation messages
+  // ##
 
-  if (document.querySelector('#mktoFormsCompany')) {
-    document.getElementById('mktoFormsCompany').id = 'mkto_FormsCompany';
-  }
+  const mktoButtonRow = document.querySelector('.mktoButtonRow:not(.mktoButtonRow--observed)');
+  if (mktoButtonRow) {
+    mktoButtonRow.classList.add('mktoButtonRow--observed');
 
-  nStyles_on = true;
-  observer.disconnect();
-  try {
-    normalizeMktoStyles();
-  } catch (error) {
-    mkfC.log('normalizeMktoStyles > ', error);
-  }
-
-  observer.observe(mktoForm, config);
-  nStyles_on = false;
-
-  if (isRequestedAgain) {
-    isRequestedAgain = false;
-    normalizeStyles(observer, mktoForm, config);
-  } else {
-    const mktoLegend = document.querySelectorAll('legend:not(.mktoLegend)');
-    if (firstrun && normalizeMktoStyles_run > 1) {
-      firstrun = false;
-      normalizeStyles(observer, mktoForm, config);
-    }
-  }
-}
-
-function cleaning_validation_main() {
-  const mktoForm = document.querySelector('.mktoWhenRendered.mktoForm[id]');
-  if (mktoForm) {
-    if (chkFrmInt) {
-      clearInterval(chkFrmInt);
-    }
-    rendering_ready = true;
-
-    if (document.querySelector('#mktoFormsCompany')) {
-      document.getElementById('mktoFormsCompany').id = 'mkto_FormsCompany';
-    }
-
-    if (mktoForm && !mktoForm.classList.contains('observMKTO')) {
-      mktoForm.classList.add('observMKTO');
-
-      if (document.querySelector('#mktoFormsCompany')) {
-        document.getElementById('mktoFormsCompany').id = 'mkto_FormsCompany';
-      }
-
-      const observer = new MutationObserver((mutations) => {
-        if (mutations && mutations.length > 0) {
-          normalizeStyles(observer, mktoForm, config);
+    mktoButtonRow.addEventListener('click', () => {
+      if (!mktoButtonRow.hasAttribute('data-buttonObserver')) {
+        mktoButtonRow.setAttribute('data-buttonObserver', true);
+        const validateForms = document.querySelectorAll('[id*="mktoForm_"]:not(.validationActive)');
+        if (validateForms) {
+          for (let i = 0; i < validateForms.length; i += 1) {
+            const validateForm = validateForms[i];
+            validateForm.classList.add('validationActive');
+          }
         }
-      });
+      }
+      const requiredFields = document.querySelectorAll('.mktoRequired:not(.mktoRequiredVis)');
+      if (requiredFields) {
+        for (let i = 0; i < requiredFields.length; i += 1) {
+          const field = requiredFields[i];
+          if (isElementVisible(field)) {
+            field.classList.add('mktoRequiredVis');
+          }
+        }
+        if (requiredFields.length > 0) {
+          setTimeout(checkFormMsgsThrottle, 10);
+        }
+      }
+    });
+  }
 
-      let config = {
-        attributes: true,
-        childList: true,
-        characterData: false,
-        subtree: true,
-      };
+  // ###########################################
 
-      observer.observe(mktoForm, config);
-      normalizeStyles(observer, mktoForm, config);
-    }
+  cleaningValidationMain();
+  if (!renderingReady) {
+    chkFrmInt = setInterval(cleaningValidationMain, 10);
   }
 }
