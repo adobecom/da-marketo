@@ -541,7 +541,7 @@ function checkFormMsgs() {
   }
 }
 
-const addAutocompleteAttribute = (() => {
+export const addAutocompleteAttribute = () => {
   const mktoForm = document.querySelector('.mktoForm[id]');
   // Turning off autocomplete on form. Whitelist selected inputs individually.
   mktoForm.setAttribute('autocomplete', 'off');
@@ -558,7 +558,7 @@ const addAutocompleteAttribute = (() => {
       mktoFormElement.setAttribute('autocomplete', autocompleteToken);
     }
   };
-})();
+};
 
 function mktOptionals(mktoForm) {
   if (!mktoForm) {

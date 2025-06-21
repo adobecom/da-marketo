@@ -9,9 +9,6 @@ import { privacyValidation } from './privacy_validation_process.js';
 
 const mktoFormsLoaded = {};
 const mktoFrmParams = new URLSearchParams(window.location.search);
-const mktoForm = document.querySelector('.mktoForm');
-mktoForm.setAttribute('style', 'opacity:0');
-mktoForm.classList.add('starting_fieldset');
 let consStyl = 'font-size: 1.2em; color: green; font-weight: bold; ';
 let renderingReview;
 let uniqueId = '';
@@ -22,6 +19,9 @@ let mktoFormConfirm;
 export default async function init(renderingReviewS) {
   renderingReview = renderingReviewS;
   mkfC.log('Form - Begin');
+  const mktoForm = document.querySelector('.mktoForm');
+  mktoForm.setAttribute('style', 'opacity:0');
+  mktoForm.classList.add('starting_fieldset');
 
   const mktoPerformanceObserver = new PerformanceObserver((list) => {
     const entries = list.getEntries();

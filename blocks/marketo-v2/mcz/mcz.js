@@ -10,24 +10,17 @@ import analytics from './adobe_analytics.js';
 import setupCategoryFilters from './category_filters.js';
 import translations from './general_translations.js';
 import { renderingReview } from './rendering_review.js';
+import { addAutocompleteAttribute } from './cleaning_validation.js';
 
-export default async function initMarketoFormModules() {
+export default function init() {
   loadStyle('/blocks/marketo-v2/mcz/marketo.css');
-
-  // 1. Rules and constants
-  await setupRules();
+  setupRules();
   templateRules();
-
-  // 2. Setup process and privacy validation
-  await setupProcess(renderingReview);
-  await privacyProcess(marketoFormSetup);
-
-  // 3. Field preferences and analytics
-  await analytics();
-
-  // 4. Category filters, cleaning/validation, translations, rendering review
-  await setupCategoryFilters();
-  await translations();
-
-  return { marketoFormSetup };
+  setupProcess(renderingReview);
+  privacyProcess(marketoFormSetup);
+  analytics();
+  addAutocompleteAttribute();
+  setupCategoryFilters();
+  translations();
+  marketoFormSetup('stage1');
 }

@@ -207,40 +207,29 @@ const readyForm = (form, formData) => {
   form.onSuccess(() => formSuccess(formEl, formData));
 };
 
-export const loadMarketo = async (el, formData) => {
+export const loadMarketo = (el, formData) => {
   const baseURL = formData[BASE_URL];
   const munchkinID = formData[MUNCHKIN_ID];
   const formID = formData[FORM_ID];
-  const forms2 = loadScript('/deps/forms2.js');
-  const mcz = import('./mcz/index.js');
-
-  Promise.all([mcz, forms2])
-    .then(async ([mczModule]) => {
-      const { MktoForms2 } = window;
-      if (!MktoForms2) throw new Error('Marketo forms not loaded');
-      if (!mczModule?.default) throw new Error('Marketo modules not loaded');
-      const { default: initMarketoFormModules } = mczModule;
-      const { marketoFormSetup } = await initMarketoFormModules();
-
-      MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID, () => {
-        // eslint-disable-next-line no-undef
-        marketoFormSetup('stage1');
-        // eslint-disable-next-line no-console
-        console.log(`Marketo form ${munchkinID}_${formID} loaded successfully`);
-      });
-      MktoForms2.whenReady((form) => { readyForm(form, formData); });
-      /* c8 ignore next 3 */
-      if (el.classList.contains('multi-step')) {
-        import('./marketo-multi.js').then(({ default: multiStep }) => multiStep(el));
-      }
-    })
-    .catch((err) => {
-      /* c8 ignore next 2 */
-      el.style.display = 'none';
-      // eslint-disable-next-line no-console
-      console.error(`Error loading Marketo form for ${munchkinID}_${formID}`, err);
-      window.lana?.log(`Error loading Marketo form for ${munchkinID}_${formID}`, { tags: 'error,marketo' });
+  loadLink(`https://${baseURL}`, { rel: 'preconnect' });
+  loadScript('/deps/forms2.js').then(() => {
+    const { MktoForms2 } = window;
+    if (!MktoForms2) throw new Error('Marketo forms not loaded');
+    const mczModule = import('./mcz/mcz.js');
+    MktoForms2.loadForm(`//${baseURL}`, munchkinID, formID, () => {
+      mczModule.then(({ default: mcz }) => mcz());
     });
+    MktoForms2.whenReady((form) => { readyForm(form, formData); });
+    if (el.classList.contains('multi-step')) {
+      import('./marketo-multi.js').then(({ default: multiStep }) => multiStep(el));
+    }
+  }).catch((err) => {
+    /* c8 ignore next 2 */
+    el.style.display = 'none';
+    // eslint-disable-next-line no-console
+    console.error(`Error loading Marketo form for ${munchkinID}_${formID}`, err);
+    window.lana?.log(`Error loading Marketo form for ${munchkinID}_${formID}`, { tags: 'error,marketo' });
+  });
 };
 
 export default function init(el) {
@@ -321,8 +310,6 @@ export default function init(el) {
   if (el.classList.contains('multi-2') || el.classList.contains('multi-3')) {
     el.classList.add('multi-step');
   }
-
-  loadLink(`https://${baseURL}`, { rel: 'dns-prefetch' });
 
   createIntersectionObserver({
     el,
