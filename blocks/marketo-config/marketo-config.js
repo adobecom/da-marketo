@@ -5,7 +5,6 @@ import { ConfiguratorContext, ConfiguratorProvider, saveStateToLocalStorage } fr
 import Accordion from '../../ui/controls/Accordion.js';
 import CopyBtn from '../../ui/controls/CopyBtn.js';
 import { Input, Select } from '../../ui/controls/formControls.js';
-import TagSelect from '../../ui/controls/TagSelector.js';
 
 async function fetchData(url) {
   const resp = await fetch(url.toLowerCase());
@@ -108,106 +107,6 @@ const validateState = (state, panelsData) => {
   return validatedState;
 };
 
-const DropdownSelect = ({ label, options, prop }) => {
-  const { dispatch, state } = useContext(ConfiguratorContext);
-  const onChange = (selections) => {
-    dispatch({
-      type: 'SET_VALUE',
-      prop,
-      value: selections,
-    });
-  };
-
-  return html`
-    <${TagSelect}
-      id=${prop}
-      options=${options}
-      value=${state[prop]}
-      label=${label}
-
-      onChange=${onChange}
-    />
-  `;
-};
-
-const StepPanel = (lsKey) => {
-  const { state, dispatch } = useContext(ConfiguratorContext);
-  const onChange = (prop, value) => {
-    dispatch({
-      type: 'SET_VALUE',
-      prop,
-      value,
-    });
-  };
-
-  const stepOptions = { 1: '1', 2: '2', 3: '3' };
-
-  const setDefaultSteps = () => {
-    const defaultStepFields = state?.fldStepPref || {
-      1: ['firstName', 'lastName', 'email', 'phone', 'company', 'country', 'state', 'postalCode'],
-      2: ['mktoFormsJobTitle', 'mktoFormsCompany', 'mktoFormsFunctionalArea', 'mktoFormsRevenue', 'mktoFormsEmployeeRange'],
-      3: ['mktoFormsPrimaryProductInterest', 'mktoFormsComments', 'mktoRequestProductDemo'],
-    };
-
-    const stepCount = parseInt(state.fldStepCount, 10) || 1;
-    if (stepCount === 1) {
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-1', value: defaultStepFields[1].concat(defaultStepFields[2], defaultStepFields[3]) });
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-2', value: [] });
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-3', value: [] });
-    } else if (stepCount === 2) {
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-1', value: defaultStepFields[1] });
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-2', value: defaultStepFields[2].concat(defaultStepFields[3]) });
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-3', value: [] });
-    } else {
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-1', value: defaultStepFields[1] });
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-2', value: defaultStepFields[2] });
-      dispatch({ type: 'SET_VALUE', prop: 'fldStepPref-3', value: defaultStepFields[3] });
-    }
-  };
-
-  useEffect(() => {
-    setDefaultSteps();
-  }, [state.fldStepCount]);
-
-  const allFields = {
-    firstName: 'First Name',
-    lastName: 'Last Name',
-    email: 'Email',
-    phone: 'Phone',
-    company: 'Company',
-    country: 'Country',
-    state: 'State',
-    postalCode: 'Postal Code',
-    mktoFormsJobTitle: 'Job Title',
-    mktoFormsCompany: 'Company Name',
-    mktoFormsFunctionalArea: 'Functional Area',
-    mktoFormsRevenue: 'Annual Revenue',
-    mktoFormsEmployeeRange: 'Employee Range',
-    mktoFormsPrimaryProductInterest: 'Primary Product Interest',
-    mktoFormsComments: 'Comments',
-    mktoRequestProductDemo: 'Request Product Demo',
-  };
-
-  const stepCount = parseInt(state.fldStepCount, 10) || 1;
-  const steps = Array.from({ length: stepCount }, (_, index) => {
-    const step = index + 1;
-    return html`
-      <div class="step-config">
-        <${DropdownSelect} options=${allFields} prop=${`fldStepPref-${step}`} label="Fields for step ${step}" />
-      </div>
-    `;
-  });
-
-  return html`
-    <div class="step-panel">
-      <div class="steps-config">
-        <${Select} label="Number of Steps" name="fldStepCount" options=${stepOptions} value=${state.fldStepCount} onChange=${(value) => onChange('fldStepCount', value)} />
-        ${steps}
-        <button class="resetToDefaultState" onClick=${setDefaultSteps}>Reset steps</button>
-      </div>
-    </div>`;
-};
-
 const AdvancedPanel = (lsKey) => {
   const { dispatch } = useContext(ConfiguratorContext);
   const onClick = () => {
@@ -229,10 +128,6 @@ const getPanels = (panelsData, lsKey) => {
     content: html`<${Fields} fieldsData=${panelConfig} />`,
   }));
 
-  panels.push({
-    title: 'Multi-Step',
-    content: html`<${StepPanel} lskey=${lsKey} />`,
-  });
   panels.push({
     title: 'Advanced',
     content: html`<${AdvancedPanel} lskey=${lsKey}/>`,
