@@ -1,6 +1,3 @@
-/* eslint-disable camelcase */
-/* eslint-disable max-len */
-/* eslint-disable no-restricted-syntax */
 // Privacy Validation - Rules
 
 // Supported Languages, this must align with Marketo Segmentation
