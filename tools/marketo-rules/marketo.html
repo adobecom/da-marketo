@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Marketo Rules</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="NOINDEX, NOFOLLOW">
+    <script src="/scripts/fallback.js" nomodule></script>
+    <script>
+      const libs = (() => {
+        const { hostname, search } = window.location;
+        if (!['.aem.', '.hlx.', '.stage.', 'local'].some((i) => hostname.includes(i))) return '/libs';
+        const branch = new URLSearchParams(search).get('milolibs') || 'main';
+        if (branch === 'local') return 'http://localhost:6456/libs';
+        return branch.includes('--') ? `https://${branch}.aem.live/libs` : `https://${branch}--milo--adobecom.aem.live/libs`;
+      })();
+
+      const miloStyles = document.createElement('link');
+      const miloUtils = document.createElement('link');
+      const miloDecorate = document.createElement('link');
+
+      miloStyles.setAttribute('as', 'style');
+      miloStyles.setAttribute('href', `${libs}/styles/styles.css`);
+
+      [miloUtils, miloDecorate].forEach((tag) => {
+        tag.setAttribute('crossorigin', 'true');
+        tag.setAttribute('as', 'script');
+      })
+
+      miloUtils.setAttribute('href', `${libs}/utils/utils.js`);
+      miloDecorate.setAttribute('href', `${libs}/utils/decorate.js`);
+
+      [miloStyles, miloUtils, miloDecorate].forEach((tag) => tag.setAttribute('rel', 'preload'));
+      document.head.append(miloStyles, miloUtils, miloDecorate);
+    </script>
+    <script src="/scripts/scripts.js" type="module"></script>
+    <style>body { display: none; }</style>
+    <link rel="icon" href="data:,">
+    <script>
+      const CONFIG_URL = 'https://milo.adobe.com/tools/marketo';
+      const DEFAULT_CONFIG = {
+        'form id': '2277',
+        'marketo host': 'engage.adobe.com',
+        'marketo munckin': '360-KCI-804',
+        'form.success.type': 'redirect',
+        'form.success.content': CONFIG_URL,
+      };
+
+      function utf8ToB64(str) {
+        return btoa(unescape(encodeURIComponent(str)));
+      }
+
+      function getConfigFromParams() {
+        const config = { ...DEFAULT_CONFIG };
+        const formId = new URLSearchParams(window.location.search).get('formId');
+        if (formId && /^\d+$/.test(formId)) {
+          config['form id'] = formId;
+        }
+        return config;
+      }
+
+      const formConfig = getConfigFromParams();
+      const configUrl = `${CONFIG_URL}#${utf8ToB64(JSON.stringify(formConfig))}`;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const link = document.querySelector('.marketo a');
+        if (link) {
+          link.href = configUrl;
+          link.textContent = configUrl;
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <header></header>
+    <main>
+      <div>
+        <div class="marketo">
+          <div>
+            <div><a href="">Marketo Form</a></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer></footer>
+    <script type="module">
+
+      function postMarketoRules() {
+        if (!window?.MktoForms2) {
+          setTimeout(postMarketoRules, 100);
+          return;
+        }
+
+        window.MktoForms2.whenReady(() => {
+          if (window.self === window.top) {
+            console.log('templateRules', window.templateRules);
+            console.log('SUPPORTED_LANGUAGES', window.SUPPORTED_LANGUAGES);
+            return;
+          }
+
+          const { origin } = new URL(document.referrer);
+
+          if (origin !== 'http://localhost:3000'
+            && origin !== 'https://localhost'
+            && !origin.match(/^https:\/\/[a-z0-9-]+--da-(bacom|marketo)--adobecom\.aem\.(page|live)$/)
+          ) {
+            // eslint-disable-next-line no-console
+            console.warn('Origin not allowed');
+            return;
+          }
+
+          window.parent.postMessage({ type: 'templateRules', data: window.templateRules }, origin);
+          window.parent.postMessage({ type: 'supportedLanguages', data: window.SUPPORTED_LANGUAGES }, origin);
+        });
+      }
+      postMarketoRules();
+    </script>
+  </body>
+</html>
