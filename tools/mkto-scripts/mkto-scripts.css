@@ -1,0 +1,103 @@
+:root {
+  --color-text: #1d1d1d;
+  --color-muted: rgb(0 0 0 / 55%);
+  --color-border: #ccc;
+  --color-error: #b00020;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: var(--color-text);
+  line-height: 1.45;
+}
+
+.mkto-scripts-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.mkto-scripts-page h1 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.mkto-scripts-status {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.mkto-scripts-status.mkto-scripts-error {
+  color: var(--color-error);
+}
+
+.mkto-scripts-panel {
+  margin-bottom: 1.5rem;
+}
+
+.mkto-scripts-panel h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.mkto-scripts-panel pre {
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  max-height: 24rem;
+  font-size: 0.8125rem;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  background: #fff;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mkto-scripts-chunk {
+  margin-bottom: 1rem;
+}
+
+.mkto-scripts-chunk h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+  color: var(--color-muted);
+}
+
+.mkto-scripts-hint {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  margin-bottom: 1rem;
+}
+
+.mkto-scripts-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.mkto-scripts-toolbar-label {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.mkto-scripts-select {
+  min-width: min(100%, 28rem);
+  padding: 0.4rem 0.5rem;
+  font-size: 0.9375rem;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  background: #fff;
+}
+
+@media (max-width: 640px) {
+  .mkto-scripts-page {
+    padding: 1rem;
+  }
+}

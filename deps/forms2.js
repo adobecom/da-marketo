@@ -6241,6 +6241,10 @@ var Form = function (formData, modernizr, opts){
       descriptor.data("mktoFieldDescriptor", fieldData);
       return descriptor;
     }else if (field.Datatype == "htmltext" || field.Datatype == "richtext"){
+      if ((field.Htmltext || field.InputLabel).includes("<script>")) {
+        field.Htmltext = field.Htmltext.replaceAll("<script>", "<script type='text/plain'>");
+        field.InputLabel = field.InputLabel.replaceAll("<script>", "<script type='text/plain'>");
+      }
       return $b.docFrag([
         $b(".mktoOffset.mktoHasWidth").css({width:first(field.OffsetWidth, formData.OffsetWidth, 0)}),
         $b(".mktoFieldWrap",[

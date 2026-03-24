@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="NOINDEX, NOFOLLOW">
+  <title>Marketo form scripts inspector</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./mkto-scripts.css">
+</head>
+<body>
+  <div class="mkto-scripts-page">
+    <h1>Marketo form scripts inspector</h1>
+    <p class="mkto-scripts-hint">Loads getForm via JSONP (no forms2). Host, munchkin ID, and page URL are fixed in code. Choose a form below or open with <code>?form=</code> in the URL. Results: <code>window.mktoScriptsExtract</code>.</p>
+
+    <div class="mkto-scripts-toolbar">
+      <label class="mkto-scripts-toolbar-label" for="mkto-form-select">Form ID</label>
+      <select id="mkto-form-select" class="mkto-scripts-select" aria-label="Marketo form ID"></select>
+    </div>
+
+    <div id="mkto-status" class="mkto-scripts-status" hidden></div>
+
+    <section class="mkto-scripts-panel">
+      <h2>HTML (embedded scripts removed; style tags stripped)</h2>
+      <pre id="mkto-out-html"></pre>
+    </section>
+
+    <section class="mkto-scripts-panel">
+      <h2>Scripts</h2>
+      <div id="mkto-out-scripts"></div>
+    </section>
+  </div>
+  <script type="module" src="./mkto-scripts.js"></script>
+</body>
+</html>

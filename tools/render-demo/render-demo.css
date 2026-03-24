@@ -1,0 +1,520 @@
+:host {
+  --marketo-form-text: #535353;
+  --marketo-form-background: #FAFAFA;
+  --marketo-form-border: #6E6E6E;
+  --marketo-form-error: #D31510;
+  --marketo-form-selected: #0265DC;
+  --marketo-form-focus: #147AF3;
+  --form-demo-accent: #4263f5;
+}
+
+.form-engine-demo {
+  display: block;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.form-demo-main-row {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr minmax(140px, 200px);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-demo-actions {
+  padding: 1rem;
+  border: 1px solid rgb(0 0 0 / 15%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 3%);
+  align-content: start;
+}
+
+.form-demo-configurator {
+  padding: 1rem;
+  border: 1px solid rgb(0 0 0 / 15%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 3%);
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.form-demo-configurator-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.form-demo-control {
+  margin-bottom: 0.75rem;
+}
+
+.form-demo-control .form-demo-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.form-demo-locale-select,
+.form-demo-preset-select,
+.form-demo-template-select,
+.form-demo-success-select {
+  min-width: 10rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid rgb(0 0 0 / 20%);
+  border-radius: 4px;
+}
+
+.form-demo-input {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid rgb(0 0 0 / 20%);
+  border-radius: 4px;
+}
+
+.form-demo-input-number {
+  max-width: 5rem;
+}
+
+.form-demo-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.form-demo-control-row {
+  margin-bottom: 0.5rem;
+}
+
+.form-demo-button {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid rgb(0 0 0 / 25%);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.form-demo-button:hover {
+  background: rgb(0 0 0 / 5%);
+}
+
+.form-demo-preview {
+  min-width: 0;
+  margin-bottom: 1.5rem;
+  min-height: 200px;
+  padding: 1.5rem;
+  border: 1px solid rgb(0 0 0 / 12%);
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+}
+
+.form-demo-preview-inner {
+  min-height: 120px;
+  position: relative;
+}
+
+.form-demo-skeleton {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem 1.5rem;
+}
+
+.form-demo-skeleton-field {
+  height: 5.5rem;
+  background: rgb(0 0 0 / 8%);
+  border-radius: 6px;
+}
+
+.form-demo-skeleton-field span {
+  display: block;
+}
+
+.form-demo-skeleton-wrapper {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+  padding: 1.5rem 1.75rem;
+  max-width: 32rem;
+}
+
+.form-demo-skeleton-heading {
+  height: 2.25rem;
+  margin-bottom: 1.25rem;
+  background: rgb(0 0 0 / 6%);
+  border-radius: 4px;
+}
+
+.form-demo-skeleton-button {
+  grid-column: span 2;
+  height: 3rem;
+  margin-top: 1rem;
+  background: rgb(0 0 0 / 8%);
+  border-radius: 24px;
+  max-width: 8rem;
+  justify-self: center;
+}
+
+.form-demo-preview-inner .form-demo-form-visible ~ .form-demo-skeleton-wrapper,
+.form-demo-preview-inner .form-demo-form-visible + .form-demo-skeleton-wrapper {
+  display: none;
+}
+
+.form-demo-preview-inner:has(.form-demo-form-visible) .form-demo-skeleton-wrapper {
+  display: none;
+}
+
+.form-demo-form-wrapper {
+  box-sizing: border-box;
+  max-width: 584px;
+  min-height: 215px;
+  margin: 0 auto;
+  padding: 24px 30px;
+  background-color: var(--marketo-form-background);
+}
+
+.form-demo-form-heading {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #2c2c2c;
+}
+
+.form-demo-form {
+  display: block;
+  max-width: 100%;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.form-demo-general-error {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--marketo-form-error);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-demo-general-error-icon {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath fill='%23D31510' d='M11 2.206L2.206 19.794h17.588L11 2.206zm0 14.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25v-1.5a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v1.5zm0-3.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25v-6a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v6z'/%3E%3C/svg%3E") no-repeat center;
+  background-size: 22px 22px;
+  flex-shrink: 0;
+}
+
+.form-demo-form .form-demo-label {
+  color: #2c2c2c;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  padding-bottom: 4px;
+  width: auto;
+}
+
+.form-demo-select {
+  width: 100%;
+}
+
+.form-demo-form .form-demo-input,
+.form-demo-form .form-demo-select {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-height: 2.5rem;
+  padding: 9px 36px 9px 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #2c2c2c;
+  background-color: #fff;
+  border: 1px solid var(--marketo-form-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+  box-shadow: none;
+  visibility: visible;
+}
+
+.form-demo-form.form-demo-form-show-errors .form-demo-input.form-demo-input-invalid:not(:focus),
+.form-demo-form.form-demo-form-show-errors .form-demo-select.form-demo-input-invalid:not(:focus) {
+  border: 1px solid var(--marketo-form-error);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath fill='%23D31510' d='M11 2.206L2.206 19.794h17.588L11 2.206zm0 14.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25v-1.5a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v1.5zm0-3.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25v-6a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 19.5px 19.5px;
+}
+
+.form-demo-form .form-demo-input::placeholder,
+.form-demo-form .form-demo-select::placeholder {
+  font-weight: 400;
+  color: var(--marketo-form-text);
+  opacity: 0.85;
+}
+
+.form-demo-form .form-demo-select {
+  appearance: none;
+  /* stylelint-disable-next-line property-no-vendor-prefix */
+  -webkit-appearance: none;
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-58 29 32 34' style='enable-background:new -58 29 32 34' xml:space='preserve'%3E%3Cpath d='m-56 43 6-12 6 12h-12zm12 6-6 12-6-12h12z' fill='%23535353'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 1em 1em;
+}
+
+.form-demo-form.form-demo-form-show-errors .form-demo-select.form-demo-input-invalid:not(:focus) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath fill='%23D31510' d='M11 2.206L2.206 19.794h17.588L11 2.206zm0 14.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25v-1.5a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v1.5zm0-3.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25v-6a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v6z'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-58 29 32 34'%3E%3Cpath d='m-56 43 6-12 6 12h-12zm12 6-6 12-6-12h12z' fill='%23D31510'/%3E%3C/svg%3E");
+  background-position: right 10px center, right 30px center;
+  background-size: 19.5px 19.5px, 1em 1em;
+}
+
+.form-demo-form .form-demo-input:focus-visible,
+.form-demo-form .form-demo-select:focus-visible {
+  outline: 2px solid var(--marketo-form-focus);
+  outline-offset: 2px;
+}
+
+.form-demo-fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 4.6%;
+  row-gap: 0;
+  border: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+}
+
+.form-demo-field {
+  margin-bottom: 11px;
+}
+
+.form-demo-field-hidden {
+  display: none;
+}
+
+.form-demo-form .form-demo-label-required::after {
+  content: "*";
+  color: var(--marketo-form-error);
+}
+
+.form-demo-field-error {
+  display: block;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--marketo-form-error);
+  margin-top: 0.25rem;
+  width: 100%;
+}
+
+.form-demo-textarea {
+  min-height: 4rem;
+  resize: vertical;
+}
+
+.form-demo-privacy {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgb(0 0 0 / 5%);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.form-demo-step-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 21px;
+  width: 100%;
+}
+
+.form-demo-form .form-demo-step-nav .form-demo-button-back {
+  appearance: button;
+  padding: 0 24px;
+  font-size: 16px;
+  line-height: 32px;
+  border-radius: 24px;
+  border: 1px solid rgb(0 0 0 / 25%);
+  background-color: #fff;
+  color: inherit;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form-demo-form .form-demo-step-nav .form-demo-submit,
+.form-demo-form .form-demo-step-nav .form-demo-button-next {
+  appearance: button;
+  background-color: #3a6bff;
+  border: none;
+  border-radius: 24px;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  padding: 0 24px;
+  font-size: 16px;
+  line-height: 32px;
+  width: initial;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 125ms ease-out;
+}
+
+.form-demo-form .form-demo-step-nav .form-demo-submit:hover,
+.form-demo-form .form-demo-step-nav .form-demo-button-next:hover {
+  background-color: #3558e6;
+  border: none;
+}
+
+.form-demo-form .form-demo-step-nav .form-demo-submit:focus-visible,
+.form-demo-form .form-demo-step-nav .form-demo-button-next:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 80%);
+  outline-offset: 2px;
+}
+
+.form-demo-step-indicator {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 21px;
+  color: var(--marketo-form-text);
+}
+
+.form-demo-success-message {
+  padding: 1.5rem;
+  font-size: 1rem;
+  color: rgb(0 80 0);
+}
+
+.form-demo-preview-placeholder {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgb(0 0 0 / 60%);
+}
+
+.form-demo-debug-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(200px, 1fr) minmax(200px, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-demo-debug-section {
+  padding: 1rem;
+  border: 1px solid rgb(0 0 0 / 15%);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 2%);
+  font-size: 0.875rem;
+  min-width: 0;
+}
+
+.form-demo-debug-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.form-demo-debug-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-demo-debug-section-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgb(0 0 0 / 70%);
+}
+
+.form-demo-debug-muted {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgb(0 0 0 / 55%);
+}
+
+.form-demo-debug-config,
+.form-demo-debug-state {
+  margin-bottom: 1rem;
+}
+
+.form-demo-debug-pre {
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 12rem;
+  overflow: auto;
+  font-size: 0.75rem;
+  background: rgb(0 0 0 / 6%);
+  border-radius: 4px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.form-demo-event-log-list {
+  max-height: 14rem;
+  overflow: auto;
+  padding: 0.5rem;
+  background: rgb(0 0 0 / 6%);
+  border-radius: 4px;
+}
+
+.form-demo-event-entry {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgb(0 0 0 / 10%);
+}
+
+.form-demo-event-entry:last-child {
+  border-bottom: none;
+}
+
+.form-demo-event-time {
+  font-size: 0.7rem;
+  color: rgb(0 0 0 / 55%);
+  margin-right: 0.5rem;
+}
+
+.form-demo-event-name {
+  font-weight: 500;
+}
+
+.form-demo-event-payload {
+  margin: 0.25rem 0 0;
+  font-size: 0.7rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+@media screen and (min-width: 600px) {
+  .form-demo-form .form-demo-fieldset {
+    column-gap: 4.6%;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-demo-main-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-demo-debug-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-demo-fieldset {
+    grid-template-columns: 1fr;
+  }
+}
