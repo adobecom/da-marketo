@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="NOINDEX, NOFOLLOW">
+  <title>Marketo form scripts diff</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./mkto-scripts-diff.css">
+</head>
+<body>
+  <div class="mkto-diff-page">
+    <h1>Marketo form scripts diff</h1>
+    <p class="mkto-diff-hint">Compares extracted scripts between two forms (getForm JSONP). Host, munchkin ID, and page URL match the scripts inspector. Use <code>?formA=</code> and <code>?formB=</code>. Identical scripts are collapsed by default. Changed diffs open at the <strong>top</strong> of the file; use <strong>Prev change</strong> / <strong>Next change</strong> (or focus the bar and use <kbd>←</kbd> <kbd>→</kbd> or <kbd>P</kbd> / <kbd>N</kbd>) to move between hunks—<strong>Prev</strong> from the first hunk returns to the top. Results: <code>window.mktoScriptsDiff</code>.</p>
+
+    <div class="mkto-diff-toolbar">
+      <div class="mkto-diff-toolbar-row">
+        <label class="mkto-diff-toolbar-label" for="mkto-diff-form-a">Form A</label>
+        <select id="mkto-diff-form-a" class="mkto-diff-select" aria-label="Marketo form A"></select>
+      </div>
+      <div class="mkto-diff-toolbar-row">
+        <label class="mkto-diff-toolbar-label" for="mkto-diff-form-b">Form B</label>
+        <select id="mkto-diff-form-b" class="mkto-diff-select" aria-label="Marketo form B"></select>
+      </div>
+    </div>
+
+    <div id="mkto-diff-status" class="mkto-diff-status" hidden></div>
+
+    <section class="mkto-diff-panel" id="mkto-diff-summary-section" hidden>
+      <h2>Summary</h2>
+      <ul id="mkto-diff-summary" class="mkto-diff-summary-list"></ul>
+    </section>
+
+    <section class="mkto-diff-panel">
+      <h2>Details</h2>
+      <div id="mkto-diff-details"></div>
+    </section>
+  </div>
+  <script type="module" src="./mkto-scripts-diff.js"></script>
+</body>
+</html>

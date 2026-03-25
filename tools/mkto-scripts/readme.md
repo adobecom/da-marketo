@@ -22,7 +22,9 @@ Each field may have an `Htmltext` property containing raw HTML with embedded `<s
 
 Open [mkto-scripts.html](./mkto-scripts.html) via a local static server (or any https origin). Styles live in [mkto-scripts.css](./mkto-scripts.css).
 
-**Fixed in code:** Marketo host, munchkin ID, and `url=` page URL — see `MKTO_DEFAULTS` in [mkto-scripts.js](./mkto-scripts.js).
+**Fixed in code:** Marketo host, munchkin ID, and `url=` page URL — see `MKTO_DEFAULTS` in [mkto-scripts-defaults.js](./mkto-scripts-defaults.js) (shared with the scripts diff tool).
+
+To **compare scripts between two form IDs**, use [../mkto-scripts-diff/mkto-scripts-diff.html](../mkto-scripts-diff/mkto-scripts-diff.html) (`?formA=` and `?formB=`).
 
 **Form ID:** Dropdown or **`?form=`** only (no `formId`). If missing, `?form=2277` is applied. **`subFolders`** per form is defined on each `FORM_OPTIONS` entry and passed into `extractFromFormData(raw, { subFolders })`.
 
@@ -38,6 +40,7 @@ On error: `{ error, raw?, html: '', scripts: [] }`.
 
 ## Files
 
+- [mkto-scripts-defaults.js](./mkto-scripts-defaults.js) — shared `MKTO_DEFAULTS`, `FORM_OPTIONS`, `subFoldersForFormId`
 - [mkto-scripts.js](./mkto-scripts.js) — UI, `?form=`, `window.mktoScriptsExtract` (ES module)
 - [mkto-form-fetch.js](./mkto-form-fetch.js) — getForm JSONP, flatten fields, Htmltext extraction
 - [mkto-script-filename-mapping.js](./mkto-script-filename-mapping.js) — default export `resolveScriptFilename`
