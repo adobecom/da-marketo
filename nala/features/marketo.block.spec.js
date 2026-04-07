@@ -1,0 +1,68 @@
+const features = [
+  {
+    tcid: '0',
+    name: '@marketo full template (redirect)',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFullRedirect @marketoRedirect @smoke @regression',
+    type: 'redirect',
+    formType: 'full',
+  },
+  {
+    tcid: '1',
+    name: '@marketo expanded template (redirect)',
+    path: ['/drafts/nala/blocks/marketo/expanded'],
+    tags: '@marketo @marketoExpandedRedirect @marketoRedirect @smoke @regression',
+    type: 'redirect',
+    formType: 'expanded',
+  },
+  {
+    tcid: '2',
+    name: '@marketo essential template (redirect)',
+    path: ['/drafts/nala/blocks/marketo/essential'],
+    tags: '@marketo @marketoEssentialRedirect @marketoRedirect @smoke @regression',
+    type: 'redirect',
+    formType: 'essential',
+  },
+  {
+    tcid: '3',
+    name: '@marketo full template (message)',
+    path: ['/drafts/nala/blocks/marketo/full-message'],
+    tags: '@marketo @marketoFullMessage @marketoMessage @smoke @regression',
+    type: 'message',
+    formType: 'full',
+  },
+  {
+    tcid: '4',
+    name: '@marketo expanded template (message)',
+    path: ['/drafts/nala/blocks/marketo/expanded-message'],
+    tags: '@marketo @marketoExpandedMessage @marketoMessage @smoke @regression',
+    type: 'message',
+    formType: 'expanded',
+  },
+  {
+    tcid: '5',
+    name: '@marketo essential template (message)',
+    path: ['/drafts/nala/blocks/marketo/essential-message'],
+    tags: '@marketo @marketoEssentialMessage @marketoMessage @smoke @regression',
+    type: 'message',
+    formType: 'essential',
+  },
+  {
+    tcid: '6',
+    name: '@marketo show/hide post form submission',
+    path: ['/drafts/nala/blocks/marketo/show-hide'],
+    tags: '@marketo @marketoShowHide @smoke @regression',
+    type: 'showHide',
+    formType: 'essential',
+  },
+  {
+    tcid: '7',
+    name: '@marketo form off param',
+    path: ['/drafts/nala/blocks/marketo/show-hide'],
+    tags: '@marketo @marketoShowHide @marketoFormOff @smoke @regression',
+    type: 'formOff',
+    formType: 'essential',
+  },
+];
+
+export default features;
