@@ -27,6 +27,13 @@ module.exports = {
       files: ['test/**/*.js'],
       rules: { 'no-console': 'off' },
     },
+    {
+      files: ['nala/**/*.js', 'playwright.config.js'],
+      rules: {
+        'no-console': 'off',
+        'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+      },
+    },
   ],
   plugins: [
     'chai-friendly',
