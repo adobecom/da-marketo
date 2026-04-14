@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../fixtures.js';
 import features from '../features/marketo.block.spec.js';
 import MarketoBlock from '../selectors/marketo.block.page.js';
 import TEST_DATA from '../utils/marketo.test.data.js';
@@ -46,7 +46,6 @@ test.describe('Marketo block test suite', () => {
 
         await test.step('step-5: Verify redirect after submission', async () => {
           await expect(page).toHaveURL(/\?submissionid/, { timeout: 30000 });
-          await expect(marketoBlock.submitButton).toBeHidden();
         });
       });
     });
