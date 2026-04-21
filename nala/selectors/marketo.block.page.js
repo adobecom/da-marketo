@@ -31,7 +31,11 @@ export default class MarketoBlock {
     // -------------------------------------------------------------------------
     // UI elements
     // -------------------------------------------------------------------------
+    this.formEl = this.marketo.locator('form');
     this.submitButton = this.marketo.locator('#mktoButton_new');
+    this.nextButton = this.marketo.locator('#mktoButton_next');
+    this.backButton = this.marketo.locator('.back-btn');
+    this.stepIndicator = this.marketo.locator('.step-details .step');
     this.message = this.marketo.locator('.ty-message');
     this.title = this.marketo.locator('.marketo-title');
     this.description = this.marketo.locator('.marketo-description');
@@ -57,21 +61,17 @@ export default class MarketoBlock {
     };
   }
 
-  /**
-   * Navigates to the given URL and waits for the Marketo form to be ready.
-   * Falls back to networkidle if the email field is not immediately visible.
-   */
   async navigateTo(testPage) {
-    await this.page.goto(testPage);
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.goto(testPage, { waitUntil: 'domcontentloaded' });
     await expect(this.page).toHaveURL(testPage);
     // Scroll the marketo block into view — on mobile the form is often below
     // the fold and won't render until it enters the viewport.
-    await this.marketo.scrollIntoViewIfNeeded().catch(() => {});
-    await this.email.waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
-      await this.page.waitForLoadState('networkidle');
-      await expect(this.email).toBeVisible({ timeout: 10000 });
-    });
+    await this.marketo.scrollIntoViewIfNeeded();
+    // Form is ready once the email input is visible AND accepting input.
+    // `toBeEnabled` guards against a brief window where MktoForms2 has
+    // painted but not yet wired event listeners.
+    await expect(this.email).toBeVisible({ timeout: 20000 });
+    await expect(this.email).toBeEnabled();
   }
 
   /**
@@ -84,6 +84,108 @@ export default class MarketoBlock {
       () => window.mcz_marketoForm_pref?.form?.template,
     );
     return template || 'unknown';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Multi-step helpers
+  // ---------------------------------------------------------------------------
+
+  async isMultiStep() {
+    return this.marketo.evaluate((el) => el.classList.contains('multi-step'));
+  }
+
+  async getTotalSteps() {
+    return this.marketo.evaluate((el) => {
+      const match = el.className.match(/\bmulti-(\d+)\b/);
+      return match ? parseInt(match[1], 10) : null;
+    });
+  }
+
+  async getCurrentStep() {
+    const raw = await this.formEl.getAttribute('data-step');
+    return parseInt(raw, 10) || 1;
+  }
+
+  /**
+   * Waits for the step transition AND the block's post-step auto-focus
+   * setTimeout. Without this, a subsequent `.fill()` can race the handler
+   * and produce concatenated values on WebKit/Firefox.
+   */
+  async waitForStepTransition(direction, fromStep) {
+    await this.page.waitForFunction(
+      ({ dir, prev }) => {
+        const form = document.querySelector('.marketo form');
+        if (!form) return false;
+        const now = parseInt(form.dataset.step, 10);
+        const advanced = dir === 'next' ? now > prev : now < prev;
+        if (!advanced) return false;
+        // The block's auto-focus uses this exact selector — mirror it to
+        // detect that the setTimeout has run and focus has landed.
+        const expected = form.querySelector(
+          `.mktoFormRowTop[data-validate="${now}"]:not(.mktoHidden) input`,
+        );
+        return !!expected && document.activeElement === expected;
+      },
+      { dir: direction, prev: fromStep },
+      { timeout: 5000 },
+    );
+  }
+
+  async clickNext() {
+    const current = await this.getCurrentStep();
+    await this.nextButton.click();
+    await this.waitForStepTransition('next', current);
+  }
+
+  async clickBack() {
+    const current = await this.getCurrentStep();
+    await this.backButton.click();
+    await this.waitForStepTransition('back', current);
+  }
+
+  async checkMultiStepValidation() {
+    // Multi-step signals validation via `show-warnings` on the form,
+    // not the single-step error banner.
+    await expect(this.formEl).toHaveClass(/show-warnings/);
+    await expect(this.errorMessage).toHaveText('This field is required..');
+  }
+
+  async fillPersonalDetails(data) {
+    const { firstName, lastName, phone } = data;
+    await this.firstName.fill(firstName);
+    await this.lastName.fill(lastName);
+    await this.phone.fill(phone);
+    await this.jobTitle.selectOption({ index: 1 });
+    await this.functionalArea.selectOption({ index: 1 });
+  }
+
+  async fillCompanyDetails(data) {
+    const { company, postalCode } = data;
+    await this.company.click();
+    await this.company.fill(company);
+    await this.postalCode.fill(postalCode);
+    await this.primaryProductInterest.selectOption({ index: 2 });
+    // State dropdown is conditional on country; skip if it doesn't appear within 2s.
+    try {
+      await this.state.waitFor({ state: 'visible', timeout: 2000 });
+      await this.state.selectOption({ index: 1 });
+    } catch { /* state not shown for this country */ }
+  }
+
+  async fillMultiStepStep(stepNum, data) {
+    if (stepNum === 1) {
+      await this.country.selectOption({ index: 1 });
+      await this.email.fill(data.email);
+      return;
+    }
+    const totalSteps = await this.getTotalSteps();
+    if (totalSteps === 3) {
+      if (stepNum === 2) await this.fillPersonalDetails(data);
+      if (stepNum === 3) await this.fillCompanyDetails(data);
+    } else {
+      await this.fillPersonalDetails(data);
+      await this.fillCompanyDetails(data);
+    }
   }
 
   // ---------------------------------------------------------------------------
