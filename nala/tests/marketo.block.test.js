@@ -20,7 +20,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   // Redirect tests: verify URL changes to ?submissionid after submission
   // -------------------------------------------------------------------------
-  features.filter((f) => f.type === 'redirect').forEach((feature) => {
+  features.filter((f) => f.type === 'redirect' && f.formType !== 'multi-step').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
@@ -54,7 +54,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   // Message tests: verify thank-you message appears and form fields hide
   // -------------------------------------------------------------------------
-  features.filter((f) => f.type === 'message').forEach((feature) => {
+  features.filter((f) => f.type === 'message' && f.formType !== 'multi-step').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
@@ -118,6 +118,83 @@ test.describe('Marketo block test suite', () => {
         await test.step('step-4: Verify content state toggles after submission', async () => {
           await expect(marketoBlock.postSubmissionContent).toBeVisible();
           await expect(marketoBlock.preSubmissionContent).toBeHidden();
+        });
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Multi-step tests: verify 2-step / 3-step flow, Back-navigation
+  // preserves entered values, and final submission behaves as redirect/message
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.formType === 'multi-step').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        const testPage = buildTestUrl(baseURL, path);
+        const testData = { ...TEST_DATA, email: `test+w${testInfo.workerIndex}t${feature.tcid}@adobetest.com` };
+        const { totalSteps } = feature;
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('Navigate and verify multi-step structure', async () => {
+          await marketoBlock.navigateTo(testPage);
+          expect(await marketoBlock.isMultiStep()).toBe(true);
+          expect(await marketoBlock.getTotalSteps()).toBe(totalSteps);
+          expect(await marketoBlock.getCurrentStep()).toBe(1);
+          await expect(marketoBlock.stepIndicator).toHaveText(`Step 1 of ${totalSteps}`);
+          await expect(marketoBlock.nextButton).toBeVisible();
+          await expect(marketoBlock.submitButton).toHaveClass(/mktoHidden/);
+          await expect(marketoBlock.backButton).toHaveCount(0);
+        });
+
+        await test.step('Verify validation warnings on empty Next', async () => {
+          await marketoBlock.nextButton.click();
+          await marketoBlock.checkMultiStepValidation();
+          expect(await marketoBlock.getCurrentStep()).toBe(1);
+        });
+
+        await test.step('Fill step 1 and advance', async () => {
+          await marketoBlock.fillMultiStepStep(1, testData);
+          await marketoBlock.clickNext();
+          expect(await marketoBlock.getCurrentStep()).toBe(2);
+          await expect(marketoBlock.stepIndicator).toHaveText(`Step 2 of ${totalSteps}`);
+          await expect(marketoBlock.backButton).toBeVisible();
+        });
+
+        await test.step('Back-navigation preserves entered values', async () => {
+          await marketoBlock.clickBack();
+          expect(await marketoBlock.getCurrentStep()).toBe(1);
+          await expect(marketoBlock.email).toHaveValue(testData.email);
+          await marketoBlock.clickNext();
+          expect(await marketoBlock.getCurrentStep()).toBe(2);
+        });
+
+        await test.step('Fill remaining steps and reach final step', async () => {
+          await marketoBlock.fillMultiStepStep(2, testData);
+          if (totalSteps === 3) {
+            await marketoBlock.clickNext();
+            expect(await marketoBlock.getCurrentStep()).toBe(3);
+            await expect(marketoBlock.stepIndicator).toHaveText('Step 3 of 3');
+            await marketoBlock.fillMultiStepStep(3, testData);
+          }
+        });
+
+        await test.step('Verify final-step UI shows Submit, hides Next', async () => {
+          await expect(marketoBlock.nextButton).toHaveClass(/mktoHidden/);
+          await expect(marketoBlock.submitButton).toBeVisible();
+          await expect(marketoBlock.submitButton).not.toHaveClass(/mktoHidden/);
+        });
+
+        await test.step('Submit the form', async () => {
+          await marketoBlock.submitButton.click();
+        });
+
+        await test.step(`Verify ${feature.type} after submission`, async () => {
+          if (feature.type === 'redirect') {
+            await expect(page).toHaveURL(/\?submissionid/, { timeout: 30000 });
+          } else {
+            await expect(marketoBlock.message).toBeAttached({ timeout: 30000 });
+            await expect(page).toHaveURL(testPage);
+          }
         });
       });
     });

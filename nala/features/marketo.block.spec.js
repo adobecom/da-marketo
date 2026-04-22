@@ -63,6 +63,42 @@ const features = [
     type: 'formOff',
     formType: 'essential',
   },
+  {
+    tcid: '8',
+    name: '@marketo multi-step 3 template (redirect)',
+    path: ['/drafts/nala/blocks/marketo/marketo-3-step-redirect'],
+    tags: '@marketo @marketoMultiStep @marketoMultiStep3 @marketoMultiStepRedirect @smoke @regression',
+    type: 'redirect',
+    formType: 'multi-step',
+    totalSteps: 3,
+  },
+  {
+    tcid: '9',
+    name: '@marketo multi-step 3 template (message)',
+    path: ['/drafts/nala/blocks/marketo/marketo-3-step-message'],
+    tags: '@marketo @marketoMultiStep @marketoMultiStep3 @marketoMultiStepMessage @smoke @regression',
+    type: 'message',
+    formType: 'multi-step',
+    totalSteps: 3,
+  },
+  {
+    tcid: '10',
+    name: '@marketo multi-step 2 template (redirect)',
+    path: ['/drafts/nala/blocks/marketo/marketo-2-step-redirect'],
+    tags: '@marketo @marketoMultiStep @marketoMultiStep2 @marketoMultiStepRedirect @smoke @regression',
+    type: 'redirect',
+    formType: 'multi-step',
+    totalSteps: 2,
+  },
+  {
+    tcid: '11',
+    name: '@marketo multi-step 2 template (message)',
+    path: ['/drafts/nala/blocks/marketo/marketo-2-step-message'],
+    tags: '@marketo @marketoMultiStep @marketoMultiStep2 @marketoMultiStepMessage @smoke @regression',
+    type: 'message',
+    formType: 'multi-step',
+    totalSteps: 2,
+  },
 ];
 
 export default features;
