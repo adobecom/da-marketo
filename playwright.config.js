@@ -27,7 +27,7 @@ export default defineConfig({
 
   retries: 1,
 
-  workers: process.env.CI ? 6 : 2,
+  workers: 2,
 
   /* Reporter */
   reporter: process.env.CI
