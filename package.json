@@ -13,7 +13,12 @@
     "test:nala:bstack": "playwright test --config browserstack.config.js",
     "lint": "npm run lint:js && npm run lint:css",
     "lint:js": "eslint .",
-    "lint:css": "stylelint 'blocks/**/*.css' 'styles/*.css'"
+    "lint:css": "stylelint 'blocks/**/*.css' 'styles/*.css'",
+    "lint:js:fix": "eslint . --fix",
+    "lint:css:fix": "stylelint 'blocks/**/*.css' 'styles/*.css' --fix",
+    "lint:fix": "npm run lint:js:fix && npm run lint:css:fix",
+    "build:forms2": "node build/forms2/build-forms2.js",
+    "build:sync-marketo": "node build/sync-marketo/sync-marketo.js"
   },
   "repository": {
     "type": "git",
@@ -44,6 +49,7 @@
     "sinon": "13.0.1",
     "stylelint": "14.6.0",
     "stylelint-config-prettier": "9.0.3",
+    "microbundle": "^0.15.1",
     "stylelint-config-standard": "25.0.0"
   }
 }
