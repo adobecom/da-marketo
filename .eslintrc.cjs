@@ -28,12 +28,20 @@ module.exports = {
       rules: { 'no-console': 'off' },
     },
     {
+      files: ['build/**/*.js'],
+      rules: { 'no-console': 'off' },
+    },
+    {
       files: ['nala/**/*.js', 'playwright.config.js', 'browserstack.config.js'],
       rules: {
         'no-console': 'off',
         'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
       },
     },
+  ],
+  ignorePatterns: [
+    '/deps/*',
+    '/mkto/*',
   ],
   plugins: [
     'chai-friendly',
