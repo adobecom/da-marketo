@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/adobecom/college#readme",
   "devDependencies": {
-    "@playwright/test": "~1.51.0",
+    "@playwright/test": "~1.59.0",
     "browserstack-node-sdk": "1.34.31",
     "@babel/core": "7.17.7",
     "@babel/eslint-parser": "7.17.0",
