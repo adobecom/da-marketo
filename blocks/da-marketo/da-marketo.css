@@ -440,7 +440,7 @@
   margin-left: 0;
 }
 
-.dialog-modal .marketo .mktoForm .mktoField {
+.dialog-modal .marketo .mktoForm .mktoField { /* stylelint-disable-line no-descending-specificity */
   width: 100%!important;
 }
 
@@ -454,7 +454,7 @@
   }
 }
 
-.columns .marketo .mktoForm .mktoField {
+.columns .marketo .mktoForm .mktoField { /* stylelint-disable-line no-descending-specificity */
   width: 100%!important;
 }
 

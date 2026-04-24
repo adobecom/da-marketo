@@ -13,7 +13,7 @@ const Select = ({
 
   useEffect(() => {
     validateInput(value);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSelectChange = (e) => {
     validateInput(e.target.value);
@@ -55,7 +55,7 @@ const Input = ({
 
   useEffect(() => {
     validateInput(value);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onInputChange = (e) => {
     const inputVal = type === 'checkbox' ? e.target.checked : e.target.value;
@@ -68,7 +68,7 @@ const Input = ({
   const computedValue = { [isCheckbox ? 'checked' : 'value']: value };
 
   const id = isCheckbox
-    ? `${name}${checkboxIdx++}`
+    ? `${name}${(checkboxIdx += 1)}`
     : name;
 
   return html`

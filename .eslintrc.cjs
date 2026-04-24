@@ -1,6 +1,12 @@
 module.exports = {
   root: true,
-  extends: 'airbnb-base',
+  extends: [
+    'airbnb-base',
+    'plugin:react-hooks/recommended',
+    'plugin:compat/recommended',
+    'plugin:ecmalist/recommended',
+  ],
+  settings: { es: { aggressive: true } },
   env: { browser: true, mocha: true },
   parser: '@babel/eslint-parser',
   parserOptions: {
@@ -9,39 +15,69 @@ module.exports = {
     requireConfigFile: false,
   },
   rules: {
-    'no-param-reassign': [2, { props: false }],
-    'linebreak-style': ['error', 'unix'],
+    'chai-friendly/no-unused-expressions': 2,
     'import/extensions': ['error', { js: 'always' }],
+    'import/no-cycle': 0,
+    'linebreak-style': ['error', 'unix'],
+    'no-await-in-loop': 0,
+    'no-param-reassign': [2, { props: false }],
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: 'ForInStatement',
+        message: 'for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.',
+      },
+      {
+        selector: 'LabeledStatement',
+        message: 'Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.',
+      },
+      {
+        selector: 'WithStatement',
+        message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
+      },
+    ],
+    'no-return-assign': ['error', 'except-parens'],
+    'no-unused-expressions': 0,
     'object-curly-newline': ['error', {
       ObjectExpression: { multiline: true, minProperties: 6 },
       ObjectPattern: { multiline: true, minProperties: 6 },
       ImportDeclaration: { multiline: true, minProperties: 6 },
       ExportDeclaration: { multiline: true, minProperties: 6 },
     }],
-    'no-return-assign': ['error', 'except-parens'],
-    'no-unused-expressions': 0,
-    'chai-friendly/no-unused-expressions': 2,
   },
   overrides: [
     {
       files: ['test/**/*.js'],
-      rules: { 'no-console': 'off' },
+      rules: { 'no-console': 0 },
     },
     {
-      files: ['build/**/*.js'],
-      rules: { 'no-console': 'off' },
-    },
-    {
-      files: ['nala/**/*.js', 'playwright.config.js', 'browserstack.config.js'],
+      files: ['build/**/*.js', 'web-test-runner.config.js'],
       rules: {
-        'no-console': 'off',
+        'no-console': 0,
         'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+      },
+    },
+    {
+      files: ['nala/**/*.js', 'nala/**/*.test.js', 'playwright.config.js', 'browserstack.config.js'],
+      rules: {
+        'no-console': 0,
+        'import/no-extraneous-dependencies': 0,
+        'max-len': 0,
+        'chai-friendly/no-unused-expressions': 0,
+        'no-plusplus': 0,
+        'global-require': 0,
+        'object-curly-newline': 'off',
+        'no-unused-vars': 'off',
+        'arrow-parens': 'off',
+        'one-var-declaration-per-line': 'off',
       },
     },
   ],
   ignorePatterns: [
     '/deps/*',
     '/mkto/*',
+    '/nala/results/*',
+    '/scripts/fallback.js',
   ],
   plugins: [
     'chai-friendly',

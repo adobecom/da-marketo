@@ -1,6 +1,6 @@
 import { html, render, useContext, useState, useEffect } from '../../deps/htm-preact.js';
 import { utf8ToB64, loadBlock, createTag } from '../../utils/utils.js';
-import { setPreferences } from '../marketo/marketo.js';
+import { setPreferences } from '../da-marketo/da-marketo.js';
 import { ConfiguratorContext, ConfiguratorProvider, saveStateToLocalStorage } from './context.js';
 import Accordion from '../../ui/controls/Accordion.js';
 import CopyBtn from '../../ui/controls/CopyBtn.js';
@@ -184,7 +184,7 @@ const Configurator = ({ title, blockClass, panelsData, lsKey }) => {
     const validatedState = validateState(state, panelsData);
     setPreferences(validatedState);
     saveStateToLocalStorage(validatedState, lsKey);
-  }, [state]);
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const url = getUrl();
@@ -194,7 +194,7 @@ const Configurator = ({ title, blockClass, panelsData, lsKey }) => {
     const contentEl = document.querySelector('.content-panel');
     contentEl.append(newBlockEl);
     loadBlock(newBlockEl);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return html`
     <div class="tool-header">
