@@ -68,7 +68,7 @@ const Input = ({
   const computedValue = { [isCheckbox ? 'checked' : 'value']: value };
 
   const id = isCheckbox
-    ? `${name}${checkboxIdx++}`
+    ? `${name}${(checkboxIdx += 1)}`
     : name;
 
   return html`

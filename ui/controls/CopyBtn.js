@@ -1,5 +1,4 @@
-/* global ClipboardItem */
-import { html, useState, useEffect } from '../../deps/htm-preact.js';
+import { html, useState } from '../../deps/htm-preact.js';
 import { getConfig, loadStyle } from '../../utils/utils.js';
 
 const CopyBtn = ({ getContent, configFormValidation }) => {
