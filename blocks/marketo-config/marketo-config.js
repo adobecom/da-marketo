@@ -1,10 +1,12 @@
+import { LIBS } from '../../scripts/scripts.js';
 import { html, render, useContext, useState, useEffect } from '../../deps/htm-preact.js';
 import { utf8ToB64, loadBlock, createTag } from '../../utils/utils.js';
-import { setPreferences } from '../marketo/marketo.js';
 import { ConfiguratorContext, ConfiguratorProvider, saveStateToLocalStorage } from './context.js';
 import Accordion from '../../ui/controls/Accordion.js';
 import CopyBtn from '../../ui/controls/CopyBtn.js';
 import { Input, Select } from '../../ui/controls/formControls.js';
+
+const { setPreferences } = await import(`${LIBS}/blocks/marketo/marketo.js`);
 
 async function fetchData(url) {
   const resp = await fetch(url.toLowerCase());

@@ -126,6 +126,517 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 },{}],2:[function(require,module,exports){
 (function (global){
+/*! http://mths.be/punycode v1.2.4 by @mathias */
+;(function(root) {
+
+	/** Detect free variables */
+	var freeExports = typeof exports == 'object' && exports;
+	var freeModule = typeof module == 'object' && module &&
+		module.exports == freeExports && module;
+	var freeGlobal = typeof global == 'object' && global;
+	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
+		root = freeGlobal;
+	}
+
+	/**
+	 * The `punycode` object.
+	 * @name punycode
+	 * @type Object
+	 */
+	var punycode,
+
+	/** Highest positive signed 32-bit float value */
+	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
+
+	/** Bootstring parameters */
+	base = 36,
+	tMin = 1,
+	tMax = 26,
+	skew = 38,
+	damp = 700,
+	initialBias = 72,
+	initialN = 128, // 0x80
+	delimiter = '-', // '\x2D'
+
+	/** Regular expressions */
+	regexPunycode = /^xn--/,
+	regexNonASCII = /[^ -~]/, // unprintable ASCII chars + non-ASCII chars
+	regexSeparators = /\x2E|\u3002|\uFF0E|\uFF61/g, // RFC 3490 separators
+
+	/** Error messages */
+	errors = {
+		'overflow': 'Overflow: input needs wider integers to process',
+		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
+		'invalid-input': 'Invalid input'
+	},
+
+	/** Convenience shortcuts */
+	baseMinusTMin = base - tMin,
+	floor = Math.floor,
+	stringFromCharCode = String.fromCharCode,
+
+	/** Temporary variable */
+	key;
+
+	/*--------------------------------------------------------------------------*/
+
+	/**
+	 * A generic error utility function.
+	 * @private
+	 * @param {String} type The error type.
+	 * @returns {Error} Throws a `RangeError` with the applicable error message.
+	 */
+	function error(type) {
+		throw RangeError(errors[type]);
+	}
+
+	/**
+	 * A generic `Array#map` utility function.
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} callback The function that gets called for every array
+	 * item.
+	 * @returns {Array} A new array of values returned by the callback function.
+	 */
+	function map(array, fn) {
+		var length = array.length;
+		while (length--) {
+			array[length] = fn(array[length]);
+		}
+		return array;
+	}
+
+	/**
+	 * A simple `Array#map`-like wrapper to work with domain name strings.
+	 * @private
+	 * @param {String} domain The domain name.
+	 * @param {Function} callback The function that gets called for every
+	 * character.
+	 * @returns {Array} A new string of characters returned by the callback
+	 * function.
+	 */
+	function mapDomain(string, fn) {
+		return map(string.split(regexSeparators), fn).join('.');
+	}
+
+	/**
+	 * Creates an array containing the numeric code points of each Unicode
+	 * character in the string. While JavaScript uses UCS-2 internally,
+	 * this function will convert a pair of surrogate halves (each of which
+	 * UCS-2 exposes as separate characters) into a single code point,
+	 * matching UTF-16.
+	 * @see `punycode.ucs2.encode`
+	 * @see <http://mathiasbynens.be/notes/javascript-encoding>
+	 * @memberOf punycode.ucs2
+	 * @name decode
+	 * @param {String} string The Unicode input string (UCS-2).
+	 * @returns {Array} The new array of code points.
+	 */
+	function ucs2decode(string) {
+		var output = [],
+		    counter = 0,
+		    length = string.length,
+		    value,
+		    extra;
+		while (counter < length) {
+			value = string.charCodeAt(counter++);
+			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+				// high surrogate, and there is a next character
+				extra = string.charCodeAt(counter++);
+				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
+					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+				} else {
+					// unmatched surrogate; only append this code unit, in case the next
+					// code unit is the high surrogate of a surrogate pair
+					output.push(value);
+					counter--;
+				}
+			} else {
+				output.push(value);
+			}
+		}
+		return output;
+	}
+
+	/**
+	 * Creates a string based on an array of numeric code points.
+	 * @see `punycode.ucs2.decode`
+	 * @memberOf punycode.ucs2
+	 * @name encode
+	 * @param {Array} codePoints The array of numeric code points.
+	 * @returns {String} The new Unicode string (UCS-2).
+	 */
+	function ucs2encode(array) {
+		return map(array, function(value) {
+			var output = '';
+			if (value > 0xFFFF) {
+				value -= 0x10000;
+				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
+				value = 0xDC00 | value & 0x3FF;
+			}
+			output += stringFromCharCode(value);
+			return output;
+		}).join('');
+	}
+
+	/**
+	 * Converts a basic code point into a digit/integer.
+	 * @see `digitToBasic()`
+	 * @private
+	 * @param {Number} codePoint The basic numeric code point value.
+	 * @returns {Number} The numeric value of a basic code point (for use in
+	 * representing integers) in the range `0` to `base - 1`, or `base` if
+	 * the code point does not represent a value.
+	 */
+	function basicToDigit(codePoint) {
+		if (codePoint - 48 < 10) {
+			return codePoint - 22;
+		}
+		if (codePoint - 65 < 26) {
+			return codePoint - 65;
+		}
+		if (codePoint - 97 < 26) {
+			return codePoint - 97;
+		}
+		return base;
+	}
+
+	/**
+	 * Converts a digit/integer into a basic code point.
+	 * @see `basicToDigit()`
+	 * @private
+	 * @param {Number} digit The numeric value of a basic code point.
+	 * @returns {Number} The basic code point whose value (when used for
+	 * representing integers) is `digit`, which needs to be in the range
+	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
+	 * used; else, the lowercase form is used. The behavior is undefined
+	 * if `flag` is non-zero and `digit` has no uppercase form.
+	 */
+	function digitToBasic(digit, flag) {
+		//  0..25 map to ASCII a..z or A..Z
+		// 26..35 map to ASCII 0..9
+		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
+	}
+
+	/**
+	 * Bias adaptation function as per section 3.4 of RFC 3492.
+	 * http://tools.ietf.org/html/rfc3492#section-3.4
+	 * @private
+	 */
+	function adapt(delta, numPoints, firstTime) {
+		var k = 0;
+		delta = firstTime ? floor(delta / damp) : delta >> 1;
+		delta += floor(delta / numPoints);
+		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
+			delta = floor(delta / baseMinusTMin);
+		}
+		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+	}
+
+	/**
+	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The Punycode string of ASCII-only symbols.
+	 * @returns {String} The resulting string of Unicode symbols.
+	 */
+	function decode(input) {
+		// Don't use UCS-2
+		var output = [],
+		    inputLength = input.length,
+		    out,
+		    i = 0,
+		    n = initialN,
+		    bias = initialBias,
+		    basic,
+		    j,
+		    index,
+		    oldi,
+		    w,
+		    k,
+		    digit,
+		    t,
+		    /** Cached calculation results */
+		    baseMinusT;
+
+		// Handle the basic code points: let `basic` be the number of input code
+		// points before the last delimiter, or `0` if there is none, then copy
+		// the first basic code points to the output.
+
+		basic = input.lastIndexOf(delimiter);
+		if (basic < 0) {
+			basic = 0;
+		}
+
+		for (j = 0; j < basic; ++j) {
+			// if it's not a basic code point
+			if (input.charCodeAt(j) >= 0x80) {
+				error('not-basic');
+			}
+			output.push(input.charCodeAt(j));
+		}
+
+		// Main decoding loop: start just after the last delimiter if any basic code
+		// points were copied; start at the beginning otherwise.
+
+		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
+
+			// `index` is the index of the next character to be consumed.
+			// Decode a generalized variable-length integer into `delta`,
+			// which gets added to `i`. The overflow checking is easier
+			// if we increase `i` as we go, then subtract off its starting
+			// value at the end to obtain `delta`.
+			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
+
+				if (index >= inputLength) {
+					error('invalid-input');
+				}
+
+				digit = basicToDigit(input.charCodeAt(index++));
+
+				if (digit >= base || digit > floor((maxInt - i) / w)) {
+					error('overflow');
+				}
+
+				i += digit * w;
+				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+
+				if (digit < t) {
+					break;
+				}
+
+				baseMinusT = base - t;
+				if (w > floor(maxInt / baseMinusT)) {
+					error('overflow');
+				}
+
+				w *= baseMinusT;
+
+			}
+
+			out = output.length + 1;
+			bias = adapt(i - oldi, out, oldi == 0);
+
+			// `i` was supposed to wrap around from `out` to `0`,
+			// incrementing `n` each time, so we'll fix that now:
+			if (floor(i / out) > maxInt - n) {
+				error('overflow');
+			}
+
+			n += floor(i / out);
+			i %= out;
+
+			// Insert `n` at position `i` of the output
+			output.splice(i++, 0, n);
+
+		}
+
+		return ucs2encode(output);
+	}
+
+	/**
+	 * Converts a string of Unicode symbols to a Punycode string of ASCII-only
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The string of Unicode symbols.
+	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
+	 */
+	function encode(input) {
+		var n,
+		    delta,
+		    handledCPCount,
+		    basicLength,
+		    bias,
+		    j,
+		    m,
+		    q,
+		    k,
+		    t,
+		    currentValue,
+		    output = [],
+		    /** `inputLength` will hold the number of code points in `input`. */
+		    inputLength,
+		    /** Cached calculation results */
+		    handledCPCountPlusOne,
+		    baseMinusT,
+		    qMinusT;
+
+		// Convert the input in UCS-2 to Unicode
+		input = ucs2decode(input);
+
+		// Cache the length
+		inputLength = input.length;
+
+		// Initialize the state
+		n = initialN;
+		delta = 0;
+		bias = initialBias;
+
+		// Handle the basic code points
+		for (j = 0; j < inputLength; ++j) {
+			currentValue = input[j];
+			if (currentValue < 0x80) {
+				output.push(stringFromCharCode(currentValue));
+			}
+		}
+
+		handledCPCount = basicLength = output.length;
+
+		// `handledCPCount` is the number of code points that have been handled;
+		// `basicLength` is the number of basic code points.
+
+		// Finish the basic string - if it is not empty - with a delimiter
+		if (basicLength) {
+			output.push(delimiter);
+		}
+
+		// Main encoding loop:
+		while (handledCPCount < inputLength) {
+
+			// All non-basic code points < n have been handled already. Find the next
+			// larger one:
+			for (m = maxInt, j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+				if (currentValue >= n && currentValue < m) {
+					m = currentValue;
+				}
+			}
+
+			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
+			// but guard against overflow
+			handledCPCountPlusOne = handledCPCount + 1;
+			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
+				error('overflow');
+			}
+
+			delta += (m - n) * handledCPCountPlusOne;
+			n = m;
+
+			for (j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+
+				if (currentValue < n && ++delta > maxInt) {
+					error('overflow');
+				}
+
+				if (currentValue == n) {
+					// Represent delta as a generalized variable-length integer
+					for (q = delta, k = base; /* no condition */; k += base) {
+						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+						if (q < t) {
+							break;
+						}
+						qMinusT = q - t;
+						baseMinusT = base - t;
+						output.push(
+							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+						);
+						q = floor(qMinusT / baseMinusT);
+					}
+
+					output.push(stringFromCharCode(digitToBasic(q, 0)));
+					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
+					delta = 0;
+					++handledCPCount;
+				}
+			}
+
+			++delta;
+			++n;
+
+		}
+		return output.join('');
+	}
+
+	/**
+	 * Converts a Punycode string representing a domain name to Unicode. Only the
+	 * Punycoded parts of the domain name will be converted, i.e. it doesn't
+	 * matter if you call it on a string that has already been converted to
+	 * Unicode.
+	 * @memberOf punycode
+	 * @param {String} domain The Punycode domain name to convert to Unicode.
+	 * @returns {String} The Unicode representation of the given Punycode
+	 * string.
+	 */
+	function toUnicode(domain) {
+		return mapDomain(domain, function(string) {
+			return regexPunycode.test(string)
+				? decode(string.slice(4).toLowerCase())
+				: string;
+		});
+	}
+
+	/**
+	 * Converts a Unicode string representing a domain name to Punycode. Only the
+	 * non-ASCII parts of the domain name will be converted, i.e. it doesn't
+	 * matter if you call it with a domain that's already in ASCII.
+	 * @memberOf punycode
+	 * @param {String} domain The domain name to convert, as a Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name.
+	 */
+	function toASCII(domain) {
+		return mapDomain(domain, function(string) {
+			return regexNonASCII.test(string)
+				? 'xn--' + encode(string)
+				: string;
+		});
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	/** Define the public API */
+	punycode = {
+		/**
+		 * A string representing the current Punycode.js version number.
+		 * @memberOf punycode
+		 * @type String
+		 */
+		'version': '1.2.4',
+		/**
+		 * An object of methods to convert from JavaScript's internal character
+		 * representation (UCS-2) to Unicode code points, and back.
+		 * @see <http://mathiasbynens.be/notes/javascript-encoding>
+		 * @memberOf punycode
+		 * @type Object
+		 */
+		'ucs2': {
+			'decode': ucs2decode,
+			'encode': ucs2encode
+		},
+		'decode': decode,
+		'encode': encode,
+		'toASCII': toASCII,
+		'toUnicode': toUnicode
+	};
+
+	/** Expose `punycode` */
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		typeof define == 'function' &&
+		typeof define.amd == 'object' &&
+		define.amd
+	) {
+		define('punycode', function() {
+			return punycode;
+		});
+	} else if (freeExports && !freeExports.nodeType) {
+		if (freeModule) { // in Node.js or RingoJS v0.8.0+
+			freeModule.exports = punycode;
+		} else { // in Narwhal or RingoJS v0.7.0-
+			for (key in punycode) {
+				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
+			}
+		}
+	} else { // in Rhino or a web browser
+		root.punycode = punycode;
+	}
+
+}(this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],3:[function(require,module,exports){
+(function (global){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -1676,14 +2187,14 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":1,"ieee754":6,"isarray":3}],3:[function(require,module,exports){
+},{"base64-js":1,"ieee754":7,"isarray":4}],4:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = Array.isArray || function (arr) {
   return toString.call(arr) == '[object Array]';
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 
 /// Serialize the a name value pair into a cookie string suitable for
 /// http headers. An optional options object specified cookie parameters
@@ -1765,7 +2276,7 @@ var decode = decodeURIComponent;
 module.exports.serialize = serialize;
 module.exports.parse = parse;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2068,7 +2579,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = (nBytes * 8) - mLen - 1
@@ -2154,7 +2665,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -2183,9 +2694,9 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 module.exports = require("./jquery.build.js");
-},{"./jquery.build.js":9}],9:[function(require,module,exports){
+},{"./jquery.build.js":10}],10:[function(require,module,exports){
 /**
  * The JQuery.node plugin. A DOM builder in the spirit of the Scriptaculous
  * Builder.Node.
@@ -2496,517 +3007,6 @@ module.exports = require("./jquery.build.js");
 )();
 
 
-},{}],10:[function(require,module,exports){
-(function (global){
-/*! http://mths.be/punycode v1.2.4 by @mathias */
-;(function(root) {
-
-	/** Detect free variables */
-	var freeExports = typeof exports == 'object' && exports;
-	var freeModule = typeof module == 'object' && module &&
-		module.exports == freeExports && module;
-	var freeGlobal = typeof global == 'object' && global;
-	if (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal) {
-		root = freeGlobal;
-	}
-
-	/**
-	 * The `punycode` object.
-	 * @name punycode
-	 * @type Object
-	 */
-	var punycode,
-
-	/** Highest positive signed 32-bit float value */
-	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
-
-	/** Bootstring parameters */
-	base = 36,
-	tMin = 1,
-	tMax = 26,
-	skew = 38,
-	damp = 700,
-	initialBias = 72,
-	initialN = 128, // 0x80
-	delimiter = '-', // '\x2D'
-
-	/** Regular expressions */
-	regexPunycode = /^xn--/,
-	regexNonASCII = /[^ -~]/, // unprintable ASCII chars + non-ASCII chars
-	regexSeparators = /\x2E|\u3002|\uFF0E|\uFF61/g, // RFC 3490 separators
-
-	/** Error messages */
-	errors = {
-		'overflow': 'Overflow: input needs wider integers to process',
-		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
-		'invalid-input': 'Invalid input'
-	},
-
-	/** Convenience shortcuts */
-	baseMinusTMin = base - tMin,
-	floor = Math.floor,
-	stringFromCharCode = String.fromCharCode,
-
-	/** Temporary variable */
-	key;
-
-	/*--------------------------------------------------------------------------*/
-
-	/**
-	 * A generic error utility function.
-	 * @private
-	 * @param {String} type The error type.
-	 * @returns {Error} Throws a `RangeError` with the applicable error message.
-	 */
-	function error(type) {
-		throw RangeError(errors[type]);
-	}
-
-	/**
-	 * A generic `Array#map` utility function.
-	 * @private
-	 * @param {Array} array The array to iterate over.
-	 * @param {Function} callback The function that gets called for every array
-	 * item.
-	 * @returns {Array} A new array of values returned by the callback function.
-	 */
-	function map(array, fn) {
-		var length = array.length;
-		while (length--) {
-			array[length] = fn(array[length]);
-		}
-		return array;
-	}
-
-	/**
-	 * A simple `Array#map`-like wrapper to work with domain name strings.
-	 * @private
-	 * @param {String} domain The domain name.
-	 * @param {Function} callback The function that gets called for every
-	 * character.
-	 * @returns {Array} A new string of characters returned by the callback
-	 * function.
-	 */
-	function mapDomain(string, fn) {
-		return map(string.split(regexSeparators), fn).join('.');
-	}
-
-	/**
-	 * Creates an array containing the numeric code points of each Unicode
-	 * character in the string. While JavaScript uses UCS-2 internally,
-	 * this function will convert a pair of surrogate halves (each of which
-	 * UCS-2 exposes as separate characters) into a single code point,
-	 * matching UTF-16.
-	 * @see `punycode.ucs2.encode`
-	 * @see <http://mathiasbynens.be/notes/javascript-encoding>
-	 * @memberOf punycode.ucs2
-	 * @name decode
-	 * @param {String} string The Unicode input string (UCS-2).
-	 * @returns {Array} The new array of code points.
-	 */
-	function ucs2decode(string) {
-		var output = [],
-		    counter = 0,
-		    length = string.length,
-		    value,
-		    extra;
-		while (counter < length) {
-			value = string.charCodeAt(counter++);
-			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
-				// high surrogate, and there is a next character
-				extra = string.charCodeAt(counter++);
-				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
-					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
-				} else {
-					// unmatched surrogate; only append this code unit, in case the next
-					// code unit is the high surrogate of a surrogate pair
-					output.push(value);
-					counter--;
-				}
-			} else {
-				output.push(value);
-			}
-		}
-		return output;
-	}
-
-	/**
-	 * Creates a string based on an array of numeric code points.
-	 * @see `punycode.ucs2.decode`
-	 * @memberOf punycode.ucs2
-	 * @name encode
-	 * @param {Array} codePoints The array of numeric code points.
-	 * @returns {String} The new Unicode string (UCS-2).
-	 */
-	function ucs2encode(array) {
-		return map(array, function(value) {
-			var output = '';
-			if (value > 0xFFFF) {
-				value -= 0x10000;
-				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
-				value = 0xDC00 | value & 0x3FF;
-			}
-			output += stringFromCharCode(value);
-			return output;
-		}).join('');
-	}
-
-	/**
-	 * Converts a basic code point into a digit/integer.
-	 * @see `digitToBasic()`
-	 * @private
-	 * @param {Number} codePoint The basic numeric code point value.
-	 * @returns {Number} The numeric value of a basic code point (for use in
-	 * representing integers) in the range `0` to `base - 1`, or `base` if
-	 * the code point does not represent a value.
-	 */
-	function basicToDigit(codePoint) {
-		if (codePoint - 48 < 10) {
-			return codePoint - 22;
-		}
-		if (codePoint - 65 < 26) {
-			return codePoint - 65;
-		}
-		if (codePoint - 97 < 26) {
-			return codePoint - 97;
-		}
-		return base;
-	}
-
-	/**
-	 * Converts a digit/integer into a basic code point.
-	 * @see `basicToDigit()`
-	 * @private
-	 * @param {Number} digit The numeric value of a basic code point.
-	 * @returns {Number} The basic code point whose value (when used for
-	 * representing integers) is `digit`, which needs to be in the range
-	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
-	 * used; else, the lowercase form is used. The behavior is undefined
-	 * if `flag` is non-zero and `digit` has no uppercase form.
-	 */
-	function digitToBasic(digit, flag) {
-		//  0..25 map to ASCII a..z or A..Z
-		// 26..35 map to ASCII 0..9
-		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
-	}
-
-	/**
-	 * Bias adaptation function as per section 3.4 of RFC 3492.
-	 * http://tools.ietf.org/html/rfc3492#section-3.4
-	 * @private
-	 */
-	function adapt(delta, numPoints, firstTime) {
-		var k = 0;
-		delta = firstTime ? floor(delta / damp) : delta >> 1;
-		delta += floor(delta / numPoints);
-		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
-			delta = floor(delta / baseMinusTMin);
-		}
-		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
-	}
-
-	/**
-	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
-	 * symbols.
-	 * @memberOf punycode
-	 * @param {String} input The Punycode string of ASCII-only symbols.
-	 * @returns {String} The resulting string of Unicode symbols.
-	 */
-	function decode(input) {
-		// Don't use UCS-2
-		var output = [],
-		    inputLength = input.length,
-		    out,
-		    i = 0,
-		    n = initialN,
-		    bias = initialBias,
-		    basic,
-		    j,
-		    index,
-		    oldi,
-		    w,
-		    k,
-		    digit,
-		    t,
-		    /** Cached calculation results */
-		    baseMinusT;
-
-		// Handle the basic code points: let `basic` be the number of input code
-		// points before the last delimiter, or `0` if there is none, then copy
-		// the first basic code points to the output.
-
-		basic = input.lastIndexOf(delimiter);
-		if (basic < 0) {
-			basic = 0;
-		}
-
-		for (j = 0; j < basic; ++j) {
-			// if it's not a basic code point
-			if (input.charCodeAt(j) >= 0x80) {
-				error('not-basic');
-			}
-			output.push(input.charCodeAt(j));
-		}
-
-		// Main decoding loop: start just after the last delimiter if any basic code
-		// points were copied; start at the beginning otherwise.
-
-		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
-
-			// `index` is the index of the next character to be consumed.
-			// Decode a generalized variable-length integer into `delta`,
-			// which gets added to `i`. The overflow checking is easier
-			// if we increase `i` as we go, then subtract off its starting
-			// value at the end to obtain `delta`.
-			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
-
-				if (index >= inputLength) {
-					error('invalid-input');
-				}
-
-				digit = basicToDigit(input.charCodeAt(index++));
-
-				if (digit >= base || digit > floor((maxInt - i) / w)) {
-					error('overflow');
-				}
-
-				i += digit * w;
-				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
-
-				if (digit < t) {
-					break;
-				}
-
-				baseMinusT = base - t;
-				if (w > floor(maxInt / baseMinusT)) {
-					error('overflow');
-				}
-
-				w *= baseMinusT;
-
-			}
-
-			out = output.length + 1;
-			bias = adapt(i - oldi, out, oldi == 0);
-
-			// `i` was supposed to wrap around from `out` to `0`,
-			// incrementing `n` each time, so we'll fix that now:
-			if (floor(i / out) > maxInt - n) {
-				error('overflow');
-			}
-
-			n += floor(i / out);
-			i %= out;
-
-			// Insert `n` at position `i` of the output
-			output.splice(i++, 0, n);
-
-		}
-
-		return ucs2encode(output);
-	}
-
-	/**
-	 * Converts a string of Unicode symbols to a Punycode string of ASCII-only
-	 * symbols.
-	 * @memberOf punycode
-	 * @param {String} input The string of Unicode symbols.
-	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
-	 */
-	function encode(input) {
-		var n,
-		    delta,
-		    handledCPCount,
-		    basicLength,
-		    bias,
-		    j,
-		    m,
-		    q,
-		    k,
-		    t,
-		    currentValue,
-		    output = [],
-		    /** `inputLength` will hold the number of code points in `input`. */
-		    inputLength,
-		    /** Cached calculation results */
-		    handledCPCountPlusOne,
-		    baseMinusT,
-		    qMinusT;
-
-		// Convert the input in UCS-2 to Unicode
-		input = ucs2decode(input);
-
-		// Cache the length
-		inputLength = input.length;
-
-		// Initialize the state
-		n = initialN;
-		delta = 0;
-		bias = initialBias;
-
-		// Handle the basic code points
-		for (j = 0; j < inputLength; ++j) {
-			currentValue = input[j];
-			if (currentValue < 0x80) {
-				output.push(stringFromCharCode(currentValue));
-			}
-		}
-
-		handledCPCount = basicLength = output.length;
-
-		// `handledCPCount` is the number of code points that have been handled;
-		// `basicLength` is the number of basic code points.
-
-		// Finish the basic string - if it is not empty - with a delimiter
-		if (basicLength) {
-			output.push(delimiter);
-		}
-
-		// Main encoding loop:
-		while (handledCPCount < inputLength) {
-
-			// All non-basic code points < n have been handled already. Find the next
-			// larger one:
-			for (m = maxInt, j = 0; j < inputLength; ++j) {
-				currentValue = input[j];
-				if (currentValue >= n && currentValue < m) {
-					m = currentValue;
-				}
-			}
-
-			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
-			// but guard against overflow
-			handledCPCountPlusOne = handledCPCount + 1;
-			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
-				error('overflow');
-			}
-
-			delta += (m - n) * handledCPCountPlusOne;
-			n = m;
-
-			for (j = 0; j < inputLength; ++j) {
-				currentValue = input[j];
-
-				if (currentValue < n && ++delta > maxInt) {
-					error('overflow');
-				}
-
-				if (currentValue == n) {
-					// Represent delta as a generalized variable-length integer
-					for (q = delta, k = base; /* no condition */; k += base) {
-						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
-						if (q < t) {
-							break;
-						}
-						qMinusT = q - t;
-						baseMinusT = base - t;
-						output.push(
-							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
-						);
-						q = floor(qMinusT / baseMinusT);
-					}
-
-					output.push(stringFromCharCode(digitToBasic(q, 0)));
-					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
-					delta = 0;
-					++handledCPCount;
-				}
-			}
-
-			++delta;
-			++n;
-
-		}
-		return output.join('');
-	}
-
-	/**
-	 * Converts a Punycode string representing a domain name to Unicode. Only the
-	 * Punycoded parts of the domain name will be converted, i.e. it doesn't
-	 * matter if you call it on a string that has already been converted to
-	 * Unicode.
-	 * @memberOf punycode
-	 * @param {String} domain The Punycode domain name to convert to Unicode.
-	 * @returns {String} The Unicode representation of the given Punycode
-	 * string.
-	 */
-	function toUnicode(domain) {
-		return mapDomain(domain, function(string) {
-			return regexPunycode.test(string)
-				? decode(string.slice(4).toLowerCase())
-				: string;
-		});
-	}
-
-	/**
-	 * Converts a Unicode string representing a domain name to Punycode. Only the
-	 * non-ASCII parts of the domain name will be converted, i.e. it doesn't
-	 * matter if you call it with a domain that's already in ASCII.
-	 * @memberOf punycode
-	 * @param {String} domain The domain name to convert, as a Unicode string.
-	 * @returns {String} The Punycode representation of the given domain name.
-	 */
-	function toASCII(domain) {
-		return mapDomain(domain, function(string) {
-			return regexNonASCII.test(string)
-				? 'xn--' + encode(string)
-				: string;
-		});
-	}
-
-	/*--------------------------------------------------------------------------*/
-
-	/** Define the public API */
-	punycode = {
-		/**
-		 * A string representing the current Punycode.js version number.
-		 * @memberOf punycode
-		 * @type String
-		 */
-		'version': '1.2.4',
-		/**
-		 * An object of methods to convert from JavaScript's internal character
-		 * representation (UCS-2) to Unicode code points, and back.
-		 * @see <http://mathiasbynens.be/notes/javascript-encoding>
-		 * @memberOf punycode
-		 * @type Object
-		 */
-		'ucs2': {
-			'decode': ucs2decode,
-			'encode': ucs2encode
-		},
-		'decode': decode,
-		'encode': encode,
-		'toASCII': toASCII,
-		'toUnicode': toUnicode
-	};
-
-	/** Expose `punycode` */
-	// Some AMD build optimizers, like r.js, check for specific condition patterns
-	// like the following:
-	if (
-		typeof define == 'function' &&
-		typeof define.amd == 'object' &&
-		define.amd
-	) {
-		define('punycode', function() {
-			return punycode;
-		});
-	} else if (freeExports && !freeExports.nodeType) {
-		if (freeModule) { // in Node.js or RingoJS v0.8.0+
-			freeModule.exports = punycode;
-		} else { // in Narwhal or RingoJS v0.7.0-
-			for (key in punycode) {
-				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
-			}
-		}
-	} else { // in Rhino or a web browser
-		root.punycode = punycode;
-	}
-
-}(this));
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],11:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -3250,7 +3250,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":2}],15:[function(require,module,exports){
+},{"buffer":3}],15:[function(require,module,exports){
 var Buffer = require('safe-buffer').Buffer
 
 // prototype class for hash functions
@@ -3446,7 +3446,7 @@ Sha.prototype._hash = function () {
 
 module.exports = Sha
 
-},{"./hash":15,"inherits":7,"safe-buffer":14}],18:[function(require,module,exports){
+},{"./hash":15,"inherits":8,"safe-buffer":14}],18:[function(require,module,exports){
 /*
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
  * in FIPS PUB 180-1
@@ -3547,7 +3547,7 @@ Sha1.prototype._hash = function () {
 
 module.exports = Sha1
 
-},{"./hash":15,"inherits":7,"safe-buffer":14}],19:[function(require,module,exports){
+},{"./hash":15,"inherits":8,"safe-buffer":14}],19:[function(require,module,exports){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
  * in FIPS 180-2
@@ -3602,7 +3602,7 @@ Sha224.prototype._hash = function () {
 
 module.exports = Sha224
 
-},{"./hash":15,"./sha256":20,"inherits":7,"safe-buffer":14}],20:[function(require,module,exports){
+},{"./hash":15,"./sha256":20,"inherits":8,"safe-buffer":14}],20:[function(require,module,exports){
 /**
  * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
  * in FIPS 180-2
@@ -3739,7 +3739,7 @@ Sha256.prototype._hash = function () {
 
 module.exports = Sha256
 
-},{"./hash":15,"inherits":7,"safe-buffer":14}],21:[function(require,module,exports){
+},{"./hash":15,"inherits":8,"safe-buffer":14}],21:[function(require,module,exports){
 var inherits = require('inherits')
 var SHA512 = require('./sha512')
 var Hash = require('./hash')
@@ -3798,7 +3798,7 @@ Sha384.prototype._hash = function () {
 
 module.exports = Sha384
 
-},{"./hash":15,"./sha512":22,"inherits":7,"safe-buffer":14}],22:[function(require,module,exports){
+},{"./hash":15,"./sha512":22,"inherits":8,"safe-buffer":14}],22:[function(require,module,exports){
 var inherits = require('inherits')
 var Hash = require('./hash')
 var Buffer = require('safe-buffer').Buffer
@@ -4060,7 +4060,7 @@ Sha512.prototype._hash = function () {
 
 module.exports = Sha512
 
-},{"./hash":15,"inherits":7,"safe-buffer":14}],23:[function(require,module,exports){
+},{"./hash":15,"inherits":8,"safe-buffer":14}],23:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4769,7 +4769,7 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":10,"querystring":13}],24:[function(require,module,exports){
+},{"punycode":2,"querystring":13}],24:[function(require,module,exports){
 var $ = require("./jquery.js");
 var comparators = require("./comparators.js");
 var fh = require("./fields/fieldhelpers.js");
@@ -5150,7 +5150,7 @@ function removeCookieAllDomains (cookieName, hostname){
   return removedDomains;
 }
 module.exports.removeCookieAllDomains = removeCookieAllDomains;
-},{"cookie":4}],28:[function(require,module,exports){
+},{"cookie":5}],28:[function(require,module,exports){
 var $ = require("../jquery.js");
 var $b = $.build;
 var fh = require("./fieldHelpers.js");
@@ -5229,9 +5229,56 @@ fieldHelpers.getValidationMsgId = function (name) {
   }
 }
 
+fieldHelpers.getMaxLengthId = function (name) {
+  if(name !== undefined) {
+    return "MaxLen" + name;
+  }
+};
+
+/**
+ * Appends an ID to a space-separated ARIA attribute (aria-describedby or aria-labelledby).
+ * Avoids duplicates. Works for any field element.
+ */
+fieldHelpers.appendIdToAria = function (elem, attrName, id) {
+  if (!elem || !id) return;
+  var current = (elem.attr(attrName) || "").trim();
+  var ids = current ? current.split(" ").filter(Boolean) : [];
+  if (ids.indexOf(id) === -1) ids.push(id);
+  elem.attr(attrName, ids.join(" "));
+};
+
+/**
+ * Setup max-length counter when maxlength attribute is present (WCAG on only).
+ * Adds counter span, wires aria, and updates counter on input, keyup, paste events.
+ * When WCAG on: if aria-labelledby present, append to it; otherwise aria-describedby.
+ */
+fieldHelpers.setupMaxLength = function (fieldElem, field, formData) {
+  var isWcagCompliant = formData && formData.ProcessOptions && formData.ProcessOptions.isWcagCompliant;
+  if (!isWcagCompliant) return null;
+  var maxlen = fieldElem.attr("maxlength");
+  if (!maxlen) return null;
+  var characterLimit = parseInt(maxlen, 10);
+  var maxLenId = fieldHelpers.getMaxLengthId(field.Name);
+  var limitReachedMsg = (formData && formData.maxLengthLimitReachedMsg) || "Maximum character limit reached";
+  var remainingMsg = (formData && formData.maxLengthRemainingMsg) || "characters remaining";
+  var maxLenSpan = $b("span.mktoMaxLength", {"id": maxLenId, "aria-live": "polite"}, "0 " + remainingMsg);
+  var currentLabelledBy = (fieldElem.attr("aria-labelledby") || "").trim();
+  var ariaAttr = currentLabelledBy ? "aria-labelledby" : "aria-describedby";
+  fieldHelpers.appendIdToAria(fieldElem, ariaAttr, maxLenId);
+  var updateCounter = function () {
+    var len = (fieldElem.val() || "").length;
+    var remaining = characterLimit - len;
+    maxLenSpan.text(remaining <= 0 ? limitReachedMsg : remaining + " " + remainingMsg);
+  };
+  fieldElem.on("input keyup paste", updateCounter);
+  updateCounter();
+  return maxLenSpan;
+};
+
 fieldHelpers.formatStandardField = function(fieldElem, field, formData){
   var first = fieldHelpers.first;
   var fieldWrap;
+  var maxLenSpan = fieldHelpers.setupMaxLength(fieldElem, field, formData);
   var elems = $b.docFrag([
     $b(".mktoOffset").css({width:first(field.OffsetWidth, formData.OffsetWidth, 0)}),
     fieldWrap = $b(".mktoFieldWrap",[
@@ -5250,20 +5297,31 @@ fieldHelpers.formatStandardField = function(fieldElem, field, formData){
     ),
     $b(".mktoClear")
   ]);
+  if (maxLenSpan) {
+    fieldWrap.find(".mktoClear").before(maxLenSpan); 
+  }
   if(field.IsRequired){
     fieldWrap.addClass("mktoRequiredField");
   }
   return elems;
 }
 fieldHelpers.renderInput = function (type, field, formData){
-  var e = $b("input[type="+type+"].mktoField.mkto"+fieldHelpers.cap(type)+"Field", {
+  var isWcagCompliant = formData && formData.ProcessOptions && formData.ProcessOptions.isWcagCompliant;
+  var attrs = {
     id:field.Name,
     name:field.Name,
     placeholder:field.PlaceholderText,
-    maxlength:field.Maxlength || 2000,
     title:field.Description,
-    "aria-labelledby":[fieldHelpers.getLabelId(field.Name), fieldHelpers.getInstructionId(field.Name)].join(" ")
-  })
+    maxlength:field.Maxlength || 2000
+  };
+  if (isWcagCompliant) {
+    if (field.Description) {
+      attrs["aria-describedby"] = fieldHelpers.getInstructionId(field.Name);
+    }
+  } else {
+    attrs["aria-labelledby"] = [fieldHelpers.getLabelId(field.Name), fieldHelpers.getInstructionId(field.Name)].join(" ");
+  }
+  var e = $b("input[type="+type+"].mktoField.mkto"+fieldHelpers.cap(type)+"Field", attrs);
   return e;
 }
 fieldHelpers.isSet = function (v){
@@ -5397,8 +5455,8 @@ var makeValFn = function (e, singletonValue){
   }
 }
 checkbox.newField = function (field, formData){
+  var isWcagCompliant = formData && formData.ProcessOptions && formData.ProcessOptions.isWcagCompliant;
   var plVals = field.PicklistValues || [];
-
   var e = $b(".mktoLogicalField.mktoCheckboxList", {title:field.Description}, [
     $.map(plVals, function (val, i){
       var id = "mktoCheckbox_" + (field.Id || field.Name) + "_" +i;
@@ -5409,20 +5467,29 @@ checkbox.newField = function (field, formData){
       if(plVals.length == 1 && !labelText){
          id = field.Name;
       }
-  
-      return $b.docFrag([
-        $b("input.mktoField", {
+      var inputAttrs = {
             name:field.Name,
             id:id,
             type:"checkbox",
             value:val.value,
-            "aria-required":field.IsRequired,
-            "aria-labelledby":[fh.getLabelId(field.Name, id), fh.getInstructionId(field.Name)].join(" ")
-        }),
-        $b("label", {"for": id, "id": fh.getLabelId(id)}, [
+            "aria-required":field.IsRequired
+      };
+      if (isWcagCompliant && plVals.length === 1) {
+        if (field.Description) {
+          inputAttrs["aria-describedby"] = fh.getInstructionId(field.Name);
+        }
+      } else {
+        inputAttrs["aria-labelledby"] = [fh.getLabelId(field.Name, id), fh.getInstructionId(field.Name)].join(" ");
+      }
+      var elements = [
+        $b("input.mktoField", inputAttrs)
+      ];
+      if (labelText || !isWcagCompliant) {
+        elements.push($b("label", {"for": id, "id": fh.getLabelId(id)}, [
           $b.html(labelText)
-        ])
-      ]);
+        ]));
+      }
+      return $b.docFrag(elements);
     })
   ]);
   if(field.IsLabelToLeft){
@@ -5655,20 +5722,30 @@ var makeValFn = function (e){
 }
 
 radio.newField = function (field, formData){
-  var e = $b(".mktoRadioList", {title:field.Description}, [
+  var isWcagCompliant = formData && formData.ProcessOptions && formData.ProcessOptions.isWcagCompliant;
+  var containerAttrs = { title: field.Description };
+  if (isWcagCompliant) {
+    containerAttrs.role = "radiogroup";
+    containerAttrs["aria-labelledby"] = fh.getLabelId(field.Name);
+  }
+  var e = $b(".mktoRadioList", containerAttrs, [
     $.map(field.PicklistValues || [], function (val, i){
       var id = "mktoRadio_" + field.Id + "_" +i;
       if(!i){
         firstVal = val.value;
       }
+      var inputAttrs = {
+        name: field.Name,
+        id: id,
+        value: val.value,
+        "aria-required": field.IsRequired,
+        "aria-labelledby": [fh.getLabelId(field.Name), fh.getLabelId(id), fh.getInstructionId(field.Name)].join(" ")
+      };
+      if (isWcagCompliant) {
+        inputAttrs["aria-labelledby"] = [fh.getLabelId(id), fh.getInstructionId(field.Name)].join(" ");
+      }
       return $b.docFrag([
-        $b("input[type=radio].mktoField", {
-            name:field.Name,
-            id:id,
-            value:val.value,
-            "aria-required":field.IsRequired,
-            "aria-labelledby":[fh.getLabelId(field.Name, id), fh.getInstructionId(field.Name)].join(" ")
-        }),
+        $b("input[type=radio].mktoField", inputAttrs),
         $b("label", {"for":id, "id":fh.getLabelId(id)}, [
           $b.html(val.label || val.name)
         ])
@@ -6004,14 +6081,22 @@ textarea.fieldType = "textarea";
   
 textarea.newField = function (field, formData){
   var maxlen = field.Maxlength || 2000;
-  var e = $b("textarea.mktoField", {
-      id:field.Name,
-      name:field.Name,
-      placeholder:field.PlaceholderText,
-      rows: Math.max(2, field.VisibleRows || 2),
-      title:field.Description,
-      "aria-labelledby":[fh.getLabelId(field.Name), fh.getInstructionId(field.Name)].join(" ")
-  });
+  var isWcagCompliant = formData && formData.ProcessOptions && formData.ProcessOptions.isWcagCompliant;
+  var attrs = {
+    id: field.Name,
+    name: field.Name,
+    placeholder: field.PlaceholderText,
+    rows: Math.max(2, field.VisibleRows || 2),
+    title: field.Description
+  };
+  if (isWcagCompliant) {
+    if (field.Description) {
+      attrs["aria-describedby"] = fh.getInstructionId(field.Name);
+    }
+  } else {
+    attrs["aria-labelledby"] = [fh.getLabelId(field.Name), fh.getInstructionId(field.Name)].join(" ");
+  }
+  var e = $b("textarea.mktoField", attrs);
   try{
     e.attr("maxlength", maxlen);
   }catch(ex){
@@ -6097,6 +6182,10 @@ var oldIe = oldIeMatch? "ie"+oldIeMatch[1] : "";
 
 // Cache location.href value, to be used later for _mktoReferrer
 var originalLocationHref = location.href;
+function getNonce() {
+  return document && document.currentScript && document.currentScript.nonce;
+}
+var nonceValue = getNonce();
 var Form = function (formData, modernizr, opts){
   var pub = {};
   var priv = {};
@@ -6241,6 +6330,8 @@ var Form = function (formData, modernizr, opts){
       descriptor.data("mktoFieldDescriptor", fieldData);
       return descriptor;
     }else if (field.Datatype == "htmltext" || field.Datatype == "richtext"){
+      // REMOVE SCRIPT TAGS
+      if ((field.Htmltext || field.InputLabel).includes("<script>")) return;
       return $b.docFrag([
         $b(".mktoOffset.mktoHasWidth").css({width:first(field.OffsetWidth, formData.OffsetWidth, 0)}),
         $b(".mktoFieldWrap",[
@@ -6476,8 +6567,13 @@ var Form = function (formData, modernizr, opts){
       }, 10);
       return elem;
     }
+    var scriptFormData = $b("script", {src:formData.loaderJsUrl, type:"text/javascript"});
+    if (nonceValue !== null) {
+      scriptFormData.attr("nonce", nonceValue);
+    }
+
     return $b.docFrag([
-      $b("script", {src:formData.loaderJsUrl, type:"text/javascript"}),
+      scriptFormData,
       elem
     ]);
   };
@@ -6635,7 +6731,7 @@ var Form = function (formData, modernizr, opts){
       cookieHelper.removeCookieAllDomains("_mkto_purl");
       location.href = u;
     }
-    
+
     var success = function (data){
       if(data.error){
         onError(data);
@@ -6644,14 +6740,11 @@ var Form = function (formData, modernizr, opts){
           var formSubmittedData = pub.getValues();
           var conversationalAdobeDxObject = {
             id: data.followupStreamValue,
-            type: data.deliveryType || 'popup'
+            type: data.deliveryType || 'popup',
+            content: { form: {} }
           };
           if (formSubmittedData && formSubmittedData.Email) {
-            conversationalAdobeDxObject.content = {
-                form: {
-                  emailAddress: formSubmittedData.Email
-                }
-            };
+            conversationalAdobeDxObject.content.form.emailAddress = formSubmittedData.Email;
           }
           if (data && data.conversationalFieldAttributes) {
             $.each(data.conversationalFieldAttributes, function (formKey, formValue){
@@ -6714,7 +6807,7 @@ var Form = function (formData, modernizr, opts){
           }
         }
       }
-      
+
       if(priv.submitButton){
         var btn = priv.submitButton.find("button");
         btn.removeAttr('disabled');
@@ -6744,7 +6837,7 @@ var Form = function (formData, modernizr, opts){
         err = msg;
       }
       onError(err);
-    } 
+    }
 
     if(hostname && hostname != location.hostname){
       if(!modernizr.postmessage || !modernizr.json){
@@ -6763,19 +6856,29 @@ var Form = function (formData, modernizr, opts){
     }
   };
 
+  var disableSubmitButton = function(disable) {
+    if (priv.submitButton) {
+      var btn = priv.submitButton.find("button");
+      if(btn) {
+        if (!disable) {
+          btn.removeAttr('disabled');
+        } else {
+          btn.attr('disabled', 'disabled');
+          if (formData.ButtonSubmissionText) {
+            btn.html(formData.ButtonSubmissionText);
+          }
+        }
+      }
+    }
+  };
+
   var onSubmit = function (e){
     var submitFn = function(valid) {
       //disable submit button elem.
-      if (priv.submitButton) {
-        var btn = priv.submitButton.find("button");
-        btn.attr('disabled', 'disabled');
-        if (formData.ButtonSubmissionText) {
-          btn.html(formData.ButtonSubmissionText);
-        }
-      }
+      disableSubmitButton(true);
       doAjaxSubmit();
       return false;
-    }
+    };
 
     var valid = pub.validate();
     if (priv.canSubmit && valid && priv.onSubmit){
@@ -6788,13 +6891,29 @@ var Form = function (formData, modernizr, opts){
       e.stopPropagation();
       return false;
     }
-    else if (formData.EnableCaptcha && formData.Captcha && formData.Captcha.provider !== "disabled" && (!priv.captchaToken || priv.captchaToken === "")) {
+    else if (formData.EnableCaptcha && formData.Captcha &&
+      formData.Captcha.provider !== "disabled" &&
+      (!priv.captchaToken || priv.captchaToken === "")) {
       if (formData.Captcha.provider == 'reCaptcha') {
-        grecaptcha.ready(function () {
-          grecaptcha.execute(formData.Captcha.siteKey, {action: 'submit'}).then(function (token) {
-            return submitFn(true);
+        disableSubmitButton(true);
+        try {
+          grecaptcha.ready(function () {
+            try {
+              e.stopPropagation();
+              grecaptcha.execute(formData.Captcha.siteKey, {action: 'submit'}).then(function (token) {
+                return submitFn(true);
+              });
+            }
+            catch (error) {
+              console.error(error);
+              disableSubmitButton(false);
+            }
           });
-        });
+        }
+        catch (error) {
+          console.error(error);
+          disableSubmitButton(false);
+        }
       }
       // This will uncommented when hCaptcha is available to configure
       // else if(formData.Captcha.provider == 'hCaptcha') {
@@ -6922,7 +7041,8 @@ var Form = function (formData, modernizr, opts){
       return renderRow(row, i, renderCtx);
     });
 
-    var socialSignOn = renderSocialSignOn();
+    // Social sign-on disabled - return empty string instead of rendering
+    var socialSignOn = "";
 
     $.each(renderCtx.fieldsToCheck, function (i, field){
       if(!changeManager.fieldChangeChecker(field.VisibilityRule, renderCtx.defaultValuesToSet).show){
@@ -6947,7 +7067,11 @@ var Form = function (formData, modernizr, opts){
         buttonCss += "\n.mktoForm .mktoButtonWrap."+bs.className+" button.mktoButton {background:"+bs.buttonColor + ";}\n";
       }
     }
-    formElem.append($b("style", {type:"text/css"}, buttonCss));
+    var styleButtonCss = $b("style", {type:"text/css"}, buttonCss);
+    if (nonceValue !== null) {
+      styleButtonCss.attr("nonce", nonceValue);
+    }
+    formElem.append(styleButtonCss);
     if (formData.knownLead && formData.ProcessOptions && formData.ProcessOptions.knownLead && formData.ProcessOptions.knownLead.type == "custom"){
       formElem.append(renderTokenizedTemplate());
       var elmsKnown = [];
@@ -6978,10 +7102,16 @@ var Form = function (formData, modernizr, opts){
       }
       elms.push(submitBtn);
 
-      //Add Dynamic Chat js in case of embbeded form 
+      //Add Dynamic Chat js in case of embbeded form
       if (formData.dcJsUrl) {
         var elem2 = $b("div");
-        elem2.append('<script type="text/javascript" src="' + formData.dcJsUrl + '"></script>');
+        var scriptTagDCJS = null;
+        if (nonceValue !== null) {
+          scriptTagDCJS = '<script nonce="'+nonceValue+ '" type="text/javascript" src="' + formData.dcJsUrl + '"></script>';
+        } else {
+          scriptTagDCJS = '<script type="text/javascript" src="' + formData.dcJsUrl + '"></script>';
+        }
+        elem2.append(scriptTagDCJS);
         elms.push(elem2);
       }
       formElem.append($b.docFrag(elms));
@@ -7011,7 +7141,7 @@ var Form = function (formData, modernizr, opts){
 
     formElem.on("submit", onSubmit);
 
-    priv.validation = Validation(formElem);
+    priv.validation = Validation(formElem, formData);
     priv.validation.init();
     setTimeout(function (){
       $("body").trigger("mktoRender", pub).data("mktoRendered", true);
@@ -7065,15 +7195,23 @@ var Form = function (formData, modernizr, opts){
     }
 
     cSettings['data-sitekey'] = formData.Captcha.sitekey;
-    cSettings.class = providers[formData.Captcha.provider].cls;
+    cSettings['class'] = providers[formData.Captcha.provider].cls;
     var captchaScript = $b("script", {
       src: providers[formData.Captcha.provider].scriptSrc,
       type: "text/javascript",
       async: true,
       defer: true
     });
+    if (nonceValue !== null) {
+      captchaScript.attr('nonce', nonceValue);
+    }
     var elem2 = $b("div");
-    var callBackScript = '<script type="text/javascript">';
+    var callBackScript = null
+    if (nonceValue !== null) {
+      callBackScript = '<script nonce="'+nonceValue+ '" type="text/javascript">';
+    } else {
+      callBackScript = '<script type="text/javascript">';
+    }
     callBackScript += 'var formId = ' + formData.Vid + ';';
     callBackScript += 'var captchaCallback = ' + onCaptchaSuccess + ';';
     callBackScript += '</script>';
@@ -7086,9 +7224,13 @@ var Form = function (formData, modernizr, opts){
     var disclaimer = '';
     if (formData.Captcha.provider == 'reCaptcha') {
       disclaimer = $b("div.mktoCaptchaDisclaimer");
-      disclaimer.append("This site is protected by reCAPTCHA and the Google\n" +
-        " <a href=\"https://policies.google.com/privacy\" target=\"_blank\">Privacy Policy</a> and" +
-        " <a href=\"https://policies.google.com/terms\" target=\"_blank\">Terms of Service</a> apply.");
+      if (formData.hideRecaptchaDisclaimer) {
+        disclaimer.append("This site is protected by reCAPTCHA.");
+      } else {
+        disclaimer.append("This site is protected by reCAPTCHA and the Google\n" +
+          " <a href=\"https://policies.google.com/privacy\" target=\"_blank\">Privacy Policy</a> and" +
+          " <a href=\"https://policies.google.com/terms\" target=\"_blank\">Terms of Service</a> apply.");
+      }
     }
 
     var captchaDiv = $b("<div>", cSettings);
@@ -7336,7 +7478,7 @@ var Form = function (formData, modernizr, opts){
 
 module.exports = Form;
 
-},{"./changeManager.js":24,"./comparators.js":26,"./cookiehelper.js":27,"./fields/currency.js":28,"./fields/fieldhelpers.js":30,"./fields/inputCheckbox.js":31,"./fields/inputDate.js":32,"./fields/inputEmail.js":33,"./fields/inputNumber.js":34,"./fields/inputRadio.js":35,"./fields/inputRange.js":36,"./fields/inputTel.js":37,"./fields/inputText.js":38,"./fields/inputUrl.js":39,"./fields/select.js":40,"./fields/textarea.js":41,"./iframeproxy.js":44,"./jquery.js":45,"./measure.js":46,"./prefillcoercer.js":49,"./safelog.js":50,"./tokenTemplate.js":52,"./urlhelper.js":53,"./validation.js":54,"cookie":4,"querystring":13,"sha.js":16,"url":23}],43:[function(require,module,exports){
+},{"./changeManager.js":24,"./comparators.js":26,"./cookiehelper.js":27,"./fields/currency.js":28,"./fields/fieldhelpers.js":30,"./fields/inputCheckbox.js":31,"./fields/inputDate.js":32,"./fields/inputEmail.js":33,"./fields/inputNumber.js":34,"./fields/inputRadio.js":35,"./fields/inputRange.js":36,"./fields/inputTel.js":37,"./fields/inputText.js":38,"./fields/inputUrl.js":39,"./fields/select.js":40,"./fields/textarea.js":41,"./iframeproxy.js":44,"./jquery.js":45,"./measure.js":46,"./prefillcoercer.js":49,"./safelog.js":50,"./tokenTemplate.js":52,"./urlhelper.js":53,"./validation.js":54,"cookie":5,"querystring":13,"sha.js":16,"url":23}],43:[function(require,module,exports){
 if(typeof window !== 'undefined' && window.MktoForms2){
   //This prevents re-executing the script if the customer has inserted the script block twice;
   module.exports = window.MktoForms2;
@@ -7373,7 +7515,10 @@ var opts = {
   fbTabDomain:"marketo.com"
 }
 var forms = [];
-
+function getNonce() {
+  return document && document.currentScript && document.currentScript.nonce;
+}
+var nonceValue = getNonce();
 forms2.setOptions = function (_opts){
   $.extend(opts, _opts);
 };
@@ -7415,6 +7560,9 @@ var addStyle = function (id, url){
     url = location.protocol + url;
   }
   var l = $b("link", {id:id, rel:"stylesheet", type:"text/css", href:url});
+  if (nonceValue !== null) {
+    l.attr("nonce", nonceValue);
+  }
   $("head").append(l);
   //Appending to the head doesn't work in good old IE.
   if(document.createStyleSheet){
@@ -7449,14 +7597,26 @@ var ajaxRequest = function(url, success){
     dataType = "jsonp";
     url+="&callback=?";  
   }
-  $.ajax({
-    dataType:dataType,
-    url:url,
-    success:success,
-    error:function (a,b,c){
-      handleError(c, success);
-    }
-  });
+  if (nonceValue !== null) {
+    $.ajax({
+      dataType: dataType,
+      url: url,
+      success: success,
+      scriptAttrs: { nonce: nonceValue},
+      error: function (a, b, c) {
+        handleError(c, success);
+      }
+    });
+  } else {
+    $.ajax({
+      dataType: dataType,
+      url: url,
+      success: success,
+      error: function (a, b, c) {
+        handleError(c, success);
+      }
+    });
+  }
 }
 
 
@@ -7582,6 +7742,9 @@ forms2.getLatestFormDescriptor = function(formData,callback) {
     else {
       delete formData.Captcha;
     }
+    if(response.hideRecaptchaDisclaimer !== undefined) {
+      formData.hideRecaptchaDisclaimer = response.hideRecaptchaDisclaimer;
+    }
     return forms2.processForm(formData,callback);
   }
 
@@ -7620,7 +7783,11 @@ forms2.processForm = function(formData, callback) {
   if($("#mktoForms2ThemeStyle").length === 0 && formData.ThemeStyle && formData.ThemeStyle.href){
     addStyle("mktoForms2ThemeStyle", opts.baseUrl + formData.ThemeStyle.href);
   }else{
-    $("head").append($b("style", "#mktoStyleLoaded {color:#123456;}"));
+    var styleMktoLoaded = $b("style", "#mktoStyleLoaded {color:#123456;}");
+    if (nonceValue !== null) {
+      styleMktoLoaded.attr('nonce', nonceValue);
+    }
+    $("head").append(styleMktoLoaded);
   }
   if(formData.FontUrl){
     addStyle("mktoFontUrl", formData.FontUrl);
@@ -7800,7 +7967,7 @@ if(typeof window !== 'undefined'){
   window.MktoForms2 = forms2;
 }
 module.exports = forms2;
-},{"./color.js":25,"./fields/fieldhelpers.js":30,"./form.js":42,"./iframeproxy.js":44,"./jquery.js":45,"./modal.js":47,"./modernizr.js":48,"./safelog.js":50,"./shimsham.js":51,"cookie":4,"events":5,"jquery.build":8,"querystring":13,"url":23}],44:[function(require,module,exports){
+},{"./color.js":25,"./fields/fieldhelpers.js":30,"./form.js":42,"./iframeproxy.js":44,"./jquery.js":45,"./modal.js":47,"./modernizr.js":48,"./safelog.js":50,"./shimsham.js":51,"cookie":5,"events":6,"jquery.build":9,"querystring":13,"url":23}],44:[function(require,module,exports){
 var $ = require("./jquery.js");
 var urlApi = require("url");
 var $b = $.build;
@@ -17626,7 +17793,7 @@ module.exports = pub;
 
 
 	jQuery._evalUrl = function( url, options, doc ) {
-		return jQuery.ajax( {
+		var ajaxJson = {
 			url: url,
 
 			// Make this explicit, since user can override this through ajaxSetup (trac-11264)
@@ -17635,7 +17802,6 @@ module.exports = pub;
 			cache: true,
 			async: false,
 			global: false,
-
 			// Only evaluate the response if it is successful (gh-4126)
 			// dataFilter is not invoked for failure responses, so using it instead
 			// of the default converter is kludgy but it works.
@@ -17645,7 +17811,11 @@ module.exports = pub;
 			dataFilter: function( response ) {
 				jQuery.globalEval( response, options, doc );
 			}
-		} );
+		};
+		if (options && options.nonce) {
+			ajaxJson.scriptAttrs = {nonce: options.nonce};
+		}
+		return jQuery.ajax( ajaxJson );
 	};
 
 
@@ -18820,7 +18990,12 @@ var Modernizr = (function( window, document, undefined ) {
           }
       }
 
-                style = ['&#173;','<style id="s', mod, '">', rule, '</style>'].join('');
+      var nonceValue = document && document.currentScript && document.currentScript.nonce;
+      if (nonceValue !== null) {
+        style = ['&#173;','<style nonce="'+nonceValue+ '" id="s', mod, '">', rule, '</style>'].join('');
+      } else {
+        style = ['&#173;','<style id="s', mod, '">', rule, '</style>'].join('');
+      }
       div.id = mod;
           (body ? div : fakeBody).innerHTML += style;
       fakeBody.appendChild(div);
@@ -19760,8 +19935,9 @@ var measure = require("./measure.js");
 var modernizr = require("./modernizr.js");
 var fh = require("./fields/fieldHelpers.js");
 
-var Validation = function (formElem){
+var Validation = function (formElem, formData){
   var that = {};
+  var isAccessibilityImprovementsEnabled = formData && formData.ProcessOptions && formData.ProcessOptions.isAccessibilityImprovementsEnabled;
   that.currentErrorElem = null;
   that.currentErrorMsg = null;
   var selector = ".mktoFieldDescriptor";
@@ -19784,15 +19960,21 @@ var Validation = function (formElem){
     if(okRequired && okValidator && desc.validatorElem){
       desc.validatorElem.removeClass("mktoInvalid");
       desc.validatorElem.addClass("mktoValid");
-      desc.validatorElem.removeAttr('aria-describedby');
+      var currentDescribedBy = desc.validatorElem.attr("aria-describedby");
+      var validMsgId = fh.getValidationMsgId(desc.name);
+      if (currentDescribedBy && currentDescribedBy.indexOf(validMsgId) >= 0) {
+        var removedErrorMsgId = currentDescribedBy.replace(validMsgId, '').trim();
+        if (removedErrorMsgId) {
+          desc.validatorElem.attr("aria-describedby", removedErrorMsgId);
+        } else {
+          desc.validatorElem.removeAttr("aria-describedby");
+        }
+      }
       desc.validatorElem.attr("aria-invalid", "false");
     }
     else if(desc.validatorElem){
       desc.validatorElem.removeClass("mktoValid");
       desc.validatorElem.addClass("mktoInvalid");
-      if (typeof desc.validatorElem.attr("aria-describedby") !== "undefined") {
-        desc.validatorElem.attr("aria-invalid", "true");
-      }
     }
     if(!okRequired){
       return desc.requiredMessage || desc.validationMessage || "This field is required";
@@ -19881,9 +20063,20 @@ var Validation = function (formElem){
     if (typeof elem[0].name !== "undefined" || (elem[0].childNodes[0] && typeof elem[0].childNodes[0].name !== "undefined")) {
       elemName = typeof elem[0].name !== "undefined" ? elem[0].name : elem[0].childNodes[0].name;
     }
+    var errorMsgId = fh.getValidationMsgId(elemName);
+
+    var errorMsgAttrs = {"id": errorMsgId, "tabindex": "-1"};
+    if (isAccessibilityImprovementsEnabled) {
+      errorMsgAttrs["aria-live"] = "assertive";
+      errorMsgAttrs["aria-atomic"] = "true";
+    } else {
+      errorMsgAttrs.role = "alert";
+    }
+    var errorMsgElem = $b(".mktoErrorMsg", errorMsgAttrs, $b.html(errorMsg));
+
     var errorBox = $b(".mktoError", [
       arrowWrap = $b(".mktoErrorArrowWrap",[$b(".mktoErrorArrow")]),
-      $b(".mktoErrorMsg", {"id":fh.getValidationMsgId(elemName), "role":"alert", "tabindex":"-1"}, $b.html(errorMsg))
+      errorMsgElem
     ]).hide();
 
     if(!modernizr.csstransforms){
@@ -19891,7 +20084,14 @@ var Validation = function (formElem){
     }
 
     elem.after(errorBox);
-    elem.attr('aria-describedby', fh.getValidationMsgId(elemName));
+    var current = (elem.attr("aria-describedby") || "").trim();
+    var ids = current ? current.split(" ") : [];
+    if (ids.indexOf(errorMsgId) === -1) {
+      ids.push(errorMsgId);
+      elem.attr("aria-describedby", ids.join(" "));
+    }
+    elem.attr("aria-invalid", "true");
+
     that.currentErrorElem = elem;
     that.currentErrorMsg = errorBox;
     var dims = measure.measure(errorBox);
