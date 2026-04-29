@@ -270,7 +270,7 @@ export const loadMarketo = async (el, formData) => {
 
     /* c8 ignore next 3 */
     if (el.classList.contains('multi-step')) {
-      import(`${LIBS}blocks/da-marketo/da-marketo-multi.js`).then(({ default: multiStep }) => multiStep(el));
+      import(`${BLOCK_BASE}blocks/da-marketo/da-marketo-multi.js`).then(({ default: multiStep }) => multiStep(el));
     }
   } catch (e) {
     /* c8 ignore next 2 */
