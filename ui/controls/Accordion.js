@@ -17,7 +17,7 @@ const AccordionItem = ({ title, content, expand, onClick }) => {
   `;
 };
 
-const getInitialState = (lskey, items) => {
+const getInitialState = (lskey) => {
   const lsState = localStorage.getItem(`milo-accordion-${lskey}`);
   if (lsState !== null) {
     return JSON.parse(lsState);

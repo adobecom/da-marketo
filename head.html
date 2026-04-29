@@ -1,6 +1,5 @@
-<!-- Modifying this file will impact your performance -->
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<script src="/scripts/fallback.js" nomodule></script>
+<link rel="preload" href="/styles/styles.css" as="style"/>
 <script>
   const libs = (() => {
     const { hostname, search } = window.location;
@@ -8,6 +7,7 @@
     const branch = new URLSearchParams(search).get('milolibs') || 'main';
     if (!/^[a-zA-Z0-9_-]+$/.test(branch)) throw new Error('Invalid branch name.');
     if (branch === 'local') return 'http://localhost:6456/libs';
+    if (branch === 'main' && hostname.includes('.stage.')) return '/libs';
     return branch.includes('--') ? `https://${branch}.aem.live/libs` : `https://${branch}--milo--adobecom.aem.live/libs`;
   })();
 
