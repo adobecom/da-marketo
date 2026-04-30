@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/scripts.js';
+import { LIBS } from '../../scripts/libs.js';
 
 const {
   parseEncodedConfig,
@@ -263,7 +263,7 @@ export const loadMarketo = async (el, formData) => {
   const formID = formData[FORM_ID];
 
   try {
-    const { loadMkto } = await import(`${BLOCK_BASE}mkto/mkto.js`);
+    const { default: loadMkto } = await import(`${BLOCK_BASE}mkto/mkto.js`);
     await loadMkto(baseURL, munchkinID, formID);
     const { MktoForms2 } = window;
     MktoForms2.whenReady((form) => { readyForm(form, formData); });
@@ -375,4 +375,9 @@ export default async function init(el) {
     callback: (target) => { loadMarketo(target, formData); },
     options: { rootMargin: `${ROOT_MARGIN}px` },
   });
+
+  /* c8 ignore next 3 */
+  if (getConfig().env?.name !== 'prod') {
+    import('./status.js').then(({ default: main }) => main(el, formData));
+  }
 }

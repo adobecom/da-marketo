@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/scripts.js';
+import { LIBS } from '../../scripts/libs.js';
 import { createTag, getConfig } from '../../utils/utils.js';
 
 const { debounce } = await import(`${LIBS}/utils/action.js`);

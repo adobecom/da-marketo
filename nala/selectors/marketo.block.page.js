@@ -1,5 +1,14 @@
 import { expect } from '@playwright/test';
 
+function expectedMarketoLibsOrigin(branch) {
+  if (!branch || !/^[a-zA-Z0-9_-]+$/.test(branch)) return null;
+  if (branch === 'local') return null;
+  if (branch === 'main') return 'https://main--da-marketo--adobecom.aem.live';
+  return branch.includes('--')
+    ? `https://${branch}.aem.live`
+    : `https://${branch}--da-marketo--adobecom.aem.live`;
+}
+
 export default class MarketoBlock {
   constructor(page) {
     this.page = page;
@@ -62,6 +71,21 @@ export default class MarketoBlock {
   }
 
   async navigateTo(testPage) {
+    const marketoLibsBranch = new URL(testPage).searchParams.get('marketolibs');
+    const expectedOrigin = expectedMarketoLibsOrigin(marketoLibsBranch);
+
+    // When ?marketolibs= is set, the form code (mkto/* and blocks/da-marketo/*)
+    // must come from the corresponding origin. Attach the listener before
+    // navigation so we don't miss the early libs.js / block requests.
+    const formCodeRequests = [];
+    if (expectedOrigin) {
+      this.page.on('request', (req) => {
+        if (/\/mkto\/|\/blocks\/da-marketo\//.test(req.url())) {
+          formCodeRequests.push(req.url());
+        }
+      });
+    }
+
     await this.page.goto(testPage, { waitUntil: 'domcontentloaded' });
     await expect(this.page).toHaveURL(testPage);
     // Scroll the marketo block into view — on mobile the form is often below
@@ -72,6 +96,18 @@ export default class MarketoBlock {
     // painted but not yet wired event listeners.
     await expect(this.email).toBeVisible({ timeout: 20000 });
     await expect(this.email).toBeEnabled();
+
+    if (expectedOrigin) {
+      expect(
+        formCodeRequests,
+        `?marketolibs=${marketoLibsBranch} set but no marketo form code requests were captured`,
+      ).not.toHaveLength(0);
+      const wrongOrigin = formCodeRequests.filter((u) => !u.startsWith(expectedOrigin));
+      expect(
+        wrongOrigin,
+        `expected marketo form code from ${expectedOrigin}, but these came from elsewhere: ${wrongOrigin.join(', ')}`,
+      ).toHaveLength(0);
+    }
   }
 
   /**

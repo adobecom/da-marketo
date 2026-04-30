@@ -17,7 +17,6 @@ export default [
   {
     ignores: [
       'deps/**',
-      'mkto/mkto.js',
       'mkto/deps/**',
       'mkto/[0-9]*/**',
       'nala/results/**',

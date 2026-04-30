@@ -8,6 +8,7 @@ function decorateMarketo(area = document) {
 }
 
 export function register({ getConfig, setConfig }) {
+  decorateMarketo(document);
   const config = getConfig();
   setConfig({
     ...config,
