@@ -1,6 +1,7 @@
-const base = new URL('.', import.meta.url).href;
-import { LIBS } from '../scripts/scripts.js';
+/* global marketoFormSetup */
+import { LIBS } from '../scripts/libs.js';
 
+const base = new URL('.', import.meta.url).href;
 const { loadScript } = await import(`${LIBS}/utils/utils.js`);
 
 // Prod form 2277 scripts
@@ -22,7 +23,7 @@ const SCRIPTS = [
   '90_build/rendering_review.js',
 ];
 
-export const loadMkto = async (marketoHost, munchkinID, formID) => {
+export default async function loadMkto(marketoHost, munchkinID, formID) {
   await loadScript(new URL('../deps/forms2.min.js', import.meta.url).href);
 
   const { MktoForms2 } = window;
@@ -36,4 +37,4 @@ export const loadMkto = async (marketoHost, munchkinID, formID) => {
       marketoFormSetup('stage1');
     });
   });
-};
+}

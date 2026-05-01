@@ -17,7 +17,8 @@ export default [
   {
     ignores: [
       'deps/**',
-      'mkto/**',
+      'mkto/deps/**',
+      'mkto/[0-9]*/**',
       'nala/results/**',
       'scripts/fallback.js',
     ],

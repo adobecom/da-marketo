@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 const USER_AGENT_DESKTOP = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.6900.0 Safari/537.36 NALA-DA-BAcom';
 const USER_AGENT_MOBILE_CHROME = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.6900.0 Mobile Safari/537.36 NALA-DA-BAcom';
 const USER_AGENT_MOBILE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1 NALA-DA-BAcom';
+const CHROME_LAUNCH_OPTIONS = { args: ['--disable-features=BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks'] };
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -51,7 +52,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], userAgent: USER_AGENT_DESKTOP },
+      use: { ...devices['Desktop Chrome'], userAgent: USER_AGENT_DESKTOP, launchOptions: CHROME_LAUNCH_OPTIONS },
     },
     {
       name: 'firefox',
@@ -63,7 +64,7 @@ export default defineConfig({
     },
     {
       name: 'mobile-chrome-pixel7',
-      use: { ...devices['Pixel 7'], userAgent: USER_AGENT_MOBILE_CHROME },
+      use: { ...devices['Pixel 7'], userAgent: USER_AGENT_MOBILE_CHROME, launchOptions: CHROME_LAUNCH_OPTIONS },
     },
     {
       name: 'mobile-safari-iphone15',

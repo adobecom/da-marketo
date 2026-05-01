@@ -50,9 +50,6 @@ function decorateArea() {
 // Add project-wide style path here.
 const STYLES = '';
 
-// Use 'https://milo.adobe.com/libs' if you cannot map '/libs' to milo's origin.
-export const LIBS = setLibs(window.location);
-
 // Add any config options.
 const CONFIG = {
   // codeRoot: '',
@@ -78,7 +75,7 @@ decorateArea();
  * ------------------------------------------------------------
  */
 
-const miloLibs = setLibs(LIBS);
+const miloLibs = setLibs('https://milo.adobe.com/libs');
 
 (function loadStyles() {
   const paths = [`${miloLibs}/styles/styles.css`];

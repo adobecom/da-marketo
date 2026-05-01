@@ -6,6 +6,13 @@ on:
   schedule:
     - cron: '0 12 * * *'
   workflow_dispatch:
+    inputs:
+      BASE_URL:
+        description: 'Base URL for tests (e.g. https://main--da-bacom--adobecom.aem.live)'
+        required: false
+      MARKETO_LIBS:
+        description: 'da-marketo branch to load via ?marketolibs= (e.g. bmarshal-marketolibs)'
+        required: false
 
 concurrency:
   group: nala-${{ github.workflow }}-${{ github.ref }}
@@ -45,8 +52,18 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps
 
+      - name: Set MARKETO_LIBS
+        run: |
+          if [ -n "${{ inputs.MARKETO_LIBS }}" ]; then
+            echo "MARKETO_LIBS=${{ inputs.MARKETO_LIBS }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "MARKETO_LIBS=$(echo '${{ github.head_ref }}' | tr '/' '-')" >> $GITHUB_ENV
+          fi
+
       - name: Run NALA tests
         run: npm run test:nala
+        env:
+          BASE_URL: ${{ inputs.BASE_URL }}
 
       - name: Upload results
         if: failure()

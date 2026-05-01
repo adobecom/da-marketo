@@ -1,5 +1,14 @@
 import { expect } from '@playwright/test';
 
+function expectedMarketoLibsOrigin(branch) {
+  if (!branch || !/^[a-zA-Z0-9_-]+$/.test(branch)) return null;
+  if (branch === 'local') return null;
+  if (branch === 'main') return 'https://main--da-marketo--adobecom.aem.live';
+  return branch.includes('--')
+    ? `https://${branch}.aem.live`
+    : `https://${branch}--da-marketo--adobecom.aem.live`;
+}
+
 export default class MarketoBlock {
   constructor(page) {
     this.page = page;
@@ -62,6 +71,9 @@ export default class MarketoBlock {
   }
 
   async navigateTo(testPage) {
+    const marketoLibsBranch = new URL(testPage).searchParams.get('marketolibs');
+    const expectedOrigin = expectedMarketoLibsOrigin(marketoLibsBranch);
+
     await this.page.goto(testPage, { waitUntil: 'domcontentloaded' });
     await expect(this.page).toHaveURL(testPage);
     // Scroll the marketo block into view — on mobile the form is often below
@@ -72,6 +84,32 @@ export default class MarketoBlock {
     // painted but not yet wired event listeners.
     await expect(this.email).toBeVisible({ timeout: 20000 });
     await expect(this.email).toBeEnabled();
+
+    if (expectedOrigin) {
+      // Milo's loadScript() appends <script src="..."> elements to document.head
+      // synchronously — they persist in the DOM. Querying them is reliable on all
+      // browsers, unlike performance.getEntriesByType() (cross-origin entries
+      // omitted on mobile WebKit) or page.on('request') (misses dynamic import()
+      // on WebKit and Firefox).
+      await this.page.waitForFunction(
+        () => !!document.querySelector('head > script[src*="/mkto/"]'),
+        { timeout: 10000 },
+      );
+
+      const formCodeUrls = await this.page.evaluate(() => Array.from(
+        document.querySelectorAll('head > script[src]'),
+      ).map((s) => s.src).filter((url) => /\/mkto\/|\/blocks\/da-marketo\//.test(url)));
+
+      expect(
+        formCodeUrls,
+        `?marketolibs=${marketoLibsBranch} set but no marketo form code requests were captured`,
+      ).not.toHaveLength(0);
+      const wrongOrigin = formCodeUrls.filter((u) => !u.startsWith(expectedOrigin));
+      expect(
+        wrongOrigin,
+        `expected marketo form code from ${expectedOrigin}, but these came from elsewhere: ${wrongOrigin.join(', ')}`,
+      ).toHaveLength(0);
+    }
   }
 
   /**

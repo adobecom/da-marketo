@@ -4,7 +4,8 @@ import MarketoBlock from '../selectors/marketo.block.page.js';
 import TEST_DATA from '../utils/marketo.test.data.js';
 
 const miloLibs = process.env.MILO_LIBS || '';
-const buildTestUrl = (baseURL, path) => `${baseURL}${path}${miloLibs}`.toLowerCase();
+const marketoLibs = process.env.MARKETO_LIBS ? `${miloLibs ? '&' : '?'}marketolibs=${process.env.MARKETO_LIBS}` : '';
+const buildTestUrl = (baseURL, path) => `${baseURL}${path}${miloLibs}${marketoLibs}`.toLowerCase();
 
 test.describe('Marketo block test suite', () => {
   let marketoBlock;
@@ -219,7 +220,7 @@ test.describe('Marketo block test suite', () => {
         });
 
         await test.step('step-3: Navigate with form=off param', async () => {
-          const formParam = miloLibs ? '&form=off' : '?form=off';
+          const formParam = testPage.includes('?') ? '&form=off' : '?form=off';
           await page.goto(`${testPage}${formParam}`);
           await page.waitForLoadState('domcontentloaded');
         });
