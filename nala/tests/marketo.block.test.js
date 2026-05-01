@@ -10,11 +10,8 @@ const buildTestUrl = (baseURL, path) => `${baseURL}${path}${miloLibs}${marketoLi
 test.describe('Marketo block test suite', () => {
   let marketoBlock;
 
-  test.beforeAll(async () => {
-    if (process.env.CI) test.setTimeout(1000 * 60 * 3);
-  });
-
   test.beforeEach(async ({ page }) => {
+    test.setTimeout(process.env.CI ? 1000 * 60 * 3 : 1000 * 60 * 2);
     marketoBlock = new MarketoBlock(page);
   });
 

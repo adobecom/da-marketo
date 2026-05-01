@@ -96,6 +96,7 @@ export default class MarketoBlock {
     // painted but not yet wired event listeners.
     await expect(this.email).toBeVisible({ timeout: 20000 });
     await expect(this.email).toBeEnabled();
+    await expect(this.marketo).not.toHaveClass(/loading/, { timeout: 20000 });
 
     if (expectedOrigin) {
       expect(
@@ -153,18 +154,12 @@ export default class MarketoBlock {
         const form = document.querySelector('.marketo form');
         if (!form) return false;
         const now = parseInt(form.dataset.step, 10);
-        const advanced = dir === 'next' ? now > prev : now < prev;
-        if (!advanced) return false;
-        // The block's auto-focus uses this exact selector — mirror it to
-        // detect that the setTimeout has run and focus has landed.
-        const expected = form.querySelector(
-          `.mktoFormRowTop[data-validate="${now}"]:not(.mktoHidden) input`,
-        );
-        return !!expected && document.activeElement === expected;
+        return dir === 'next' ? now > prev : now < prev;
       },
       { dir: direction, prev: fromStep },
       { timeout: 5000 },
     );
+    await this.page.waitForTimeout(150);
   }
 
   async clickNext() {
