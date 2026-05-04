@@ -1,6 +1,8 @@
 # mkto/
 
-EDS-agnostic Marketo script pipeline for business.adobe.com forms. These scripts run against the [Marketo Forms 2.0 API](https://engage.adobe.com) and know nothing about EDS or DA — the `blocks/da-marketo/` block is responsible for translating page content into the state they need.
+Marketo script pipeline for business.adobe.com forms. These scripts run against the [Marketo Forms 2.0 API](https://engage.adobe.com) and know nothing about EDS or DA — the `blocks/da-marketo/` block is responsible for translating page content into the state they need.
+
+**Exception:** `libs.js` is the one EDS-aware file in this folder. It is the Milo/AEM EDS entry point for this repo — see [EDS/Milo entry point](#edsmilo-entry-point) below.
 
 ## Relationship to mkto-frms
 
@@ -48,9 +50,28 @@ Numeric prefixes indicate load order. Scripts are loaded sequentially by `mkto.j
 
 All form configuration lives in `window.mcz_marketoForm_pref`. This is populated by the `da-marketo` block before scripts load. Modules read from this object to drive behavior — do not use module-local state for anything shared across modules.
 
-## Entry point
+## EDS/Milo entry point
 
-`mkto.js` is the only public export. It loads `deps/forms2.min.js` from the same origin, calls `MktoForms2.loadForm` against `engage.adobe.com`, then chains the scripts above in order before calling `marketoFormSetup('stage1')`.
+`libs.js` is the Milo/AEM EDS loader. Consumers (e.g. `da-bacom/scripts/scripts.js`, or eventually Milo itself) import it and call `register({ getConfig, setConfig })` to activate da-marketo on a page:
+
+```js
+const mkto = await import(`${MARKETO_LIBS}/libs.js`);
+mkto.register({ getConfig, setConfig });
+```
+
+`MARKETO_LIBS` is the base URL for this repo's `mkto/` folder (e.g. `https://main--da-marketo--adobecom.aem.live/mkto`), so the import resolves to `mkto/libs.js` on the correct origin.
+
+`register()` reads the current Milo config, appends `{ base, blocks: ['da-marketo'] }` to `externalLibs`, and wraps `decorateArea` to rename `.marketo` elements to `.da-marketo`. The base URL is self-resolved via `import.meta.url` — no URL needs to be passed in.
+
+This is the only file in `mkto/` that knows about Milo's API. All other files are EDS-agnostic.
+
+`eslint.config.js` explicitly ignores `mkto/mkto.js`, `mkto/deps/**`, and `mkto/[0-9]*/**` (the vendored pipeline scripts) but **not** `libs.js` — so linting applies here.
+
+## Marketo entry point
+
+`mkto.js` is the Marketo pipeline loader. It loads `deps/forms2.min.js` from the same origin, calls `MktoForms2.loadForm` against `engage.adobe.com`, then chains the scripts above in order before calling `marketoFormSetup('stage1')`.
+
+It is called by `blocks/da-marketo/da-marketo.js` after the block has translated DA content into `window.mcz_marketoForm_pref`.
 
 ## Logging
 

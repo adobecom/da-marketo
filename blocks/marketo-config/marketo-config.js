@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/scripts.js';
+import { LIBS } from '../../scripts/libs.js';
 import { html, render, useContext, useState, useEffect } from '../../deps/htm-preact.js';
 import { utf8ToB64, loadBlock, createTag } from '../../utils/utils.js';
 import { ConfiguratorContext, ConfiguratorProvider, saveStateToLocalStorage } from './context.js';

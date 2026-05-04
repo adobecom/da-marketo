@@ -5,8 +5,11 @@
   --marketo-form-error: #D7373F;
   --marketo-form-selected: #0265DC;
   --marketo-form-focus: #147AF3;
+  --marketo-form-overlay-background: #FAFAFAD9;
   --marketo-form-placeholder-height: calc(78px * 7 + 57px); /* 7 rows + submit */
   --marketo-form-placeholder-height-desktop: calc(78px * 4 + 57px); /* 4 rows + submit */
+  --marketo-form-placeholder-height-multi: calc(78px * 2 + 57px); /* 2 rows + submit */
+  --marketo-form-placeholder-height-multi-desktop: calc(78px + 57px); /* 1 row + submit */
   --marketo-form-min-height: 215px;
   --marketo-form-max-height: 10000px;
 }
@@ -24,6 +27,10 @@
 
 .marketo.loading form {
   min-height: var(--marketo-form-placeholder-height);
+}
+
+.marketo.marketo.multi-step.loading form {
+  min-height: var(--marketo-form-placeholder-height-multi);
 }
 
 .marketo .marketo-title {
@@ -86,6 +93,67 @@
 
 .marketo .mktoFormRowTop {
   display: contents;
+  visibility: visible;
+  position: static;
+  pointer-events: auto;
+}
+
+.marketo.multi-step .mktoFormRow.mktoFormRowTop[data-validate="2"],
+.marketo.multi-step .mktoFormRow.mktoFormRowTop[data-validate="3"] {
+  display: block;
+  visibility: hidden;
+  position: absolute;
+  left: -100000px;
+  pointer-events: none;
+}
+
+.marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="2"],
+.marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="3"] {
+  display: contents;
+  visibility: visible;
+  position: static;
+  pointer-events: auto;
+}
+
+.marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="1"],
+.marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="1"] {
+  display: block;
+  visibility: hidden;
+  position: absolute;
+  left: -100000px;
+  pointer-events: none;
+}
+
+.marketo.multi-step .mktoForm[data-step="1"] .mktoFormRow.mktoFormRowTop.adobe-privacy,
+.marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop.adobe-privacy {
+  display: none;
+}
+
+.marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop.adobe-privacy,
+.marketo.multi-step.multi-2 .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop.adobe-privacy {
+  display: grid;
+  visibility: visible;
+  position: static;
+  pointer-events: auto;
+}
+
+.marketo.multi-step .step-details {
+  display: flex;
+  justify-content: center;
+  font-size: var(--type-body-xs-size);
+  font-weight: normal;
+  line-height: var(--type-body-xs-lh);
+  grid-column: span 2;
+}
+
+.marketo.multi-step .step-details button {
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--link-color-dark);
+  margin-right: 8px;
 }
 
 .marketo .mktoFormCol.mktoVisible {
@@ -291,6 +359,7 @@
   margin-top: 21px;
 }
 
+.marketo .marketo-overlay .retry-button,
 .marketo .mktoForm .mktoButton {
   appearance: button;
   background: var(--color-accent);
@@ -308,27 +377,34 @@
   cursor: pointer;
 }
 
+.marketo .marketo-overlay .retry-button:hover,
 .marketo .mktoForm .mktoButton:hover {
   background: var(--color-accent-hover);
   border-color: var(--color-accent-hover);
 }
 
+.marketo .marketo-overlay .retry-button:active,
 .marketo .mktoForm .mktoButton:active {
   background: var(--color-accent-down);
   border-color: var(--color-accent-down);
 }
 
+.marketo .marketo-overlay .retry-button:focus-visible,
 .marketo .mktoForm .mktoButton:focus-visible {
   border: 2px solid var(--color-white);
   outline: 2px solid var(--color-accent-focus-ring);
 }
 
-.marketo .mktoForm .mktoFormRow.msg-error {
+.marketo .mktoFormRow.mktoFormRowTop.msg-error .mktoFormCol {
   display: none;
 }
 
-.marketo .mktoForm.show-warnings .mktoFormRow.msg-error {
-  display: contents;
+.marketo .show-warnings .mktoFormRow.mktoFormRowTop.msg-error .mktoFormCol {
+  display: block;
+}
+
+.marketo .mktoForm.hide-errors .mktoFormRow.mktoFormRowTop.msg-error .mktoFormCol {
+  display: none;
 }
 
 .marketo .mktoForm .mktoFormRow.msg-error .mktoHtmlText {
@@ -473,6 +549,40 @@
   width: 100%;
 }
 
+.marketo:has(.marketo-overlay) {
+  position: relative;
+}
+
+.marketo .marketo-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--marketo-form-overlay-background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.marketo .marketo-overlay .error-container {
+  max-width: 420px;
+  width: 100%;
+  background: var(--marketo-form-background);
+  box-shadow: 0 4px 24px #00000014;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.marketo .marketo-overlay .error {
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--marketo-form-text);
+  margin-bottom: 12px;
+}
+
 @media screen and (min-width: 600px) {
   .marketo .marketo-form-wrapper {
     padding: var(--spacing-xxl);
@@ -510,6 +620,16 @@
   .marketo .mktoFormRow.mktoFormRowTop.comments,
   .marketo .mktoFormRow.mktoFormRowTop.demo,
   .marketo .mktoFormRow.mktoFormRowTop.name {
+    display: block;
+    grid-column: span 2;
+  }
+
+  .marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="2"].comments,
+  .marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="2"].demo,
+  .marketo.multi-step .mktoForm[data-step="2"] .mktoFormRow.mktoFormRowTop[data-validate="2"].name,
+  .marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="3"].comments,
+  .marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="3"].demo,
+  .marketo.multi-step .mktoForm[data-step="3"] .mktoFormRow.mktoFormRowTop[data-validate="3"].name {
     display: block;
     grid-column: span 2;
   }
@@ -586,8 +706,16 @@
     min-height: var(--marketo-form-placeholder-height-desktop);
   }
 
+  .marketo.multi-step.loading form {
+    min-height: var(--marketo-form-placeholder-height-multi-desktop);
+  }
+
   .marketo .mktoForm {
     max-height: var(--marketo-form-placeholder-height-desktop);
+  }
+
+  .marketo.multi-step .mktoForm {
+    max-height: var(--marketo-form-placeholder-height-multi-desktop);
   }
   
   .resource-form.section.two-up {
