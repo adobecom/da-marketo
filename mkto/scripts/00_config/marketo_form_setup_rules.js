@@ -1,15 +1,14 @@
 // ##
-// ## Updated 20250523T151657
+// ## Updated 20251117T121800
 // ##
 // ##
-// ##  Marketo Form Setup
 // ##
-// ##  This is the default data layer that will be used
-// ##  if the data layer is not found or is incomplete
+// ##  00_config/marketo_form_setup_rules.js - 20251117T121800
 // ##
 // ##
 
 if (typeof window.mcz_marketoForm_pref_example == "undefined") {
+  var mktoFrmVersion = "25.11.17a";
   var mktoFrmLog = false;
   var mktoFrmLanaLogMasterSwitch = false; // Master switch for auto-Lana logging (warns/errors) via URL param.
   const mktoFrmLogLanaMethods = ["log", "info", "error", "warn"]; // Methods that can trigger Lana logging.
@@ -133,6 +132,40 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
       );
     }
   }
+
+  //are we in a test mode?
+  if (window.location.href.indexOf("mkto_test") > -1) {
+    if (mktoFrmParams.get("mkto_test") == "active") {
+      if (localStorage.getItem("mkto_test_dl")) {
+        mkf_c.log("Test DL Found");
+        try {
+          mcz_marketoForm_pref_test = JSON.parse(localStorage.getItem("mkto_test_dl"));
+          window.mcz_marketoForm_pref_test = mcz_marketoForm_pref_test;
+
+          if (localStorage.getItem("mkto_test") != "active") {
+            localStorage.setItem("mkto_test", "active");
+          }
+        } catch (error) {
+          mkf_c.warn("ERROR: parsing Test Data Layer", error);
+        }
+      }
+    } else {
+      localStorage.setItem("mkto_test", "inactive");
+      let url = new URL(window.location.href);
+      url.searchParams.set("mkto_test", "inactive");
+      window.history.replaceState({}, "", url.href);
+    }
+  } else {
+    if (localStorage.getItem("mkto_test")) {
+      if (localStorage.getItem("mkto_test") == "active") {
+        mkf_c.log("Redirecting to test version");
+        let url = new URL(window.location.href);
+        url.searchParams.set("mkto_test", "active");
+        window.location.href = url.href;
+      }
+    }
+  }
+
   //QA Form
   if (window?.mcz_marketoForm_pref?.form?.id == 1723) {
     window.mktoFrmLog = true;
@@ -163,6 +196,12 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
     },
     form: {
       //form settings
+      status: "pending", //pending, ready, error
+      polling: false, //true, false - if true, the form will be polled for data layer updates
+      progressive: false, //true, false - if true, the form will be a progressive form
+      known_visitor: false, //true, false - if true, the form will be a known visitor form
+      autoSuccess: false, //true, false - if true, the form will be a auto success form
+      autoSuccessTimeFrameDays: 30, //number of days to check for auto success
       template: "content_discover",
       type: "marketo_form", //This is a Marketo Form default value
       subtype: "request_for_information", //see subtypeRules for examples
@@ -229,7 +268,7 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         nurture: "submit", // Nurturing Leads
         whitepaper_form: "submit", // Whitepaper Download
         webinar: "register",
-        strategy_webinar: "submit", // Strategy Webinar.
+        strategy_webinar: "register", // Strategy Webinar.
         demo: "submit",
         trial_download: "download", // Trial Download
         trial: "download", // Trial Download
@@ -242,16 +281,16 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         content_evaluate: "submit", // Nurturing Leads
         flex_contact: "submit", //Request for Information
         flex_content: "submit", //Whitepaper Download
-        flex_event: "submit", //Strategy Webinar
+        flex_event: "register", //Strategy Webinar
         email: "join", // Subscriptions
       },
       templateVersions: {
-        dme_flex_contact: "flex_contact",
-        dme_flex_content: "flex_content",
-        dme_flex_event: "flex_event",
-        comb_flex_contact: "flex_contact",
-        comb_flex_content: "flex_content",
-        comb_flex_event: "flex_event",
+        dme_flex_contact: "dme_flex_contact",
+        dme_flex_content: "dme_flex_content",
+        dme_flex_event: "dme_flex_event",
+        comb_flex_contact: "comb_flex_contact",
+        comb_flex_content: "comb_flex_content",
+        comb_flex_event: "comb_flex_event",
       },
       subtypeTemplate: {
         //subtypes assigned to templates
@@ -289,7 +328,38 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         override: "", //will override all verbs for submit for all languages.
       },
       baseSite: "https://business.adobe.com",
-      version: "25.05.23a",
+      version: mktoFrmVersion,
+      multi_step: {
+        active: false, //true, false - if true, the form will be a multi-step form
+        steps: [], //array of steps objects
+      },
+      field_visibility: {
+        //These fields will be hidden or visible
+        name: "required", //visible, required
+        company: "hidden", //visible, hidden, required
+        phone: "hidden", //visible, hidden, required
+        comments: "hidden", //visible, hidden
+        demo: "hidden", //visible, hidden,
+        state: "hidden", //visible, hidden, required
+        postcode: "hidden", //visible, hidden, required
+        company_size: "hidden", //visible, hidden, required
+        website: "hidden", //visible, hidden, required
+      },
+      field_filters: {
+        //filter terms used to display or hide field options
+        products: "POI-Dxonly-area", //POI-Dxonly, hidden, all
+        job_role: "", //Job Role-HiLevel, hidden, all
+        industry: "", //Industry-Manufacturing, hidden, all
+        functional_area: "", //Functional Area-DX, hidden, all
+      },
+      field_exclusions: {
+        //values to exclude from the field
+        products: "",
+        job_role: "",
+        industry: "",
+        functional_area: "",
+      },
+      lastSubmission: null, //date of the last submission
     },
     program: {
       //Marketo Program Settings
@@ -327,24 +397,8 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         id: "",
       },
     },
-    field_visibility: {
-      //These fields will be hidden or visible
-      name: "required", //visible, required
-      company: "hidden", //visible, hidden, required
-      phone: "hidden", //visible, hidden, required
-      comments: "hidden", //visible, hidden
-      demo: "hidden", //visible, hidden,
-      state: "hidden", //visible, hidden, required
-      postcode: "hidden", //visible, hidden, required
-      company_size: "hidden", //visible, hidden, required
-      website: "hidden", //visible, hidden, required
-    },
-    field_filters: {
-      //filter terms used to display or hide field options
-      products: "POI-Dxonly-area", //POI-Dxonly, hidden, all
-      job_role: "", //Job Role-HiLevel, hidden, all
-      industry: "", //Industry-Manufacturing, hidden, all
-      functional_area: "", //Functional Area-DX, hidden, all
+    program_profile: {
+      host: "root.program_profile",
     },
     value_setup: {
       field_mapping: {
@@ -387,11 +441,10 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         State: "address-level1",
         PostalCode: "postal-code",
       },
+      always_update_fields: ["mktoLastUnsubscribeDate", "sessionECID", "sessionGUID"],
     },
   };
 }
-// ##
-// ##
 
 // ##
 // ##

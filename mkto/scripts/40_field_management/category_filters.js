@@ -1,15 +1,15 @@
 // ##
-// ## Updated 20240117T190031
+// ## Updated 20250918T125252
 // ##
 // ##
 // ##
-// ## Category Filters
+// ## 40_field_management/category_filters.js - Category Filters 20250918T125252
 // ##
 // ##
 
-if (typeof categoryFilters == "undefined") {
+if (typeof window?.categoryFilters == "undefined") {
   mkf_c.log("Category Filters - Loaded");
-  function categoryFilters() {
+  window.categoryFilters = function () {
     var fld_push_mktoFormsFunctionalAreaCategory;
 
     var fld_wait_mktoFormsFunctionalAreaCategoryCheckInterval;
@@ -33,7 +33,7 @@ if (typeof categoryFilters == "undefined") {
 
         const updateCategoryFilter = (selector, property) => {
           const element = document.querySelector(selector);
-          const value = window?.mcz_marketoForm_pref?.field_filters?.[property];
+          const value = window?.mcz_marketoForm_pref?.form?.field_filters?.[property];
           if (value && value !== "") {
             dispatchChangeEvent(element, value);
           }
@@ -73,8 +73,11 @@ if (typeof categoryFilters == "undefined") {
     };
 
     fld_push_mktoFormsFunctionalAreaCategory();
-  }
+  };
 }
+
+// ##
+// ##
 
 // ##
 // ##

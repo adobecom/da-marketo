@@ -1,16 +1,16 @@
 // ##
-// ## Updated 20240117T235503
+// ## Updated 20250929T205629
 // ##
 // ##
 // ##
-// ## Field Preferences
+// ## 40_field_management/field_preferences.js - 20250929T205629
 // ##
 // ##
 
-if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
+if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefined") {
   mkf_c.log("Field Preferences - Begin");
 
-  function field_pref() {
+  window.field_pref = function () {
     mkf_c.log("Field Preferences - Triggered");
     const fieldMap = {};
     if (window?.mcz_marketoForm_pref?.value_setup?.field_mapping) {
@@ -131,6 +131,7 @@ if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
                 }).join(" ");
                 field.setAttribute("aria-labelledby", newAriaLabelString);
               }
+
               mktoInstruction.remove();
               if (field_dependance[fieldName.toLowerCase()]) {
                 let fieldDependanceName = field_dependance[fieldName.toLowerCase()];
@@ -154,7 +155,7 @@ if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
                     for (let i = 0; i < 10; i++) {
                       setTimeout(function () {
                         fieldDependanceElement.dispatchEvent(event);
-                      }, 100 * i);
+                      }, 50 * i);
                     }
                   }
                 }
@@ -167,29 +168,29 @@ if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
         if (setRequired_set[fieldName] < setRequired_attempts) {
           setTimeout(function () {
             setRequired(fieldName, direction);
-          }, 30);
+          }, 20);
         } else {
           //mkf_c.log(`setRequired - [${fieldName}] found after ${setRequired_set[fieldName]} attempts.`)
         }
       }
-    }
+    };
 
     function updateFieldPreferences() {
       let mktoFieldPreferences = document.querySelector(
         '.mktoFormRow [name="__mktoFieldPreferences"]'
       );
       let fieldNames = [];
-      for (var key in window?.mcz_marketoForm_pref?.field_visibility) {
-        if (window?.mcz_marketoForm_pref?.field_visibility.hasOwnProperty(key)) {
+      for (var key in window?.mcz_marketoForm_pref?.form?.field_visibility) {
+        if (window?.mcz_marketoForm_pref?.form?.field_visibility.hasOwnProperty(key)) {
           fieldNames.push(key);
         }
       }
       var newFieldPreferences = "";
       if (fieldNames.length > 0) {
         for (var i = 0; i < fieldNames.length; i++) {
-          let checkDL = window?.mcz_marketoForm_pref?.field_visibility;
-          if (checkDL && window?.mcz_marketoForm_pref?.field_visibility?.[fieldNames[i]]) {
-            let setting = window?.mcz_marketoForm_pref?.field_visibility?.[fieldNames[i]];
+          let checkDL = window?.mcz_marketoForm_pref?.form?.field_visibility;
+          if (checkDL && window?.mcz_marketoForm_pref?.form?.field_visibility?.[fieldNames[i]]) {
+            let setting = window?.mcz_marketoForm_pref?.form?.field_visibility?.[fieldNames[i]];
             setting = setting.toLowerCase();
             if (setting === "visible" || setting === "show" || setting === "all") {
               newFieldPreferences += fieldNames[i] + "#";
@@ -200,16 +201,20 @@ if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
             }
           }
         }
-        mktoFieldPreferences.value = newFieldPreferences;
+        let template = window?.mcz_marketoForm_pref?.form?.template || "";
+        if (template != "") {
+          template = "#" + template;
+        }
+        mktoFieldPreferences.value = newFieldPreferences + template;
         let event = new Event("change", { bubbles: true });
         mktoFieldPreferences.dispatchEvent(event);
         for (let i = 0; i < 10; i++) {
           setTimeout(function () {
             mktoFieldPreferences.dispatchEvent(event);
-          }, 100 * i);
+          }, 10 * i);
         }
       } else {
-        setTimeout(updateFieldPreferences, 25);
+        setTimeout(updateFieldPreferences, 10);
       }
     }
 
@@ -220,7 +225,7 @@ if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
         mkf_c.log("Marketo Config Interface no longer exists. Stopping field visibility check.");
         return;
       }
-      let fieldVisibility = window?.mcz_marketoForm_pref?.field_visibility;
+      let fieldVisibility = window?.mcz_marketoForm_pref?.form?.field_visibility;
       if (fieldVisibility) {
         let currentFieldVisibility = JSON.stringify(fieldVisibility);
         if (currentFieldVisibility !== lastFieldVisibility) {
@@ -248,18 +253,17 @@ if (typeof field_pref != "function" && typeof form_dynamics == "undefined") {
           fieldVisibilityCheckInterval = setInterval(checkDataLayer, 500);
         }
       } else {
-        if (window?.mcz_marketoForm_pref?.profile?.known_visitor) {
-          //mkf_c.log("Known Visitor - fieldPrefs_wait_fieldPreferences");
-        } else {
-          setTimeout(fieldPrefs_wait_fieldPreferences, 20);
-        }
+        setTimeout(fieldPrefs_wait_fieldPreferences, 10);
       }
     }
 
     fieldPrefs_wait_fieldPreferences();
-  }
+  };
   mkf_c.log("Field Preferences - End");
 }
+
+// ##
+// ##
 
 // ##
 // ##

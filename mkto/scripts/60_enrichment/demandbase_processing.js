@@ -1,19 +1,18 @@
 // ##
-// ## Updated 20250508T212339
+// ## Updated 20251117T205007
 // ##
 // ##
-// ## Demandbase Module Processing
+// ## 60_enrichment/demandbase_processing.js 20251117T205007
 // ##
 (async function () {
-  //
   // Remove "//" before "return;" below to bypass Demandbase
-  // return;
+  //return;
+
+  if (typeof form_dynamics == "undefined") {
+    true;
+  }
   //
-  //
-  //
-  //
-  //
-  //
+  // Demandbase Module Processing
   //
   let serviceName = "DEMANDBASE";
   if (window?.mcz_marketoForm_pref?.form?.enrichment?.[serviceName]?.setup?.processing) {
@@ -175,7 +174,9 @@
         return;
       }
 
-      let finalUrl = `${apiUrl}?key=${key}&rnd=${random}&callback=${callbackName}&query=${reqQuery}&informationLevel=${informationLevel}`;
+      let finalUrl = `${apiUrl}?key=${key}&rnd=${random}&callback=${callbackName}&query=${encodeURIComponent(
+        reqQuery
+      )}&informationLevel=${informationLevel}`;
       mkf_c.log(`${serviceName}: Service URL:`, finalUrl);
 
       const script = document.createElement("script");
@@ -689,7 +690,13 @@
         value !== "N/A" &&
         value !== "undefined"
       ) {
-        mcz_fieldMap_data[mktoField] = value;
+        if (typeof value === "string") {
+          let tempDiv = document.createElement("div");
+          tempDiv.textContent = value;
+          mcz_fieldMap_data[mktoField] = tempDiv.innerHTML;
+        } else {
+          mcz_fieldMap_data[mktoField] = value;
+        }
       } else {
         if (nullFields[mktoField] && mktoDemandbaseCompanyID) {
           mkf_c.log(`${serviceName}: mapFieldsToForm - Null Field:`, mktoField);
@@ -822,14 +829,14 @@
 
     let companyInputName = mcz_dl.setup?.autoComplete?.companyInputName || null;
     if (!companyInputName) {
-      mkf_c.warn(`${serviceName}: Company field not defined in setup config, stopping.`);
+      mkf_c.warn(`${serviceName}: Company input not defined in setup config, stopping.`);
       return;
     }
 
     const companyInput = document.querySelector(`.mktoForm input[name='${companyInputName}']`);
 
     if (!companyInput) {
-      mkf_c.warn(`${serviceName}: Company field not found, skipping autocomplete`);
+      mkf_c.warn(`${serviceName}: Company input not found, skipping autocomplete`);
       return;
     }
 
@@ -882,7 +889,7 @@
       async (event) => {
         let companyInput = document.querySelector(`.mktoForm input[name='${companyInputName}']`);
         if (!companyInput) {
-          mkf_c.log(`${serviceName}: Company field not found, skipping autocomplete`);
+          mkf_c.log(`${serviceName}: Company input not found, skipping autocomplete`);
           return;
         }
         const query = companyInput.value.trim();
@@ -1036,7 +1043,7 @@
       // Set Sorting Prefix by domain
       if (fieldSuggestionImprovements.includes("domain")) {
         if (!emailInputName) {
-          mkf_c.warn(`${serviceName}: Email Field not defined in setup config, stopping.`);
+          mkf_c.warn(`${serviceName}: Email input name not defined in setup config, stopping.`);
           return suggestionsFiltered;
         }
         let emailInput = document.querySelector(`.mktoForm input[name='${emailInputName}']`);
@@ -1138,7 +1145,7 @@
     let updateDataList = (suggestionsFiltered, recordShow) => {
       let companyInput = document.querySelector(`.mktoForm input[name='${companyInputName}']`);
       if (!companyInput) {
-        mkf_c.log(`${serviceName}: Company field not found, skipping selection`);
+        mkf_c.log(`${serviceName}: Company input not found, skipping selection`);
         return;
       }
       dataList.innerHTML = "";
@@ -1193,7 +1200,7 @@
     handleSelection = debounce(async (event) => {
       let companyInput = document.querySelector(`.mktoForm input[name='${companyInputName}']`);
       if (!companyInput) {
-        mkf_c.log(`${serviceName}: Company field not found, skipping selection`);
+        mkf_c.log(`${serviceName}: Company input not found, skipping selection`);
         return;
       }
       let activeRefID = null;
@@ -1371,10 +1378,6 @@
       return ticks < 1000 ? `00${ticks}` : ticks < 10000 ? `0${ticks}` : ticks;
     }
 
-    if (knownVisitor) {
-      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Known Visitor.`);
-      return;
-    }
     if (checkingTicks > totalMaxTicksToWait) {
       mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Max ticks reached, stopping.`);
       return;
@@ -1384,22 +1387,26 @@
     }
 
     if (!emailInputName || !companyInputName) {
-      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Email or Company field.`);
+      mkf_c.log(
+        `${serviceName}: ${paddTicks(
+          totalTicks
+        )}# Email Input Name or Company Input Name not found, Stopping.`
+      );
       return;
     }
     if (checkingTicks > 10) {
-      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# checking speed set to every second.`);
+      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Checking speed set to every second.`);
       checkingSpeed = 1000;
     }
     const consentCheck = typeof checkAdobePrivacy === "function" ? await checkAdobePrivacy() : true;
     if (!consentCheck) {
-      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Consent.`);
+      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Consent Check First.`);
       setTimeout(() => init_moduleDB(), 10);
       return;
     }
     let emailInput = document.querySelector(`.mktoForm input[name='${emailInputName}']`);
     if (!emailInput) {
-      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Email Field.`);
+      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Email Input.`);
       setTimeout(() => init_moduleDB(), 10);
       return;
     }
@@ -1410,23 +1417,26 @@
     let companyInput = document.querySelector(`.mktoForm input[name='${companyInputName}']`);
     if (!companyInput) {
       if (checkingTicks > maxTicksAfterEmailInputFound) {
-        mkf_c.log(
-          `${serviceName}: ${paddTicks(totalTicks)}# No Company field found, max time reached.`
+        mkf_c.warn(
+          `${serviceName}: ${paddTicks(
+            totalTicks
+          )}# No company input found, max time reached, force finished.`
         );
         return;
       }
-      mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Company field.`);
+      //mkf_c.log(`${serviceName}: ${paddTicks(totalTicks)}# Waiting for Company Input.`);
       setTimeout(() => init_moduleDB(), 10);
       return;
     }
 
-    mkf_c.log(
-      `${serviceName}: ${paddTicks(totalTicks)}# Initializing ${serviceName} Autocomplete.`
-    );
+    // mkf_c.log(
+    //   `${serviceName}: ${paddTicks(totalTicks)}# Initializing ${serviceName} Autocomplete.`
+    // );
     await bindCompanyAutocomplete();
   };
 
   init_moduleDB();
 })();
+
 // ##
 // ##

@@ -1,8 +1,8 @@
 // ##
-// ## Updated 20250523T151736
+// ## Updated 20251125T133842
 // ##
 // ##
-// ## Processing
+// ## 90_build/marketo_form_setup_process.js - 20251125T133842
 // ##
 var mkto_formsLoaded = mkto_formsLoaded || {};
 var mktoFrmParams = new URLSearchParams(window.location.search);
@@ -13,9 +13,6 @@ var consStyl = "font-size: 1.2em; color: green; font-weight: bold; ";
 
 if (typeof mktoPerformanceObserver == "undefined") {
   mkf_c.log("Form - Begin");
-
-  var unique_id = "";
-  var activeCookie = false;
 
   mktoPerformanceObserver = new PerformanceObserver((list) => {
     const entries = list.getEntries();
@@ -42,7 +39,6 @@ if (typeof mktoPerformanceObserver == "undefined") {
             `%cForm load time: ${window?.mcz_marketoForm_pref?.performance?.loadTime}ms, bucket: ${window?.mcz_marketoForm_pref?.performance?.loadTimeBucket}ms`,
             consStyl
           );
-
           if (typeof aaInteraction === "function") {
             aaInteraction(
               "Marketo Form View",
@@ -60,110 +56,12 @@ if (typeof mktoPerformanceObserver == "undefined") {
 
   performance.mark("MarketoFormStart");
 
-  window.uFFld = function (form, fieldName, value, critical = false) {
-    if (form === null || form === undefined) {
-      mkf_c.warn("Form is null or undefined for:" + fieldName + " = " + value);
-      return;
-    }
-
-    value = "" + value;
-    value = value.replace(/undefined|null/g, "").trim();
-    value = String(value);
-
-    if (critical && value === "") {
-      mkf_c.warn("Critical field is empty: " + fieldName);
-    }
-
-    let formField = document.querySelector('[name="' + fieldName + '"]');
-    if (formField) {
-      let activeOnForm = false;
-      let checklbl = document.querySelector('label[for="' + fieldName + '"]');
-      if (checklbl) {
-        let lbl = checklbl.innerText;
-        mkf_c.log(lbl);
-        if (lbl.length > 0) {
-          let parent = checklbl.parentElement;
-          while (parent) {
-            if (parent.classList.contains("mktoFormRowTop")) {
-              activeOnForm = true;
-              mkf_c.log("Active on Form: " + fieldName);
-              if (parent.classList.contains("mktoHidden")) {
-                mkf_c.log("Active on Form (but hidden): " + fieldName);
-                activeOnForm = false;
-              }
-              break;
-            }
-            parent = parent.parentElement;
-          }
-        }
-      }
-      if (activeOnForm == false) {
-        if (formField.tagName == "SELECT" && formField.querySelectorAll("option").length > 0) {
-          let options = formField.querySelectorAll("option");
-          let found = false;
-          for (let i = 0; i < options.length; i++) {
-            if (options[i].value == value) {
-              found = true;
-              break;
-            }
-          }
-          if (!found) {
-            let newOption = document.createElement("option");
-            newOption.value = value;
-            newOption.innerHTML = value;
-            formField.appendChild(newOption);
-          }
-        }
-
-        if (formField.type == "radio" || formField.type == "checkbox") {
-          let radioCheck = document.querySelector(
-            '[name="' + fieldName + '"][value="' + value + '"]'
-          );
-          if (!radioCheck) {
-            let nwO = document.createElement("input");
-            nwO.type = formField.type;
-            nwO.name = fieldName;
-            nwO.value = value;
-            nwO.style.display = "none";
-            formField.parentElement.appendChild(nwO);
-          }
-        }
-        let tV = form.getValues();
-        if (tV.hasOwnProperty(fieldName)) {
-          if (tV[fieldName] != value) {
-            form.setValues({ [fieldName]: value });
-          }
-        } else {
-          form.addHiddenFields({ [fieldName]: value });
-        }
-        formField.value = value;
-      }
-    } else {
-      let hiddenField = {};
-      hiddenField[fieldName] = value;
-      form.addHiddenFields(hiddenField);
-    }
-  };
-
-  function marketoFormSetup(lvl) {
-    if (lvl === undefined || lvl === null) {
-      lvl = "";
-    }
+  function marketoFormSetup(lvl = "") {
+    var group_label = "Marketo Form Setup " + lvl;
+    mkf_c.group(group_label);
     mkf_c.log("Marketo Form Setup - Triggered " + lvl);
 
     if (lvl == "stage1") {
-      if (typeof window.mcz_marketoForm_pref === "undefined") {
-        mkf_c.log("Marketo Form DataLayer - Not Found, using default values");
-        window.mcz_marketoForm_pref = window.mcz_marketoForm_pref_example || [];
-      } else {
-        mkf_c.log("mcz_marketoForm_pref is defined, check quality");
-        checkAndAddProperties(
-          window.mcz_marketoForm_pref,
-          window.mcz_marketoForm_pref_example,
-          false
-        );
-      }
-
       function checkAndAddProperties(obj, defaultObj, replace) {
         for (let prop in defaultObj) {
           if (typeof obj[prop] === "undefined") {
@@ -176,257 +74,195 @@ if (typeof mktoPerformanceObserver == "undefined") {
         }
       }
 
-      let templateLog = "";
-      function aTLg(log) {
-        if (log === undefined || log === null) {
-          return;
-        }
-        if (log == "---") {
-          templateLog += "-----\n";
-          return;
-        }
-        templateLog += log + "\n";
-      }
-
-      function checkTemplate() {
-        let groupLBL = "Marketo Form Template";
-        mkf_c.groupCollapsed(groupLBL);
-
-        const mczPrefs = window.mcz_marketoForm_pref;
-        if (!mczPrefs) {
-          mkf_c.warn("DL not defined.");
-          mkf_c.groupEnd(groupLBL);
-          return;
-        }
-        if (!mczPrefs.form) {
-          mkf_c.warn("form not defined.");
-          mkf_c.groupEnd(groupLBL);
-          return;
-        }
-        if (!mczPrefs.form.template) {
-          mkf_c.warn("form.template not defined.");
-          mkf_c.groupEnd(groupLBL);
-          return;
-        }
-        if (mktoFrmParams.get("template")) {
-          mczPrefs.form.template = mktoFrmParams.get("template");
-        }
-
-        const templateName = mczPrefs.form?.template;
-        const templates = window?.templateRules;
-
-        templateLog = "\nTemplate = '" + templateName + "'\n" + templateLog;
-
-        if (!templateName || !Array.isArray(templates)) {
-          mkf_c.warn("Template incorrect.");
-          mkf_c.groupEnd(groupLBL);
-          return;
-        }
-        const templateRule = templates.find((template) => template.hasOwnProperty(templateName));
-        if (!templateRule) {
-          mkf_c.warn("Template no rule: " + templateName);
-          mkf_c.groupEnd(groupLBL);
-          return;
-        }
-        const rule = templateRule[templateName];
-        if (templateName.indexOf("flex") > -1 && !mktoFrmParams.get("template")) {
-          mkf_c.log("\nRules Relaxed");
-          mkf_c.groupEnd(groupLBL);
-        } else {
-          aTLg("\nEval '" + templateName + "'");
-          if (templateName.indexOf("flex") > -1 && mktoFrmParams.get("template") > -1) {
-            aTLg("Test Rules Enforced");
-          }
-
-          if (rule.field_visibility) {
-            aTLg("\nVis");
-            applyRuleToFields(rule.field_visibility, mczPrefs.field_visibility, "field_visibility");
-          }
-          if (rule.field_filters) {
-            aTLg("\nFilter");
-            applyRuleToFields(rule.field_filters, mczPrefs.field_filters, "field_filters");
-          }
-        }
-
-        if (mczPrefs.form.templateVersions) {
-          if (mczPrefs.form.templateVersions.hasOwnProperty(mczPrefs.form.template)) {
-            let originalTemplateVersion = mczPrefs.form.template;
-            mczPrefs.form.template = mczPrefs.form.templateVersions[mczPrefs.form.template];
-            if (originalTemplateVersion != mczPrefs.form.template) {
-              aTLg(
-                "Template: '" + originalTemplateVersion + "' > '" + mczPrefs.form.template + "'"
-              );
-            }
-          } else {
-            aTLg(
-              "No template ver: " + mczPrefs.form.template + ", Using: " + mczPrefs.form.template
-            );
-          }
-        } else {
-          aTLg("no subtype.");
-        }
-
-        if (mczPrefs.form.subtypeTemplate) {
-          if (mczPrefs.form.subtypeTemplate.hasOwnProperty(mczPrefs.form.template)) {
-            let originalSubtype = mczPrefs.form.subtype;
-            mczPrefs.form.subtype = mczPrefs.form.subtypeTemplate[mczPrefs.form.template];
-            if (originalSubtype != mczPrefs.form.subtype) {
-              aTLg("Subtype Changed: '" + originalSubtype + "' > '" + mczPrefs.form.subtype + "'");
-            }
-          } else {
-            aTLg("No temp rule: " + mczPrefs.form.template);
-            aTLg("Using subtype: " + mczPrefs.form.subtype);
-          }
-        } else {
-          aTLg("subtype in template undefined.");
-        }
-
-        let poi = mktoFrmParams.get("mktfrm_poi") || "";
-        if (!poi && window.location.hash) {
-          const hash = window.location.hash;
-          if (hash.includes("#poi")) {
-            poi = hash.replace("#poi", "");
-          }
-        }
-        if (poi.length > 2) {
-          poi = poi
-            .replace(/[^a-zA-Z0-9]/g, "_")
-            .replace(/_+$/, "")
-            .toUpperCase();
-
-          mczPrefs.program.poi = poi;
-          mczPrefs.field_filters.products = "hidden";
-          mkf_c.log(`POI provided in query string: ${poi}`);
-        }
-
-        aTLg("Subtypes Verbs");
-        aTLg(JSON.stringify(mczPrefs.form.subtypeRules, null, 2));
-        aTLg("\nSubtypes Enforced:");
-        aTLg(JSON.stringify(mczPrefs.form.subtypeTemplate, null, 2));
-
-        aTLg("---");
-
-        aTLg("\nComplete Rule '" + templateName + "'\n");
-        aTLg(JSON.stringify(rule, null, 2));
-        mkf_c.log(templateLog);
-        mkf_c.groupEnd(groupLBL);
-      }
-
-      function applyRuleToFields(ruleFields, fields, fieldName) {
-        if (!fields) {
-          return;
-        }
-        let matches_Y = "";
-        let matches_N = "";
-        Object.entries(ruleFields).forEach(function (entry) {
-          var key = entry[0];
-          var ruleArray = entry[1];
-          var ruleValue = ruleArray[0].split(":")[0];
-          let thisV =
-            " - '" + key + "' is set as '" + fields[key] + "', Rule is '" + ruleValue + "'";
-
-          if (fields[key] !== ruleValue) {
-            matches_N += thisV + "\n";
-            fields[key] = ruleValue;
-          } else {
-            matches_Y += thisV + "\n";
-          }
-        });
-        if (matches_Y !== "") {
-          matches_Y = "\nMatches:\n" + matches_Y + "\n";
-        }
-        if (matches_N !== "") {
-          matches_N = "!!!!!! No Match:\n" + matches_N;
-        }
-        aTLg(matches_Y + matches_N);
-      }
-      if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
-        mkf_c.log("Known Visitor - marketoFormSetup");
-        if (typeof privacyValidation === "function") {
-          privacyValidation();
-        }
+      if (typeof window.mcz_marketoForm_pref === "undefined") {
+        mkf_c.log("Marketo Form DataLayer - Not Found, using default values");
+        window.mcz_marketoForm_pref = window.mcz_marketoForm_pref_example || [];
       } else {
-        if (typeof checkTemplate === "function") {
-          checkTemplate();
+        mkf_c.log("mcz_marketoForm_pref is defined, check quality");
+        checkAndAddProperties(
+          window.mcz_marketoForm_pref,
+          window.mcz_marketoForm_pref_example,
+          false
+        );
+      }
+
+      if (typeof window.mcz_marketoForm_pref_test === "object") {
+        mkf_c.log("test data layer found, merging with current data layer");
+        mkf_c.log("current data layer", window.mcz_marketoForm_pref);
+        mkf_c.log("test data layer", mcz_marketoForm_pref_test);
+        checkAndAddProperties(window.mcz_marketoForm_pref, mcz_marketoForm_pref_test, true);
+      }
+
+      if (window.mcz_marketoForm_pref?.form?.field_visibility) {
+        mkf_c.log("v2 form object found.");
+      } else if (window.mcz_marketoForm_pref?.field_visibility) {
+        mkf_c.log("Upgrading form object to v2");
+        window.mcz_marketoForm_pref.form.field_visibility =
+          window.mcz_marketoForm_pref.field_visibility;
+
+        window.mcz_marketoForm_pref.form.field_filters = window.mcz_marketoForm_pref?.field_filters;
+
+        window.mcz_marketoForm_pref.form.field_exclusions =
+          window.mcz_marketoForm_pref?.field_exclusions;
+      }
+
+      if (typeof window?.mkto_checkAdobeIMS === "function") {
+        window.mkto_checkAdobeIMS();
+      }
+
+      if (typeof window.mkto_getMktToken === "function") {
+        window.mkto_getMktToken();
+      }
+
+      if (typeof window.mkto_checkTemplate === "function") {
+        window.mkto_checkTemplate();
+      }
+
+      window.mkto_checkAutoSuccess = async function (src = "") {
+        let programId = window?.mcz_marketoForm_pref?.program?.id || "";
+        if (programId && programId?.length > 0) {
+          programId = programId.replace(/[^0-9]/g, "");
+          programId = programId.substring(0, 10);
         }
-        if (typeof renderingReview === "function") {
-          renderingReview();
+        window.mcz_marketoForm_pref.flags = window.mcz_marketoForm_pref.flags || {};
+        if (window.mcz_marketoForm_pref?.flags?.autoSuccessReviewed === true) {
+          return;
+        }
+
+        let groupLabel = "Checking Auto Success - " + src;
+        mkf_c.group(groupLabel);
+        if (typeof window.MktoForms_onSuccess === "function") {
+          if (window.mcz_marketoForm_pref?.form?.autoSuccess === true) {
+            mkf_c.log("Auto Success: enabled");
+            let lastSubmission =
+              window.mcz_marketoForm_pref?.profile?.prefill?.mktoLastUnsubscribeDate || "";
+
+            if (lastSubmission && lastSubmission == "") {
+              mkf_c.log(
+                "Auto Success: No last submission found from prefill, checking localStorage."
+              );
+              const mktoFrmLastID_p = localStorage.getItem("mktoFrmLastID_p" + programId) || "";
+              const mktoFrmLastID = localStorage.getItem("mktoFrmLastID") || "";
+              const deriveSubmissionDate = (value) => {
+                if (!value || typeof value !== "string") {
+                  return "";
+                }
+                const timestampMatch = value.match(/#t:(\d{10,})/);
+                if (!timestampMatch || !timestampMatch[1]) {
+                  return "";
+                }
+                const timestamp = parseInt(timestampMatch[1], 10);
+                if (Number.isNaN(timestamp) || timestamp <= 0) {
+                  return "";
+                }
+                return new Date(timestamp).toISOString();
+              };
+              const programSubmission = deriveSubmissionDate(mktoFrmLastID_p);
+              const globalSubmission = deriveSubmissionDate(mktoFrmLastID);
+              if (programSubmission) {
+                lastSubmission = programSubmission;
+                mkf_c.log(
+                  "Auto Success: Program submission found via localStorage.",
+                  programSubmission
+                );
+              } else if (globalSubmission) {
+                // lastSubmission = globalSubmission;
+                mkf_c.log(
+                  "NOT USED: Auto Success: Global submission found via localStorage.",
+                  globalSubmission
+                );
+              }
+            }
+
+            if (lastSubmission && lastSubmission !== "") {
+              let okToAutoSuccess = false;
+              mkf_c.log(`Auto Success: Last Submission: ${lastSubmission}`);
+              try {
+                window.mcz_marketoForm_pref.flags.autoSuccessReviewed = true;
+                const timeFrameDays =
+                  window.mcz_marketoForm_pref?.form?.autoSuccessTimeFrameDays || 30;
+                const timeFrameMillis = timeFrameDays * 24 * 60 * 60 * 1000;
+                let timeDifference = new Date() - new Date(lastSubmission);
+                let timeDifferenceDays = timeDifference / (24 * 60 * 60 * 1000);
+                timeDifferenceDays = Math.round(timeDifferenceDays);
+                okToAutoSuccess = timeDifferenceDays <= timeFrameDays;
+                mkf_c.log(
+                  `Auto Success: Time Difference: ${timeDifferenceDays} days, okToAutoSuccess: ${okToAutoSuccess}`
+                );
+              } catch (error) {
+                window.mcz_marketoForm_pref.flags.autoSuccessReviewed = false;
+                mkf_c.error("Auto Success: Error calculating time difference", error);
+                okToAutoSuccess = false;
+              }
+              if (okToAutoSuccess) {
+                mkf_c.groupEnd(groupLabel);
+                window.MktoForms_onSuccess();
+                return;
+              }
+            } else {
+              mkf_c.log("Auto Success: No last submission found.");
+            }
+          }
+        }
+        if (typeof window?.renderingReview === "function") {
+          mkf_c.groupEnd(groupLabel);
+          window.renderingReview("AutoSuccess - " + src);
+        }
+      };
+
+      if (typeof window?.mkto_PrgrsCtrlr?.init === "function") {
+        mkf_c.log("Progressive Controller is available");
+      } else {
+        mkf_c.warn("Progressive Controller is not available, falling back to standard form setup");
+        programId = "";
+      }
+      let programId = window?.mcz_marketoForm_pref?.program?.id || "";
+      if (programId && programId?.length > 0) {
+        programId = programId.replace(/[^0-9]/g, "");
+        programId = programId.substring(0, 10);
+      }
+      if (programId && programId !== "") {
+        mkf_c.log(`Program ID Provided: ${programId}, syncing with Progressive Controller`);
+        window.mkto_PrgrsCtrlr.init({
+          programId: programId,
+          callback: () => {
+            mkf_c.log("Progressive Controller Initialized, sourcing program data.");
+            window.mkto_checkTemplate("PP");
+
+            if (typeof window?.mkto_checkAutoSuccess === "function") {
+              window.mkto_checkAutoSuccess("PP");
+              return;
+            } else {
+              if (typeof window?.renderingReview === "function") {
+                window.renderingReview("PP - No AutoSuccess");
+                return;
+              }
+            }
+          },
+        });
+      } else {
+        mkf_c.log("standard form setup");
+        if (typeof window?.mkto_checkAutoSuccess === "function") {
+          window.mkto_checkAutoSuccess("Standard");
+          return;
+        } else {
+          if (typeof window?.renderingReview === "function") {
+            window.renderingReview("Standard - No AutoSuccess");
+            return;
+          } else {
+            mkf_c.error("FATAL ERROR: renderingReview function is not available");
+          }
         }
       }
 
+      mkf_c.groupEnd(group_label);
       return;
     }
 
-    if (window.location.href.indexOf("mkto_test") > -1) {
-      if (mktoFrmParams.get("mkto_test") == "active") {
-        if (localStorage.getItem("mkto_test_dl")) {
-          if (localStorage.getItem("mkto_test") != "active") {
-            localStorage.setItem("mkto_test", "active");
-          }
-          mkf_c.log("Test DL Found");
-          try {
-            mcz_marketoForm_pref_test = JSON.parse(localStorage.getItem("mkto_test_dl"));
-            mkf_c.log("current data layer", window.mcz_marketoForm_pref);
-            mkf_c.log("test data layer", mcz_marketoForm_pref_test);
-            checkAndAddProperties(window.mcz_marketoForm_pref, mcz_marketoForm_pref_test, true);
-          } catch (error) {
-            mkf_c.warn("ERROR: parsing error", error);
-          }
-        }
-      } else {
-        localStorage.setItem("mkto_test", "inactive");
-        let url = new URL(window.location.href);
-        url.searchParams.set("mkto_test", "inactive");
-        window.history.replaceState({}, "", url.href);
-      }
-    } else {
-      if (localStorage.getItem("mkto_test")) {
-        if (localStorage.getItem("mkto_test") == "active") {
-          mkf_c.log("Redirecting to test version");
-          let url = new URL(window.location.href);
-          url.searchParams.set("mkto_test", "active");
-          window.location.href = url.href;
-        }
-      }
-    }
-
-    function isTestRecord() {
-      let testRecord = "not_test";
-      let here = window.location.href.toLowerCase();
-
-      let email_fld = document.querySelector('.mktoForm[id] [name="Email"]');
-      if (email_fld) {
-        if (email_fld.value.includes("@adobetest.com")) {
-          testRecord = "test_submit";
-          if (email_fld.value.includes("privacytest") || email_fld.value.includes("nosub")) {
-            testRecord = "test_no_submit";
-          }
-        }
-      }
-      if (here.indexOf(".hlx.") > -1) {
-        testRecord = "test_submit";
-      }
-      if (here.indexOf("preview=1") > -1 && here.indexOf("formid=") > -1) {
-        testRecord = "test_no_submit";
-      }
-      if (window?.mcz_marketoForm_pref?.profile !== undefined) {
-        if (testRecord == "not_test") {
-          window.mcz_marketoForm_pref.profile["testing"] = false;
-        } else {
-          window.mcz_marketoForm_pref.profile["testing"] = true;
-        }
-      }
-
-      if (testRecord.indexOf("test_submit") > -1) {
-        consStyl = "font-size: 1.2em; color: purple; font-weight: bold; ";
-      } else if (testRecord.indexOf("test_no_submit") > -1) {
-        consStyl = "font-size: 1.2em; color: red; font-weight: bold; ";
-      }
-
-      return testRecord;
-    }
-
     function mkto_buildForm() {
+      var group_label = "mkto_buildForm";
+      mkf_c.group(group_label);
+
       let formId = window.getMktoFormID();
       //check the size of the cookie for this session
       if (document.cookie.length > 4096) {
@@ -436,107 +272,34 @@ if (typeof mktoPerformanceObserver == "undefined") {
       }
 
       if (typeof formId === "undefined" || formId === null) {
+        mkf_c.log(`Form ID is undefined or null, formId: ${formId}`);
+        mkf_c.groupEnd(group_label);
         return;
       }
       if (!mkto_formsLoaded[formId]) {
         mkto_formsLoaded[formId] = true;
       } else {
-        mkf_c.log("Form [" + formId + "] already loaded");
+        mkf_c.log(`Form [${formId}] already loaded`);
+        mkf_c.groupEnd(group_label);
         return;
       }
 
-      var group_label = "Form Setup";
-      mkf_c.group(group_label);
+      window.mkto_print_DL(mcz_marketoForm_pref);
+      let checkTestRecord = window.mkto_isTestRecord();
+      mkf_c.log(`Test Record: ${checkTestRecord}`);
 
-      function print_niceDL(json) {
-        const friendlyNames = {
-          field_visibility: "Field Visibility Preferences",
-          field_filters: "Select Field Value Filters",
-          subtypeRules: "Form Type Submit Verbs",
-          profile: "Visitor Preferences",
-          form: "Form Configuration",
-          subType: "Form Type",
-          type: "Application",
-          program: "Marketo Program Settings",
-          campaignids: "Campaign IDs",
-          success: "Success - Thank You Reactions",
-          value_setup: "How Fields relate to each other",
-          mktoInstantInquiry: "Inquiry Creation",
-          subtypeTemplate: "Template > Form Types",
-          logging: "Tesing & Logging",
-        };
-        function isKeyValuePairObject(obj) {
-          for (let key in obj) {
-            if (typeof obj[key] === "object" && obj[key] !== null) {
-              return false;
-            }
-          }
-          return true;
-        }
-        function formatKeyValuePair(node) {
-          let maxKeyLength = Math.max(...Object.keys(node).map((key) => key.length));
-          let formattedPairs = [];
-          for (let key in node) {
-            let adjustedKey = key + " ".repeat(maxKeyLength - key.length);
-            let combined = adjustedKey + " : \t" + node[key];
-            formattedPairs.push(combined);
-          }
-          return formattedPairs;
-        }
-        function logNode(node, nodeName, depth = 0) {
-          if (typeof node !== "object" || node === null) {
-            return;
-          }
-          nodeName = friendlyNames[nodeName] ? friendlyNames[nodeName] : nodeName;
-          if (
-            depth === 0 ||
-            nodeName == "Form Configuration" ||
-            nodeName == "Campaign IDs" ||
-            nodeName == "Marketo Program Settings" ||
-            nodeName == "success"
-          ) {
-            mkf_c.group(nodeName ? `${nodeName}` : "Configuration");
-          } else {
-            mkf_c.groupCollapsed(nodeName ? `${nodeName}` : "Configuration");
-          }
-          let simpleKeys = Object.keys(node).filter(
-            (key) => !(typeof node[key] === "object" && node[key] !== null)
-          );
-          let maxKeyLength = Math.max(...simpleKeys.map((key) => key.length));
-          for (let key of simpleKeys) {
-            let value = node[key];
-            let adjustedKey = key + " ".repeat(maxKeyLength - key.length);
-            mkf_c.log(`${adjustedKey} : ${value}`);
-          }
-          for (let key in node) {
-            let value = node[key];
-            if (Array.isArray(value) || (typeof value === "object" && value !== null)) {
-              logNode(value, key, depth + 1); // Increase the depth as we go deeper
-            }
-          }
-
-          mkf_c.groupEnd(group_label);
-        }
-        function logJson(json) {
-          logNode(json);
-        }
-        logJson(json);
-      }
-      print_niceDL(mcz_marketoForm_pref);
-
-      isTestRecord();
-
-      MktoForms2.getForm(formId).onValidate(function (valid) {
-        let formId = getMktoFormID();
+      MktoForms2.getForm(formId).onValidate(async function (valid) {
+        let formId = window.getMktoFormID();
         let form = MktoForms2.getForm(formId);
         let fData = form.getValues();
-        let unique_id = getUniqueID(fData);
-        let requiredFields = document.querySelectorAll("#mktoForm_" + formId + " .mktoRequired");
+        let unique_id = window.mkto_getUniqueID(fData);
+        let activeCookie = window?.mcz_marketoForm_pref?.profile?.activeCookie || false;
+        let requiredFields = document.querySelectorAll(`#mktoForm_${formId} .mktoRequired`);
         let requiredFieldsData = {};
         let requiredFieldsFilled = true;
         let testRecord = false;
 
-        isTestRecord();
+        window.mkto_isTestRecord();
         if (window?.mcz_marketoForm_pref?.profile !== undefined) {
           if (typeof testRecord !== "boolean") {
             testRecord = false;
@@ -567,12 +330,12 @@ if (typeof mktoPerformanceObserver == "undefined") {
             if (requiredFieldsData.hasOwnProperty(key)) {
               if (review == "") {
                 requiredFieldsFilled = false;
-                mkf_c.log("Required Field Missing: " + key);
+                mkf_c.log(`Required Field Missing: '${key}'`);
               }
             }
           }
         }
-        let countryField = document.querySelector("#mktoForm_" + formId + ' [name="Country"]');
+        let countryField = document.querySelector(`#mktoForm_${formId} [name="Country"]`);
         if (countryField) {
           if (countryField.value == "") {
             let options = countryField.querySelectorAll("option");
@@ -583,7 +346,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
         }
 
         let mktoInvalid_nonreq = document.querySelectorAll(
-          "#mktoForm_" + formId + " .mktoInvalid:not(.mktoRequired)"
+          `#mktoForm_${formId} .mktoInvalid:not(.mktoRequired)`
         );
         for (let i = 0; i < mktoInvalid_nonreq.length; i++) {
           mktoInvalid_nonreq[i].classList.remove("mktoInvalid");
@@ -609,7 +372,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
               eVld = false;
             }
           }
-          let eFld = document.querySelector("#mktoForm_" + formId + ' [name="Email"]');
+          let eFld = document.querySelector(`#mktoForm_${formId} [name="Email"]`);
           if (eFld) {
             if (fData.Email != fData.Email.trim()) {
               fData.Email = fData.Email.trim();
@@ -631,78 +394,6 @@ if (typeof mktoPerformanceObserver == "undefined") {
           }
         }
 
-        function mktoFrmsGetValueByName(name) {
-          if (!name || typeof name !== "string") {
-            return "";
-          }
-          const consentCheck = typeof checkAdobePrivacy === "function" && checkAdobePrivacy();
-          const safeGet = (obj, path) => {
-            return path.reduce(
-              (acc, curr) => (acc && acc[curr] !== undefined ? acc[curr] : undefined),
-              obj
-            );
-          };
-          const getParam = (paramName) => {
-            const campaignValue = safeGet(window, [
-              "mcz_marketoForm_pref",
-              "program",
-              "campaignids",
-              paramName,
-            ]);
-            if (campaignValue) {
-              const trimmed = String(campaignValue).trim();
-              if (trimmed && !["null", "undefined"].includes(trimmed)) {
-                return trimmed;
-              }
-            }
-            return new URLSearchParams(window.location.search).get(paramName) || "";
-          };
-          const getCookie = (cookieName) => {
-            const cookies = document.cookie.split("; ").reduce((acc, curr) => {
-              const [key, value] = curr.split("=");
-              acc[key] = value;
-              return acc;
-            }, {});
-            return cookies[cookieName] || "";
-          };
-          const getFromStorage = (storage, key) => {
-            try {
-              return storage?.getItem(key) || "";
-            } catch {
-              return "";
-            }
-          };
-          const parseJSON = (value) => {
-            if (!value || typeof value !== "string" || !value.trim()) {
-              return "";
-            }
-            try {
-              const parsed = JSON.parse(value);
-              return parsed === null || parsed === undefined ? "" : parsed;
-            } catch {
-              return value;
-            }
-          };
-          const getValue = () => {
-            if (!consentCheck) {
-              return getParam(name);
-            }
-            return (
-              getParam(name) ||
-              getFromStorage(sessionStorage, name) ||
-              getCookie(name) ||
-              getFromStorage(localStorage, name) ||
-              ""
-            );
-          };
-          const ensureString = (value) => {
-            if (typeof value === "string") return value;
-            if (typeof value === "object") return JSON.stringify(value);
-            return String(value);
-          };
-          return ensureString(parseJSON(getValue()));
-        }
-
         var mktoFrmPvtURL = new URL(window.location.href);
         mktoFrmPvtURL.searchParams.forEach((value, key) => {
           if (!value || value === "null" || value === "undefined") {
@@ -722,6 +413,10 @@ if (typeof mktoPerformanceObserver == "undefined") {
           const cleanName = String(paramName).trim();
           const cleanValue = String(paramValue).trim();
           if (!cleanValue || cleanValue === "null" || cleanValue === "undefined") {
+            return mktoFrmPvtURL;
+          }
+          //ignore mkt_tok
+          if (cleanName.toLowerCase() === "mkt_tok") {
             return mktoFrmPvtURL;
           }
           if (mktoFrmPvtURL.searchParams.has(cleanName)) {
@@ -754,7 +449,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
             mktoTreatmentId = "";
           }
 
-          let TID = mktoFrmsGetValueByName("TID");
+          let TID = window.mktoFrmsGetValueByName("TID");
           let cgen_param = {};
           for (let i = 0; i < cgen_sparams.length; i++) {
             cgen_param[cgen_sparams[i]] = "";
@@ -773,7 +468,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
             }
           }
           for (let i = 0; i < cgen_sparams.length; i++) {
-            let paramValue = mktoFrmsGetValueByName(cgen_sparams[i]);
+            let paramValue = window.mktoFrmsGetValueByName(cgen_sparams[i]);
             if (paramValue !== "" && paramValue !== null && paramValue !== undefined) {
               cgen_param[cgen_sparams[i]] = paramValue;
             }
@@ -802,7 +497,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
           }
           let gclid = window?.mcz_marketoForm_pref?.program?.campaignids?.gclid;
           if (gclid == "" || gclid == null || gclid == undefined) {
-            gclid = mktoFrmsGetValueByName("gclid");
+            gclid = window.mktoFrmsGetValueByName("gclid");
           }
           if (gclid) {
             if (window?.mcz_marketoForm_pref?.program?.campaignids !== undefined) {
@@ -821,7 +516,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
               }
             }
             if (value == "" || value == null || value == undefined) {
-              let valcheck = mktoFrmsGetValueByName(attrMapping[key].queryParam);
+              let valcheck = window.mktoFrmsGetValueByName(attrMapping[key].queryParam);
               if (valcheck) {
                 value = valcheck;
               } else {
@@ -830,9 +525,9 @@ if (typeof mktoPerformanceObserver == "undefined") {
                   attrMapping[key]?.cookie != null &&
                   attrMapping[key]?.cookie != undefined
                 ) {
-                  let cookieVer = mktoFrmsGetValueByName(attrMapping[key].cookie);
+                  let cookieVer = window.mktoFrmsGetValueByName(attrMapping[key].cookie);
                   if (cookieVer) {
-                    mkf_c.log(attrMapping[key].cookie + " = " + cookieVer + " Sourced from cookie");
+                    mkf_c.log(`${attrMapping[key].cookie} = ${cookieVer} Sourced from cookie`);
                     value = cookieVer;
                     addUniqueParam(attrMapping[key].queryParam, value);
                   }
@@ -851,28 +546,23 @@ if (typeof mktoPerformanceObserver == "undefined") {
                 }
                 if (!valid) {
                   mkf_c.log(
-                    "Invalid " +
-                      attrMapping[key].field +
-                      " value: " +
-                      value +
-                      " - does not start with " +
-                      attrMapping[key].starts_with.join(", ")
+                    `Invalid ${
+                      attrMapping[key].field
+                    } value: ${value} - does not start with ${attrMapping[key].starts_with.join(
+                      ", "
+                    )}`
                   );
                 }
               }
               if (attrMapping[key].min_length && value.length > 0 && valid == true) {
                 if (value.length < attrMapping[key].min_length) {
                   valid = false;
-                  mkf_c.log(
-                    "Invalid " + attrMapping[key].field + " value: " + value + " - too short"
-                  );
+                  mkf_c.log(`Invalid ${attrMapping[key].field} value: ${value} - too short`);
                 }
                 if (attrMapping[key].max_length) {
                   if (value.length > attrMapping[key].max_length) {
                     valid = false;
-                    mkf_c.log(
-                      "Invalid " + attrMapping[key].field + " value: " + value + " - too long"
-                    );
+                    mkf_c.log(`Invalid ${attrMapping[key].field} value: ${value} - too long`);
                   }
                 }
               }
@@ -1012,24 +702,13 @@ if (typeof mktoPerformanceObserver == "undefined") {
           }
         }
 
-        if (mcz_marketoForm_pref?.profile?.known_visitor == true) {
-          form.addHiddenFields({
-            mktoOKtoMail: "U",
-            mktoOKtoEmail: "U",
-            mktoOKtoCall: "U",
-            mktoMPSPermissionsFlag: true,
-            mktoOKtoShare: false,
-            autosubmit: true,
-            mktoInstantInquiry: mktoInstantInquiry,
-          });
-        } else {
-          form.addHiddenFields({
-            mktoOKtoMail: "U",
-            mktoMPSPermissionsFlag: true,
-            autosubmit: false,
-            mktoInstantInquiry: mktoInstantInquiry,
-          });
-        }
+        addUniqueParam("inquiry", mktoInstantInquiry ? "true" : "false");
+        form.addHiddenFields({
+          mktoOKtoMail: "U",
+          mktoMPSPermissionsFlag: true,
+          autosubmit: false,
+          mktoInstantInquiry: mktoInstantInquiry,
+        });
         mcz_marketoForm_pref.profile["mktoInstantInquiry"] = mktoInstantInquiry;
 
         uFFld(form, "mktoformType", mcz_marketoForm_pref?.form?.type, true);
@@ -1037,6 +716,21 @@ if (typeof mktoPerformanceObserver == "undefined") {
         uFFld(form, "languagePref", mcz_marketoForm_pref?.profile?.segLangCode, true);
         uFFld(form, "mktoConsentURL", mcz_marketoForm_pref?.program?.url, true);
         uFFld(form, "mktoFormsPrimaryProductInterest", mcz_marketoForm_pref?.program?.poi, true);
+        addUniqueParam(
+          "poi",
+          (mcz_marketoForm_pref?.program?.poi || "").trim().toLowerCase() || ""
+        );
+        let programId = mcz_marketoForm_pref?.program?.id || "";
+        programId = String(programId)?.trim() || "";
+        if (programId !== "") {
+          addUniqueParam("programid", programId);
+        }
+
+        let mktoFormId = mcz_marketoForm_pref?.form?.id || "";
+        mktoFormId = String(mktoFormId)?.trim() || "";
+        if (mktoFormId !== "") {
+          addUniqueParam("mktoFormId", mktoFormId);
+        }
 
         let d = new Date();
         let year = d.getFullYear();
@@ -1058,7 +752,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
         let subID = window?.mcz_marketoForm_pref?.program?.subscription?.id || "";
         subID = subID.trim();
         if (subID !== undefined && subID !== null && subID !== "") {
-          mkf_c.log("SubID: " + subID + ".");
+          mkf_c.log(`SubID: ${subID}.`);
           form.addHiddenFields({
             mktoOKtoMail: "U",
             mktoOKtoEmail: "U",
@@ -1068,110 +762,125 @@ if (typeof mktoPerformanceObserver == "undefined") {
             mktoSessionSubscriptionID: subID,
             mktoOPContentSubscriptionPermissionValue: "Y",
           });
+          addUniqueParam("subid", subID);
         }
 
-        if (activeCookie == true) {
-          try {
-            if (window?.adobeIMS?.isSignedInUser())
-              if (typeof _satellite.getVisitorId().getCustomerIDs().adobeid == "object") {
-                if (typeof _satellite.getVisitorId().getCustomerIDs().adobeid.id == "string") {
-                  s_guid = _satellite.getVisitorId().getCustomerIDs().adobeid.id;
-                  if (s_guid != "") {
-                    if (window.mcz_marketoForm_pref?.profile !== undefined) {
-                      window.mcz_marketoForm_pref.profile.guid = s_guid;
-                    }
+        window.mcz_marketoForm_pref.profile = window.mcz_marketoForm_pref?.profile || {};
 
-                    form.addHiddenFields({
-                      sessionGUID: s_guid,
-                    });
-                  }
-                }
-              }
-          } catch (err) {}
-          if (document.cookie.indexOf("MCMID%7C") > 0 && document.cookie.indexOf("MCAAMLH-") > 0) {
-            var mcmid = /MCMID%7C([^%|;]+)/.exec(document.cookie);
-            var mcaamlh = /MCAAMLH-[^%|;]+%7C([0-9]+)/.exec(document.cookie);
-            if (mcmid && mcaamlh && mcmid.length > 1 && mcaamlh.length > 1) {
-              s_ecid = mcaamlh[1] + ":" + mcmid[1];
-              if (s_ecid.length > 10) {
-                if (window.mcz_marketoForm_pref?.profile !== undefined) {
-                  window.mcz_marketoForm_pref.profile.ecid = s_ecid;
-                }
-                form.addHiddenFields({
-                  sessionECID: s_ecid,
-                });
-                if (s_ecid.indexOf(":") > -1) {
-                  let temp_mcid = s_ecid.split(":")[1];
-                  if (temp_mcid.length > 5) {
-                    form.addHiddenFields({
-                      mktoMcid: temp_mcid,
-                    });
-                  }
-                }
-              }
-            }
-          }
-          if (document.cookie.indexOf("TID=") > 0) {
-            s_cgen = /TID=([^%|;]+)/.exec(document.cookie)[1];
-            if (s_cgen.length > 5) {
-              if (window.mcz_marketoForm_pref?.profile !== undefined) {
-                window.mcz_marketoForm_pref.profile.cgen = s_cgen;
-              }
-            }
-          }
+        //ECID
+        let current_ecid = window.mcz_marketoForm_pref?.profile?.ecid || "";
+        if (current_ecid !== "") {
+          form.addHiddenFields({
+            sessionECID: current_ecid,
+          });
         } else {
-          mkf_c.log("No Marketo Cookie found");
+          let mcmid = document.cookie.match(/MCMID%7C([^%|;]+)/)?.[1]?.trim() || "";
+          let mcaamlh = document.cookie.match(/MCAAMLH-[^%|;]+%7C([0-9]+)/)?.[1]?.trim() || "";
+          if (mcmid !== "" && mcaamlh !== "") {
+            let s_ecid = `${mcaamlh}:${mcmid}`;
+            if (s_ecid.length > 10) {
+              window.mcz_marketoForm_pref.profile.ecid = s_ecid;
+              window.mcz_marketoForm_pref.profile.mcmid = mcmid;
+              form.addHiddenFields({
+                sessionECID: s_ecid,
+                mktoMcid: mcmid,
+              });
+            }
+          }
         }
 
-        if (typeof window.Demandbase != "undefined") {
-          if (typeof window?.Demandbase?.Connectors?.WebForm?.fieldMap != "undefined") {
-            let dataSource = window.Demandbase.Connectors.WebForm.dataSource;
-            let detectedAudience = window.Demandbase.Connectors.WebForm.detectedAudience;
-            let detectedAudienceSegment =
-              window.Demandbase.Connectors.WebForm.detectedAudienceSegment;
+        //GUID
+        let current_guid = window.mcz_marketoForm_pref?.profile?.guid || "";
+        if (current_guid !== "") {
+          form.addHiddenFields({
+            sessionGUID: current_guid,
+          });
+        } else {
+          if (
+            typeof window?.adobeIMS?.isSignedInUser() === "boolean" &&
+            window?.adobeIMS?.isSignedInUser() === true
+          ) {
+            if (
+              typeof window?.adobeIMS?.getProfile() === "object" &&
+              window?.adobeIMS?.getProfile() !== null
+            ) {
+              let ims_profile = (await window.adobeIMS?.getProfile()) || null;
+              if (ims_profile && ims_profile !== null) {
+                window.mcz_marketoForm_pref.profile.ims_profile = ims_profile;
+                if (ims_profile?.userId && ims_profile?.userId !== "") {
+                  current_guid = ims_profile?.userId?.split("@")?.[0]?.trim() || "";
+                  if (current_guid !== "") {
+                    window.mcz_marketoForm_pref.profile.guid = current_guid;
+                    form.addHiddenFields({
+                      sessionGUID: current_guid,
+                    });
+                  }
+                }
+              }
+            }
+          } else {
+            mkf_c.warn("Not signed in to Adobe IMS");
+          }
+        }
 
-            let fieldMap = window?.Demandbase?.Connectors?.WebForm?.fieldMap;
-            let fieldDBdata = window?.Demandbase?.Connectors?.WebForm?.CompanyProfile;
-            if (typeof fieldDBdata != "undefined") {
+        if (typeof window?.Demandbase !== "undefined") {
+          if (typeof window?.Demandbase?.Config?.data_ip !== "undefined") {
+            let fieldDBdata = window?.Demandbase?.Config?.data_ip || {};
+            if (Object.keys(fieldDBdata).length > 0) {
+              let dataSource = "IP";
+              let fieldMap = window?.Demandbase?.Config?.forms?.fieldMap;
+              let detectedAudience = fieldDBdata?.audience || "";
+              let detectedAudienceSegment = fieldDBdata?.audience_segment || "";
               let fieldMapData = {};
+
               for (let key in fieldMap) {
-                if (fieldMap.hasOwnProperty(key)) {
-                  if (fieldDBdata.hasOwnProperty(key)) {
+                if (fieldMap[key] && fieldMap[key] !== null && fieldMap[key] !== "") {
+                  if (fieldDBdata[key] && fieldDBdata[key] !== null && fieldDBdata[key] !== "") {
                     fieldMapData[fieldMap[key]] = fieldDBdata[key];
                   }
                 }
               }
               let fieldMapData_onForm = {};
               for (let key in fieldMapData) {
-                if (fieldMapData.hasOwnProperty(key)) {
-                  if (document.querySelector('[name="' + key + '"]')) {
+                if (fieldMapData[key] && fieldMapData[key] !== null && fieldMapData[key] !== "") {
+                  if (document.querySelector(`[name="${key}"]`)) {
                     fieldMapData_onForm[key] = fieldMapData[key];
                   }
                 }
               }
 
-              let fieldMapData_non = {};
+              let fieldMapData_offForm = {};
               mcz_marketoForm_pref.demandbaseInfo = mcz_marketoForm_pref.demandbaseInfo || {};
               for (let key in fieldDBdata) {
-                if (fieldDBdata.hasOwnProperty(key)) {
-                  mcz_marketoForm_pref.demandbaseInfo[key] = fieldDBdata[key];
-                  if (!fieldMap.hasOwnProperty(key)) {
-                    fieldMapData_non[key] = fieldDBdata[key];
+                if (fieldDBdata[key] && fieldDBdata[key] !== null && fieldDBdata[key] !== "") {
+                  mcz_marketoForm_pref.demandbaseInfo[key] = fieldDBdata[key] || "";
+                  if (!fieldMap[key] && fieldMap[key] !== null && fieldMap[key] !== "") {
+                    fieldMapData_offForm[key] = fieldDBdata[key];
                   }
                 }
               }
+              mcz_marketoForm_pref.demandbaseInfo = mcz_marketoForm_pref.demandbaseInfo || {};
+              mcz_marketoForm_pref.demandbaseInfo[dataSource] = {
+                source_type: dataSource,
+                audience: detectedAudience,
+                audience_segment: detectedAudienceSegment,
+                fieldMap: fieldMap || {},
+                fieldMapData: fieldMapData || {},
+                fieldMapData_onForm: fieldMapData_onForm || {},
+                fieldMapData_offForm: fieldMapData_offForm || {},
+              };
 
               var group_label = "Demandbase";
               mkf_c.group(group_label);
-              mkf_c.info("Data Source: " + dataSource);
-              mkf_c.info("Detected Audience: " + detectedAudience);
-              mkf_c.info("Detected Audience Segment: " + detectedAudienceSegment);
-              mkf_c.table("Mapped Fields");
+              mkf_c.info(
+                `Data Source: ${dataSource}\nDetected Audience: ${detectedAudience}\nDetected Audience Segment: ${detectedAudienceSegment}`
+              );
+              mkf_c.info("Mapped Fields");
               mkf_c.table(fieldMapData);
-              mkf_c.table("Mapped Fields on this Form");
+              mkf_c.info("Mapped Fields on this Form");
               mkf_c.table(fieldMapData_onForm);
-              mkf_c.table("Non-Mapped Fields");
-              mkf_c.table(fieldMapData_non);
+              mkf_c.info("Non-Mapped Fields");
+              mkf_c.table(fieldMapData_offForm);
               mkf_c.groupEnd(group_label);
             }
           }
@@ -1183,7 +892,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
           group_append = " - Test Record";
         }
         mkf_c.group(group_label);
-        mkf_c.log("%cForm Valid:" + valid, consStyl);
+        mkf_c.log(`%cForm Valid: ${valid}`, consStyl);
         let ne = new Date();
         mkf_c.log("%cForm Data: @" + ne.toLocaleString(), consStyl);
 
@@ -1191,19 +900,19 @@ if (typeof mktoPerformanceObserver == "undefined") {
         if (poi_warn == "") {
           mkf_c.log("%cPOI is empty - Critical Field", consStyl);
         } else {
-          mkf_c.log("%cPOI: " + poi_warn, consStyl);
+          mkf_c.log(`%cPOI: ${poi_warn}`, consStyl);
         }
 
         let mktoProductionCampaignId_warn = fData["mktoProductionCampaignId"];
         if (mktoProductionCampaignId_warn == "") {
           mkf_c.log("%cProd Campaign ID is empty - Critical Field", consStyl);
         } else {
-          mkf_c.log("%cProd Campaign ID: " + mktoProductionCampaignId_warn, consStyl);
+          mkf_c.log(`%cProd Campaign ID: ${mktoProductionCampaignId_warn}`, consStyl);
         }
 
-        mkf_c.table("Required Fields" + group_append);
+        mkf_c.table(`Required Fields${group_append}`);
         mkf_c.table(requiredFieldsData);
-        mkf_c.table("All Fields" + group_append);
+        mkf_c.table(`All Fields${group_append}`);
         mkf_c.table(fData);
 
         mkf_c.groupEnd(group_label);
@@ -1211,7 +920,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
         let errorDiv = document.querySelector('div[data-mkto_vis_src="msg-error"]');
         if (!valid) {
           form.submittable(valid);
-          let mktoSubmitButton = document.querySelectorAll("#mktoForm_" + formId + " button");
+          let mktoSubmitButton = document.querySelectorAll(`#mktoForm_${formId} button`);
           if (mktoSubmitButton) {
             for (let i = 0; i < mktoSubmitButton.length; i++) {
               mktoSubmitButton[i].removeAttribute("disabled");
@@ -1234,6 +943,98 @@ if (typeof mktoPerformanceObserver == "undefined") {
           }
 
           form.submittable(valid);
+
+          if (window.mcz_marketoForm_pref?.profile) {
+            let currentPrefill = window.mcz_marketoForm_pref.profile.prefill || {};
+            let updatedPrefill = { ...currentPrefill };
+            const mktoFormSelector = `form.mktoForm[id="mktoForm_${window.mcz_marketoForm_pref.form.id}"]`;
+            const allowedTextInputTypes = new Set(["text", "email", "tel", "number"]);
+            const normalizeFieldValue = (value) => {
+              if (Array.isArray(value)) {
+                return value.filter(
+                  (item) => item !== null && item !== undefined && ("" + item).trim() !== ""
+                );
+              }
+              if (typeof value === "string") {
+                return value.trim();
+              }
+              return value;
+            };
+            const isVisibleTextInputOrDropdown = (fieldName) => {
+              const fieldElements = document.querySelectorAll(
+                `${mktoFormSelector} [name="${fieldName}"]`
+              );
+              if (!fieldElements || fieldElements.length === 0) {
+                return false;
+              }
+              for (let i = 0; i < fieldElements.length; i++) {
+                const element = fieldElements[i];
+                const rowTop =
+                  typeof element.closest === "function" ? element.closest(".mktoFormRowTop") : null;
+                if (rowTop && rowTop.classList.contains("mktoHidden")) {
+                  continue;
+                }
+                const isVisible =
+                  element.offsetWidth > 0 ||
+                  element.offsetHeight > 0 ||
+                  element.getClientRects().length > 0;
+                if (!isVisible) {
+                  continue;
+                }
+                const tagName = (element.tagName || "").toUpperCase();
+                if (tagName === "SELECT") {
+                  return true;
+                }
+                if (tagName === "INPUT") {
+                  const type = (element.getAttribute("type") || "text").toLowerCase();
+                  if (allowedTextInputTypes.has(type) || type === "") {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+            for (const key in fData) {
+              let fieldName = key.trim();
+              let fieldValue = fData[key];
+              let alwaysUpdate = false;
+              let alwaysUpdateFields =
+                window.mcz_marketoForm_pref?.value_setup?.always_update_fields || [];
+              if (alwaysUpdateFields.length > 0 && alwaysUpdateFields.includes(fieldName)) {
+                alwaysUpdate = true;
+              }
+              const normalizedValue = normalizeFieldValue(fieldValue);
+              const hasValue =
+                normalizedValue !== "" &&
+                normalizedValue !== null &&
+                typeof normalizedValue !== "undefined" &&
+                (!Array.isArray(normalizedValue) || normalizedValue.length > 0);
+              if (
+                (hasValue && alwaysUpdate) ||
+                (hasValue && isVisibleTextInputOrDropdown(fieldName))
+              ) {
+                updatedPrefill[fieldName] = fieldValue;
+              }
+            }
+            window.mcz_marketoForm_pref.profile.prefill = updatedPrefill;
+            window.mktoPreFillFields = updatedPrefill;
+            try {
+              sessionStorage.setItem("mktoPreFillFields", JSON.stringify(updatedPrefill));
+              localStorage.setItem("mktoFrmLastID", unique_id);
+              localStorage.setItem("mktoFrmLastID_p" + programId, unique_id);
+            } catch (e) {
+              mkf_c.warn("Error setting sessionStorage.mktoPreFillFields", e);
+              mkf_c.warn("Error setting localStorage.mktoFrmLastID", e);
+            }
+          }
+          if (typeof mkto_PrgrsCtrlr?.storageManager?.saveData === "function") {
+            const coreObjects = ["program", "form", "profile", "program_profile", "event"];
+            coreObjects.forEach((key) => {
+              if (window.mcz_marketoForm_pref[key]) {
+                mkto_PrgrsCtrlr.storageManager.saveData(window.mcz_marketoForm_pref[key]);
+              }
+            });
+          }
         }
         return valid;
       });
@@ -1244,9 +1045,9 @@ if (typeof mktoPerformanceObserver == "undefined") {
         if (submittable) {
           let canSubmit = true;
           if (canSubmit && validForm) {
-            let testRecord = isTestRecord();
+            let testRecord = window.mkto_isTestRecord();
             if (testRecord == "test_no_submit") {
-              mkf_c.log("%c" + "Test Record Detected - Emulating Marketo Submission", consStyl);
+              mkf_c.log(`%cTest Record Detected - Emulating Marketo Submission`, consStyl);
 
               mcz_marketoForm_pref.form.success.confirm = true;
               if (aaInteractionsActive == true && aaInteraction != undefined) {
@@ -1270,19 +1071,19 @@ if (typeof mktoPerformanceObserver == "undefined") {
                 clearTimeout(window.mktoFormConfirm);
 
                 window.mktoFormConfirm = setTimeout(function () {
-                  if (typeof MktoForms_onSuccess === "function") {
-                    MktoForms_onSuccess();
+                  if (typeof window.MktoForms_onSuccess === "function") {
+                    window.MktoForms_onSuccess();
                   } else {
                     mkf_c.error("MktoForms_onSuccess is not defined");
                   }
                 }, delay);
               } else {
-                MktoForms_onSuccess();
+                window.MktoForms_onSuccess();
                 mkf_c.log("aaInteractionsActive is false");
               }
             } else {
               const mktoSubmitButton = document.querySelector(
-                "#mktoForm_" + formId + " button[type='submit']"
+                `#mktoForm_${formId} button[type='submit']`
               );
 
               if (mktoSubmitButton) {
@@ -1296,7 +1097,7 @@ if (typeof mktoPerformanceObserver == "undefined") {
       };
 
       window.doBTNUpdate = function (formId) {
-        const mktoButtonWrap = document.querySelector("#mktoForm_" + formId + " .mktoButtonWrap");
+        const mktoButtonWrap = document.querySelector(`#mktoForm_${formId} .mktoButtonWrap`);
         if (mktoButtonWrap) {
           let primaryBTN = mktoButtonWrap.querySelector("[type='submit']");
           if (primaryBTN) {
@@ -1370,16 +1171,12 @@ if (typeof mktoPerformanceObserver == "undefined") {
                       primaryBTNtext = translatedSubmit;
                     } else {
                       mkf_c.log(
-                        "Check General_Translations, No translated '" +
-                          subtypeRule +
-                          "' text found for language: " +
-                          language
+                        `Language: ${language} No button translated '${subtypeRule}' text found`
                       );
                     }
                   } else {
                     mkf_c.log(
-                      "Check General_Translations, No translated submit text found for button subtype: " +
-                        subtypeRule
+                      `Language: ${language} No button translated '${subtypeRule}' text found`
                     );
                   }
                 }
@@ -1430,11 +1227,11 @@ if (typeof mktoPerformanceObserver == "undefined") {
               }
             });
 
-            translateButtons("submit");
-            translateButtons("pleasewait");
-            translateButtons("next");
-            translateButtons("back");
-            translateButtons("step00of99");
+            window.translateButtons("submit");
+            window.translateButtons("pleasewait");
+            window.translateButtons("next");
+            window.translateButtons("back");
+            window.translateButtons("step00of99");
           } else {
             setTimeout(function () {
               window.doBTNUpdate(formId);
@@ -1443,66 +1240,27 @@ if (typeof mktoPerformanceObserver == "undefined") {
         }
       };
 
-      function translateButtons(translationKey) {
-        let append = "";
-        let language = mcz_marketoForm_pref?.profile?.prefLanguage;
-        let translatedText = translateFormElems?.[translationKey]?.["en_us"] || null;
-        let current = "";
-
-        if (translatedText === null) {
-          mkf_c.log(
-            `Check General_Translations, No translated '${translationKey}' text found for language: ${language}`
-          );
-          return;
-        }
-        current = translatedText;
-        if (translatedText.indexOf("...") > 0) {
-          append = "...";
-        }
-        if (language) {
-          translatedText =
-            translateFormElems[translationKey][language] ||
-            translateFormElems[translationKey][language.substring(0, 2)] ||
-            null;
-          if (translatedText === null) {
-            for (var key in translateFormElems[translationKey]) {
-              if (key.substring(0, 2) === language.substring(0, 2)) {
-                translatedText = translateFormElems[translationKey][key];
-                break;
-              }
-            }
-          }
-        }
-        if (translatedText === null) {
-          mkf_c.log(
-            `Check General_Translations, No translated '${translationKey}' text found for language: ${language}`
-          );
-        } else {
-          document
-            .querySelectorAll(".mktoButtonRow button, .mktoButtonRow .mkto-step00of99")
-            .forEach((button) => {
-              if (button.textContent?.toLowerCase().trim() === current.toLowerCase().trim()) {
-                button.setAttribute("data-mkto-btn-" + translationKey, translatedText + append);
-                button.textContent = translatedText + append;
-              }
-              let alt_translationKey = button.getAttribute("data-translationKey") || null;
-              if (button.getAttribute("data-translationKey") !== null) {
-                if (alt_translationKey !== translationKey) {
-                  translateButtons(alt_translationKey);
-                }
-              }
-            });
-        }
-      }
-
       setTimeout(function () {
         window.doBTNUpdate(formId);
       }, 25);
 
       MktoForms2.getForm(formId).onSuccess(function (values, followUpUrl) {
         mcz_marketoForm_pref.form.success.confirm = true;
-        if (aaInteractionsActive == true && aaInteraction != undefined) {
-          aaInteraction("Marketo Form Submission", "formSubmission", formId, null);
+
+        let ty_type = "" + mcz_marketoForm_pref?.form?.success?.type;
+        ty_type = ty_type.trim().toLowerCase();
+        if (ty_type == "adobe_connect") {
+          if (typeof window.MktoForms_onSuccess === "function") {
+            window.MktoForms_onSuccess();
+          } else {
+            mkf_c.error("MktoForms_onSuccess is not defined");
+          }
+          return false;
+        }
+
+        if (aaInteractionsActive == true && window.aaInteraction != undefined) {
+          window.aaInteraction("Marketo Form Submission", "formSubmission", formId, null);
+
           let delay = 5000;
           if (mcz_marketoForm_pref?.form?.success?.delay) {
             delay = parseInt(mcz_marketoForm_pref.form.success.delay);
@@ -1523,16 +1281,16 @@ if (typeof mktoPerformanceObserver == "undefined") {
             clearTimeout(window.mktoFormConfirm);
           }
           window.mktoFormConfirm = setTimeout(function () {
-            if (typeof MktoForms_onSuccess === "function") {
-              MktoForms_onSuccess();
+            if (typeof window.MktoForms_onSuccess === "function") {
+              window.MktoForms_onSuccess();
             } else {
               mkf_c.error("MktoForms_onSuccess is not defined");
             }
           }, delay);
         } else {
           mkf_c.log("aaInteractionsActive is false");
-          if (typeof MktoForms_onSuccess === "function") {
-            MktoForms_onSuccess();
+          if (typeof window.MktoForms_onSuccess === "function") {
+            window.MktoForms_onSuccess();
           } else {
             mkf_c.error("MktoForms_onSuccess is not defined");
           }
@@ -1542,99 +1300,131 @@ if (typeof mktoPerformanceObserver == "undefined") {
 
       mkf_c.groupEnd(group_label);
     }
-    window.MktoForms_onSuccess = function () {
-      if (window.mktoFormConfirm !== undefined) {
-        clearTimeout(window.mktoFormConfirm);
-      }
-      var group_label = "Marketo Submit Success";
-      mkf_c.group(group_label);
-      function logSuccess(message) {
-        mkf_c.log("%c" + message, consStyl);
-      }
 
-      if (window?.mcz_marketoForm_pref?.profile?.testing == true) {
-        logSuccess("Form Submitted - Test Record");
-      } else {
-        logSuccess("Form Submitted");
-      }
-
-      function MktoFormsValidUrl(url) {
-        try {
-          new URL(url);
-          return true;
-        } catch (_) {
-          return false;
+    if (typeof window?.MktoForms_onSuccess !== "function") {
+      window.MktoForms_onSuccess = function () {
+        if (window?.mktoFormConfirm !== undefined) {
+          clearTimeout(window.mktoFormConfirm);
         }
-      }
+        var group_label = "Marketo Submit Success";
+        mkf_c.group(group_label);
+        function lS(message) {
+          mkf_c.log(`%c${message}`, consStyl);
+        }
 
-      let ty_content = "" + mcz_marketoForm_pref?.form?.success?.content;
-      ty_content = ty_content.trim();
-
-      if (mcz_marketoForm_pref?.form?.success?.type == undefined) {
-        mcz_marketoForm_pref.form.success.type = "redirect";
-        logSuccess("Form Success Type not defined, defaulting to redirect");
-      }
-
-      if (ty_content != "" && ty_content != "null" && ty_content != "undefined") {
-        if (MktoFormsValidUrl(ty_content) == true) {
-          logSuccess("TY URL");
-          if (ty_content.indexOf("http") == -1) {
-            logSuccess("TY relative URL");
-            if (ty_content.indexOf("/") == 0) {
-              ty_content = ty_content.substring(1);
-            }
-            ty_content = window.location.origin + "/" + ty_url;
-          }
-          logSuccess("TY is a valid URL: " + ty_content);
+        if (window?.mcz_marketoForm_pref?.profile?.testing == true) {
+          lS("Form Submitted - Test Record");
         } else {
-          logSuccess("URL=X >> message.");
-          mcz_marketoForm_pref.form.success.type = "message";
+          lS("Form Submitted");
         }
-      } else {
-        logSuccess("TY=X for lang");
 
-        if (translateFormElems?.thankyou) {
-          let language = mcz_marketoForm_pref?.profile?.prefLanguage;
-          let tyFallback = "Thank you.";
-          let translatedTY =
-            Object.entries(translateFormElems.thankyou).find(([key]) =>
-              key.toLowerCase().startsWith("en")
-            )?.[1] || "Thank you for your submission.";
+        let ty_type = "" + mcz_marketoForm_pref?.form?.success?.type || "";
+        ty_type = ty_type.trim().toLowerCase();
+        let ty_content = "" + mcz_marketoForm_pref?.form?.success?.content || "";
+        ty_content = ty_content.trim();
 
-          if (language) {
-            const langCode = language.substring(0, 2).toLowerCase();
-            translatedTY =
-              translateFormElems.thankyou[language] ||
-              translateFormElems.thankyou[langCode] ||
+        if (ty_content == "" || ty_content.toLowerCase() == "null" || ty_content.toLowerCase() == "undefined") {
+          ty_content = "";
+        }
+        if (ty_type == "" || ty_type == "null" || ty_type == "undefined") {
+          ty_type = "redirect";
+          lS("Form Success Type not defined, defaulting to redirect");
+        }
+
+        let ne = new Date();
+        mkf_c.log(`%cForm Data: @${ne.toLocaleString()} ${ty_type}`, consStyl);
+        lS(`Date: ${ne.toLocaleString()}`);
+        lS(`Unique ID: ${window?.mcz_marketoForm_pref?.profile?.unique_id}`);
+
+        mcz_marketoForm_pref.form.lastSubmission = new Date();
+
+        if (typeof mkto_PrgrsCtrlr?.storageManager?.saveData === "function") {
+          const coreObjects = ["program", "form", "profile", "program_profile", "event"];
+          coreObjects.forEach((key) => {
+            if (window.mcz_marketoForm_pref[key]) {
+              mkto_PrgrsCtrlr.storageManager.saveData(window.mcz_marketoForm_pref[key]);
+            }
+          });
+        }
+
+        if (ty_type == "adobe_connect") {
+          if (
+            typeof window?.mkto_PrgrsCtrlr?.adobeConnectManager?.reviewAdobeConnect == "function"
+          ) {
+            window.mkto_PrgrsCtrlr.adobeConnectManager.reviewAdobeConnect();
+            return;
+          } else {
+            mkf_c.log("reviewAdobeConnect function is not available, setting to message");
+            ty_type = "redirect";
+          }
+        }
+
+        mcz_marketoForm_pref.form.success.type = ty_type;
+
+        if (ty_content != "") {
+          if (window.MktoFormsValidUrl(ty_content) == true) {
+            ty_type = "redirect";
+            lS("TY URL");
+
+            if (ty_content.indexOf("http") == -1) {
+              lS("TY relative URL");
+              if (ty_content.indexOf("/") == 0) {
+                ty_content = ty_content.substring(1);
+              }
+              ty_content = window?.location?.origin + "/" + ty_content;
+            }
+
+            lS(`TY is a valid URL: ${ty_content}`);
+          } else {
+            lS(`URL=X >> message. ${ty_content}`);
+            ty_type = "message";
+          }
+        }
+
+        mcz_marketoForm_pref.form.success.type = ty_type;
+
+        if (ty_content == "") {
+          lS(`TY=X for language: ${mcz_marketoForm_pref?.profile?.prefLanguage}`);
+
+          if (translateFormElems?.thankyou) {
+            let language = mcz_marketoForm_pref?.profile?.prefLanguage;
+            let tyFallback = "Thank you.";
+            let translatedTY =
               Object.entries(translateFormElems.thankyou).find(([key]) =>
-                key.toLowerCase().startsWith(langCode)
-              )?.[1] ||
-              null;
+                key.toLowerCase().startsWith("en")
+              )?.[1] || "Thank you for your submission.";
+
+            if (language) {
+              const langCode = language.substring(0, 2).toLowerCase();
+              translatedTY =
+                translateFormElems.thankyou[language] ||
+                translateFormElems.thankyou[langCode] ||
+                Object.entries(translateFormElems.thankyou).find(([key]) =>
+                  key.toLowerCase().startsWith(langCode)
+                )?.[1] ||
+                null;
+
+              if (translatedTY === null) {
+                mkf_c.log(`No language: ${language}`);
+              } else {
+                mkf_c.log(`language: ${language} Translated TY: ${translatedTY}`);
+              }
+            }
 
             if (translatedTY === null) {
+              translatedTY = tyFallback;
               mkf_c.log(`No language: ${language}`);
-            } else {
-              mkf_c.log(`language: ${language}`);
             }
+            ty_content = translatedTY;
           }
-
-          if (translatedTY === null) {
-            translatedTY = tyFallback;
-            mkf_c.log(`No language: ${language}`);
-          }
-          ty_content = translatedTY;
         }
-      }
 
-      let ne = new Date();
-      mkf_c.log("%cForm Data: @" + ne.toLocaleString(), consStyl);
-      logSuccess("Date: " + ne.toLocaleString());
-      logSuccess("Unique ID: " + window?.mcz_marketoForm_pref?.profile?.unique_id);
+        mcz_marketoForm_pref.form.success.type = ty_type;
+        mcz_marketoForm_pref.form.success.content = ty_content;
 
-      mkf_c.groupEnd(group_label);
+        mkf_c.groupEnd(group_label);
 
-      if (mcz_marketoForm_pref?.form?.success?.type == "redirect") {
-        if (ty_content != "" && ty_content != null && ty_content != undefined) {
+        if (ty_type == "redirect") {
           try {
             if (ty_content.indexOf("submissionid") == -1) {
               let unique_id = window?.mcz_marketoForm_pref?.profile?.unique_id;
@@ -1645,43 +1435,21 @@ if (typeof mktoPerformanceObserver == "undefined") {
               }
             }
           } catch (e) {
-            mkf_c.log("Failed to add submissionid", e);
+            mkf_c.log(`Failed to add submissionid to URL: ${ty_content}`, e);
           }
 
           window.location.href = ty_content;
+        } else {
+          window.MktoForms_tyMsg(ty_content);
         }
-      } else {
-        if (ty_content == "" || ty_content == "null" || ty_content == "undefined") {
-          ty_content = "Thank you for your submission.";
-        }
-
-        let form = document.getElementById("mktoForm_" + mcz_marketoForm_pref?.form?.id);
-        let formWrapper = document.createElement("div");
-        formWrapper.classList.add("mktoForm-wrap");
-
-        let formMessageContent = document.createElement("p");
-        formMessageContent.classList.add("ty-message");
-        formMessageContent.innerHTML = ty_content;
-        formWrapper.appendChild(formMessageContent);
-        form.parentNode.insertBefore(formWrapper, form);
-        form.style.opacity = "0";
-        form.style.visibility = "hidden";
-        form.reset();
-
-        setTimeout(function () {
-          formMessageContent.style.opacity = "1";
-          formMessageContent.style.visibility = "visible";
-        }, 100);
-      }
-    };
+      };
+    }
 
     mkto_buildForm();
   }
 
   mkf_c.log("Marketo Form Setup - End");
 }
-// ##
-// ##
 
 // ##
 // ##
