@@ -1,5 +1,7 @@
+import { LIBS } from '../../scripts/libs.js';
 import { html, useState } from '../../deps/htm-preact.js';
-import { getConfig, loadStyle } from '../../utils/utils.js';
+
+const { getConfig, loadStyle } = await import(`${LIBS}/utils/utils.js`);
 
 const CopyBtn = ({ getContent, configFormValidation }) => {
   const { miloLibs, codeRoot } = getConfig();

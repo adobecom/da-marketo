@@ -1,7 +1,6 @@
 import { LIBS } from '../../scripts/libs.js';
-import { createTag } from '../../utils/utils.js';
 
-const { loadStyle, getMetadata } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, loadStyle, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
 const BLOCK_BASE = new URL('../../', import.meta.url).href;
 
@@ -43,13 +42,11 @@ function createWidget(el, formID) {
 }
 
 export default function main(el, formData) {
-  loadStyle(`${BLOCK_BASE}blocks/da-marketo/status.css`);
-
-  const formID = formData['form id'];
-  const refresh = () => el.querySelector('.marketo-info-widget')?.replaceWith(createWidget(el, formID));
-
-  new MutationObserver(refresh).observe(el, { attributes: true, attributeFilter: ['class'] });
-  window.addEventListener('mktoSubmit', refresh);
-
-  el.appendChild(createWidget(el, formID));
+  loadStyle(`${BLOCK_BASE}blocks/da-marketo/status.css`, () => {
+    const formID = formData['form id'];
+    const refresh = () => el.querySelector('.marketo-info-widget')?.replaceWith(createWidget(el, formID));
+    new MutationObserver(refresh).observe(el, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('mktoSubmit', refresh);
+    el.appendChild(createWidget(el, formID));
+  });
 }

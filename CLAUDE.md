@@ -102,7 +102,7 @@ Each block is a directory under `blocks/` with at least `<name>.js` and `<name>.
 | Block | Purpose |
 |---|---|
 | `blocks/da-marketo/` | Marketo form embed — translation layer + Forms2 loader |
-| `blocks/marketo-config/` | Preact-based configuration UI for form authors |
+| `blocks/da-marketo-config/` | Preact-based configuration UI for form authors |
 
 `da-marketo.js` uses `BLOCK_BASE = new URL('../../', import.meta.url).href` to anchor all relative asset loads (including `mkto/`) to its own origin — this is how the block and scripts stay in sync across environments without extra config.
 
