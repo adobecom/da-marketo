@@ -1,5 +1,5 @@
 /* global marketoFormSetup */
-import { LIBS } from '../scripts/libs.js';
+import { LIBS } from '../scripts/constants.js';
 
 const base = new URL('.', import.meta.url).href;
 const { loadScript } = await import(`${LIBS}/utils/utils.js`);

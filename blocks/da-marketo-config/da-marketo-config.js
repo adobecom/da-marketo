@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LIBS } from '../../scripts/libs.js';
+import { LIBS } from '../../scripts/constants.js';
 import { html, render, useContext, useState, useEffect } from '../../deps/htm-preact.js';
 import { ConfiguratorContext, ConfiguratorProvider, saveStateToLocalStorage, loadStateFromLocalStorage } from './context.js';
 import Accordion from '../../ui/controls/Accordion.js';

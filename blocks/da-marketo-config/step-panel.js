@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LIBS } from '../../scripts/libs.js';
+import { LIBS } from '../../scripts/constants.js';
 import { html, useContext, useState, useEffect } from '../../deps/htm-preact.js';
 import { ConfiguratorContext } from './context.js';
 import { Select } from '../../ui/controls/formControls.js';
