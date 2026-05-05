@@ -1,10 +1,11 @@
 /* eslint-disable import/prefer-default-export */
 
 const BASE = new URL('../', import.meta.url).href.replace(/\/$/, '');
-const MARKETO_BLOCKS = ['da-marketo'];
+const MARKETO_BLOCKS = ['da-marketo', 'da-marketo-config'];
 
 function decorateMarketo(area = document) {
   area.querySelectorAll('.marketo').forEach((el) => el.classList.replace('marketo', 'da-marketo'));
+  area.querySelectorAll('.marketo-config').forEach((el) => el.classList.replace('marketo-config', 'da-marketo-config'));
 }
 
 export function register({ getConfig, setConfig }) {

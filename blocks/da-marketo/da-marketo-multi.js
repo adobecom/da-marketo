@@ -1,6 +1,6 @@
-import { LIBS } from '../../scripts/libs.js';
-import { createTag, getConfig } from '../../utils/utils.js';
+import { LIBS } from '../../scripts/constants.js';
 
+const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 const { debounce } = await import(`${LIBS}/utils/action.js`);
 const { replaceKey, replaceKeyArray } = await import(`${LIBS}/features/placeholders.js`);
 

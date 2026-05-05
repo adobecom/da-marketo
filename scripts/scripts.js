@@ -75,7 +75,7 @@ decorateArea();
  * ------------------------------------------------------------
  */
 
-const miloLibs = setLibs('https://milo.adobe.com/libs');
+const miloLibs = setLibs('/libs');
 
 (function loadStyles() {
   const paths = [`${miloLibs}/styles/styles.css`];

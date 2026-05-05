@@ -1,4 +1,4 @@
-import { LIBS } from '../scripts/libs.js';
+import { LIBS } from '../scripts/constants.js';
 
 const {
   parseEncodedConfig,

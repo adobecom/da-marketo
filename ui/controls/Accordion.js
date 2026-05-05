@@ -1,5 +1,7 @@
-import { getConfig, loadStyle } from '../../utils/utils.js';
+import { LIBS } from '../../scripts/constants.js';
 import { html, useState } from '../../deps/htm-preact.js';
+
+const { getConfig, loadStyle } = await import(`${LIBS}/utils/utils.js`);
 
 const AccordionItem = ({ title, content, expand, onClick }) => {
   const isExpanded = expand ? 'is-expanded' : '';
