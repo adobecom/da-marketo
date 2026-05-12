@@ -29,6 +29,7 @@ const FORM_LINE_FILE_MAPPING = {
   '// ## Privacy Validation - Rules': 'privacy_validation_rules.js',
   '// ## Privacy Validation': 'privacy_validation.js',
   '// ## Partner Validation': 'partner_validation.js',
+  '98_progressive/progressive_controller.js': 'progressive_controller.js',
   '// ## Rendering Review': 'rendering_review.js',
   '// en_us language strings English': 'state_translate-en.js',
   '// ## General translation for all forms': 'state_translate.js',
