@@ -23,7 +23,7 @@ const FORM_LINE_FILE_MAPPING = {
   'mkf_c.log("General Form Translations Added");': 'general_translations.js',
   '// ##  Marketo Global Form Functions': 'global.js',
   '// ## Known Visitor': 'known_visitor.js',
-  '// ## Processing': 'marketo_form_setup_processing.js',
+  '// ## Processing': 'marketo_form_setup_process.js',
   '// ##  Marketo Form Setup': 'marketo_form_setup_rules.js',
   '// ## Privacy Validation - Rule Processing': 'privacy_validation_process.js',
   '// ## Privacy Validation - Rules': 'privacy_validation_rules.js',
