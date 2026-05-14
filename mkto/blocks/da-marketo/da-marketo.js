@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/constants.js';
+import { LIBS } from '../../constants.js';
 
 const {
   parseEncodedConfig,
@@ -14,7 +14,6 @@ const {
 
 const { replaceKey } = await import(`${LIBS}/features/placeholders.js`);
 
-// Resolves to this repo's root regardless of which origin loads this block.
 const BLOCK_BASE = new URL('../../', import.meta.url).href;
 
 const ROOT_MARGIN = 50;
@@ -278,7 +277,7 @@ export const loadMarketo = async (el, formData) => {
   const formID = formData[FORM_ID];
 
   try {
-    const { default: loadMkto } = await import(`${BLOCK_BASE}mkto/mkto.js`);
+    const { default: loadMkto } = await import(`${BLOCK_BASE}mkto.js`);
     await loadMkto(baseURL, munchkinID, formID);
     const { MktoForms2 } = window;
     MktoForms2.whenReady((form) => { readyForm(form, formData); });

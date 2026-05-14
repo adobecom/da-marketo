@@ -26,29 +26,29 @@ const MARKER_TO_FILE = {
 const MARKERS_SORTED = Object.keys(MARKER_TO_FILE).sort((a, b) => b.length - a.length);
 
 const BASENAME_TO_FOLDER = {
-  'marketo_form_setup_rules.js': '00_config',
-  'template_manager.js': '20_template_manager',
-  'template_rules.js': '20_template_manager',
-  'privacy_validation_process.js': '30_privacy',
-  'privacy_validation_rules.js': '30_privacy',
-  'privacy_validation.js': '30_privacy',
-  'partner_validation.js': '30_privacy',
-  'category_filters.js': '40_field_management',
-  'field_preferences.js': '40_field_management',
-  'form_dynamics.js': '40_field_management',
-  'adobe_analytics.js': '50_analytics',
-  'demandbase_config.js': '60_enrichment',
-  'demandbase_mapping.js': '60_enrichment',
-  'demandbase_processing.js': '60_enrichment',
-  'general_translations.js': '80_translations',
-  'state_translate.js': '80_translations',
-  'global.js': '90_build',
-  'cleaning_validation.js': '90_build',
-  'marketo_form_setup_process.js': '90_build',
-  'rendering_review.js': '90_build',
-  'known_visitor.js': '95_known_visitor',
-  'progressive_config.js': '98_progressive',
-  'progressive_controller.js': '98_progressive',
+  'marketo_form_setup_rules.js': 'scripts/00_config',
+  'template_manager.js': 'scripts/20_template_manager',
+  'template_rules.js': 'scripts/20_template_manager',
+  'privacy_validation_process.js': 'scripts/30_privacy',
+  'privacy_validation_rules.js': 'scripts/30_privacy',
+  'privacy_validation.js': 'scripts/30_privacy',
+  'partner_validation.js': 'scripts/30_privacy',
+  'category_filters.js': 'scripts/40_field_management',
+  'field_preferences.js': 'scripts/40_field_management',
+  'form_dynamics.js': 'scripts/40_field_management',
+  'adobe_analytics.js': 'scripts/50_analytics',
+  'demandbase_config.js': 'scripts/60_enrichment',
+  'demandbase_mapping.js': 'scripts/60_enrichment',
+  'demandbase_processing.js': 'scripts/60_enrichment',
+  'general_translations.js': 'scripts/80_translations',
+  'state_translate.js': 'scripts/80_translations',
+  'global.js': 'scripts/90_build',
+  'cleaning_validation.js': 'scripts/90_build',
+  'marketo_form_setup_process.js': 'scripts/90_build',
+  'rendering_review.js': 'scripts/90_build',
+  'known_visitor.js': 'scripts/95_known_visitor',
+  'progressive_config.js': 'scripts/98_progressive',
+  'progressive_controller.js': 'scripts/98_progressive',
 };
 
 function shortHash(str) {
@@ -102,8 +102,8 @@ function findFromLangComment(content) {
 
 function folderForBasename(basename) {
   if (BASENAME_TO_FOLDER[basename]) return BASENAME_TO_FOLDER[basename];
-  if (/^state_translate(-[a-z_]+)?\.js$/i.test(basename)) return '80_translations';
-  if (/^lp_sync_\d+\.js$/i.test(basename)) return '98_progressive/landing_pages';
+  if (/^state_translate(-[a-z_]+)?\.js$/i.test(basename)) return 'scripts/80_translations';
+  if (/^lp_sync_\d+\.js$/i.test(basename)) return 'scripts/98_progressive/landing_pages';
   return null;
 }
 

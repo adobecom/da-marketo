@@ -1,6 +1,7 @@
 /* eslint-disable import/prefer-default-export */
 
-const BASE = new URL('../', import.meta.url).href.replace(/\/$/, '');
+const branch = new URLSearchParams(window.location.search).get('marketolibs');
+const BASE = branch === 'local' ? 'http://localhost:6586/mkto' : new URL('./', import.meta.url).href.replace(/\/$/, '');
 const MARKETO_BLOCKS = ['da-marketo', 'da-marketo-config'];
 
 function decorateMarketo(area = document) {

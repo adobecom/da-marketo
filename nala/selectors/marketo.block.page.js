@@ -74,13 +74,13 @@ export default class MarketoBlock {
     const marketoLibsBranch = new URL(testPage).searchParams.get('marketolibs');
     const expectedOrigin = expectedMarketoLibsOrigin(marketoLibsBranch);
 
-    // When ?marketolibs= is set, the form code (mkto/* and blocks/da-marketo/*)
-    // must come from the corresponding origin. Attach the listener before
-    // navigation so we don't miss the early libs.js / block requests.
+    // When ?marketolibs= is set, the form code (mkto/**) must come from
+    // the corresponding origin. Attach the listener before navigation so we
+    // don't miss the early libs.js / block requests.
     const formCodeRequests = [];
     if (expectedOrigin) {
       this.page.on('request', (req) => {
-        if (/\/mkto\/|\/blocks\/da-marketo\//.test(req.url())) {
+        if (/\/mkto\//.test(req.url())) {
           formCodeRequests.push(req.url());
         }
       });

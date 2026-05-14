@@ -11,6 +11,7 @@ describe('libs.js', () => {
       });
       expect(config.externalLibs).to.have.length(1);
       expect(config.externalLibs[0].blocks).to.include('da-marketo');
+      expect(config.externalLibs[0].blocks).to.include('da-marketo-config');
       expect(config.externalLibs[0].base).to.be.a('string').and.not.empty;
     });
 

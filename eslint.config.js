@@ -16,9 +16,8 @@ export default [
   { linterOptions: { reportUnusedDisableDirectives: false } },
   {
     ignores: [
-      'deps/**',
       'mkto/deps/**',
-      'mkto/[0-9]*/**',
+      'mkto/scripts/[0-9]*/**',
       'nala/results/**',
       'scripts/fallback.js',
     ],
@@ -79,7 +78,7 @@ export default [
     },
   },
   {
-    files: ['blocks/**/*.js', 'ui/controls/**/*.js'],
+    files: ['blocks/**/*.js', 'mkto/blocks/**/*.js', 'ui/controls/**/*.js', 'mkto/ui/controls/**/*.js'],
     rules: {
       'react-hooks/exhaustive-deps': 0,
       'react-hooks/globals': 0,

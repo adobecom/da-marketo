@@ -1,5 +1,5 @@
 import { expect } from '@esm-bundle/chai';
-import { setLibs, LIBS } from '../../scripts/constants.js';
+import { setLibs, LIBS } from '../../mkto/constants.js';
 
 describe('Libs', () => {
   const tests = [

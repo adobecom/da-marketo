@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/constants.js';
+import { LIBS } from '../../constants.js';
 import { createContext, html, useReducer } from '../../deps/htm-preact.js';
 
 const { parseEncodedConfig } = await import(`${LIBS}/utils/utils.js`);
