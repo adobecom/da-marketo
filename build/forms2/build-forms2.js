@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Download Marketo forms2.js, apply build/forms2/forms2.patch, bundle to deps/forms2.min.js
+// Download Marketo forms2.js, apply build/forms2/forms2.patch, bundle to mkto/deps/forms2.min.js
 // (npm run build:forms2).  Requires a `patch` binary on PATH (e.g. macOS/Linux, Git for Windows).
 //
 // Usage:
@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '../..');
-const DEPS_DIR = join(REPO_ROOT, 'deps');
+const DEPS_DIR = join(REPO_ROOT, 'mkto', 'deps');
 
 const PATCH_FILE = join(SCRIPT_DIR, 'forms2.patch');
 const FORMS2_FILE = join(DEPS_DIR, 'forms2.js');

@@ -3,6 +3,7 @@ import features from '../features/marketo.block.spec.js';
 import MarketoBlock from '../selectors/marketo.block.page.js';
 import TEST_DATA from '../utils/marketo.test.data.js';
 
+const UPDATE_PLACEHOLDERS = 'Please check placeholders.json';
 const miloLibs = process.env.MILO_LIBS || '';
 const marketoLibs = process.env.MARKETO_LIBS ? `${miloLibs ? '&' : '?'}marketolibs=${process.env.MARKETO_LIBS}` : '';
 const buildTestUrl = (baseURL, path) => `${baseURL}${path}${miloLibs}${marketoLibs}`.toLowerCase();
@@ -138,7 +139,8 @@ test.describe('Marketo block test suite', () => {
           expect(await marketoBlock.isMultiStep()).toBe(true);
           expect(await marketoBlock.getTotalSteps()).toBe(totalSteps);
           expect(await marketoBlock.getCurrentStep()).toBe(1);
-          await expect(marketoBlock.stepIndicator).toHaveText(`Step 1 of ${totalSteps}`);
+          await expect(marketoBlock.stepIndicator).toHaveText(`Step 1 of ${totalSteps}`, { ignoreCase: true });
+          await expect(marketoBlock.stepIndicator, UPDATE_PLACEHOLDERS).toHaveText(`Step 1 of ${totalSteps}`);
           await expect(marketoBlock.nextButton).toBeVisible();
           await expect(marketoBlock.submitButton).toHaveClass(/mktoHidden/);
           await expect(marketoBlock.backButton).toHaveCount(0);
@@ -154,7 +156,8 @@ test.describe('Marketo block test suite', () => {
           await marketoBlock.fillMultiStepStep(1, testData);
           await marketoBlock.clickNext();
           expect(await marketoBlock.getCurrentStep()).toBe(2);
-          await expect(marketoBlock.stepIndicator).toHaveText(`Step 2 of ${totalSteps}`);
+          await expect(marketoBlock.stepIndicator).toHaveText(`Step 2 of ${totalSteps}`, { ignoreCase: true });
+          await expect(marketoBlock.stepIndicator, UPDATE_PLACEHOLDERS).toHaveText(`Step 2 of ${totalSteps}`);
           await expect(marketoBlock.backButton).toBeVisible();
         });
 
@@ -171,7 +174,8 @@ test.describe('Marketo block test suite', () => {
           if (totalSteps === 3) {
             await marketoBlock.clickNext();
             expect(await marketoBlock.getCurrentStep()).toBe(3);
-            await expect(marketoBlock.stepIndicator).toHaveText('Step 3 of 3');
+            await expect(marketoBlock.stepIndicator).toHaveText(`Step 3 of ${totalSteps}`, { ignoreCase: true });
+            await expect(marketoBlock.stepIndicator, UPDATE_PLACEHOLDERS).toHaveText(`Step 3 of ${totalSteps}`);
             await marketoBlock.fillMultiStepStep(3, testData);
           }
         });

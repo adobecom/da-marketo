@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/constants.js';
+import { LIBS } from '../../constants.js';
 
 const { createTag, loadStyle, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 

@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/constants.js';
+import { LIBS } from '../../constants.js';
 import { html, useState } from '../../deps/htm-preact.js';
 
 const { getConfig, loadStyle } = await import(`${LIBS}/utils/utils.js`);
