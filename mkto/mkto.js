@@ -2,7 +2,7 @@
 import { LIBS } from './constants.js';
 
 const base = new URL('.', import.meta.url).href;
-const { loadScript } = await import(`${LIBS}/utils/utils.js`);
+const { loadScript, loadLink } = await import(`${LIBS}/utils/utils.js`);
 
 // Prod form 2277 scripts
 const SCRIPTS = [
@@ -28,6 +28,8 @@ export default async function loadMkto(marketoHost, munchkinID, formID) {
 
   const { MktoForms2 } = window;
   if (!MktoForms2) throw new Error('Marketo forms not loaded');
+
+  SCRIPTS.forEach((src) => loadLink(`${base}${src}`, { rel: 'preload', as: 'script' }));
 
   MktoForms2.loadForm(`https://${marketoHost}`, munchkinID, formID, () => {
     SCRIPTS.reduce(

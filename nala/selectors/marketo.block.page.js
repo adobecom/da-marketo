@@ -159,7 +159,7 @@ export default class MarketoBlock {
       { dir: direction, prev: fromStep },
       { timeout: 5000 },
     );
-    await this.page.waitForTimeout(150);
+    await this.page.waitForTimeout(110);
   }
 
   async clickNext() {
@@ -198,7 +198,7 @@ export default class MarketoBlock {
     await this.primaryProductInterest.selectOption({ index: 2 });
     // State dropdown is conditional on country; skip if it doesn't appear within 2s.
     try {
-      await this.state.waitFor({ state: 'visible', timeout: 2000 });
+      await this.state.waitFor({ state: 'visible', timeout: 300 });
       await this.state.selectOption({ index: 1 });
     } catch { /* state not shown for this country */ }
   }
@@ -262,7 +262,7 @@ export default class MarketoBlock {
     // use index 2 to guarantee a real product value is selected
     await this.primaryProductInterest.selectOption({ index: 2 });
     // State only renders for certain countries — interact only if visible
-    await this.state.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+    await this.state.waitFor({ state: 'visible', timeout: 300 }).catch(() => {});
     if (await this.state.isVisible()) {
       await this.state.selectOption({ index: 1 });
     }

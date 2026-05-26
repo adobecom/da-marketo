@@ -99,6 +99,14 @@ const features = [
     formType: 'multi-step',
     totalSteps: 2,
   },
+  {
+    tcid: '12',
+    name: '@marketo CDN routing — mkto/ path assertion',
+    path: ['/drafts/nala/blocks/marketo/essential'],
+    tags: '@marketo @marketoCdnRouting @regression',
+    type: 'cdnRouting',
+    formType: 'essential',
+  },
 ];
 
 export default features;
