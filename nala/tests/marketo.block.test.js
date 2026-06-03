@@ -5,7 +5,8 @@ import TEST_DATA from '../utils/marketo.test.data.js';
 
 const UPDATE_PLACEHOLDERS = 'Please check placeholders.json';
 const miloLibs = process.env.MILO_LIBS || '';
-const marketoLibs = process.env.MARKETO_LIBS ? `${miloLibs ? '&' : '?'}marketolibs=${process.env.MARKETO_LIBS}` : '';
+const cdnBranch = process.env.MARKETO_LIBS || '';
+const marketoLibs = cdnBranch ? `${miloLibs ? '&' : '?'}marketolibs=${cdnBranch}` : '';
 const buildTestUrl = (baseURL, path) => `${baseURL}${path}${miloLibs}${marketoLibs}`.toLowerCase();
 
 test.describe('Marketo block test suite', () => {
@@ -197,6 +198,61 @@ test.describe('Marketo block test suite', () => {
             await expect(marketoBlock.message).toBeAttached({ timeout: 30000 });
             await expect(page).toHaveURL(testPage);
           }
+        });
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // CDN routing tests: verify mkto/ path is used, old path never requested
+  // Uses MARKETO_LIBS (set to the PR branch by nala.yml) as the ?marketolibs= value.
+  // 'main'/'stage' are skipped — da-bacom maps them to http:// which browsers block as mixed content.
+  // Once Akamai CDN is wired (target: Jun 23 2026) these can run against business.adobe.com directly.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'cdnRouting').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        // MARKETO_LIBS is set to the PR branch by nala.yml (github.head_ref); unset on scheduled runs.
+        // 'main' and 'stage' map to http:// in da-bacom getMarketoLibs — skip those to avoid mixed-content failures.
+        test.skip(
+          !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
+          'CDN routing test requires MARKETO_LIBS env var set to a non-main/stage branch',
+        );
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        const responses = new Map();
+        page.on('response', (res) => {
+          const { pathname } = new URL(res.url());
+          if (pathname.includes('/mkto/') || pathname.includes('/blocks/da-marketo/')) {
+            responses.set(res.url(), res.status());
+          }
+        });
+
+        await test.step('step-1: navigate and wait for form', async () => {
+          await marketoBlock.navigateTo(testPage);
+        });
+
+        await test.step('step-2: mkto/libs.js returns 200', async () => {
+          const entry = [...responses.entries()].find(([url]) => url.includes('/mkto/libs.js'));
+          expect(entry, 'mkto/libs.js was not requested').toBeTruthy();
+          expect(entry[1], `mkto/libs.js returned ${entry?.[1]}`).toBe(200);
+        });
+
+        await test.step('step-3: mkto/blocks/da-marketo/da-marketo.js returns 200', async () => {
+          const entry = [...responses.entries()].find(([url]) => url.includes('/mkto/blocks/da-marketo/da-marketo.js'));
+          expect(entry, 'mkto/blocks/da-marketo/da-marketo.js was not requested').toBeTruthy();
+          expect(entry[1], `mkto/blocks/da-marketo/da-marketo.js returned ${entry?.[1]}`).toBe(200);
+        });
+
+        await test.step('step-4: no requests to old path (without /mkto/ prefix)', async () => {
+          const oldPathReqs = [...responses.keys()].filter(
+            (url) => /\/blocks\/da-marketo\//.test(url) && !/\/mkto\/blocks\/da-marketo\//.test(url),
+          );
+          expect(
+            oldPathReqs,
+            `old-path requests found: ${oldPathReqs.join(', ')}`,
+          ).toHaveLength(0);
         });
       });
     });

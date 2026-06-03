@@ -116,7 +116,9 @@ function findRawPath(content, formId) {
 
 function applyLayout(rawPath) {
   if (!rawPath) return null;
-  if (rawPath.includes('/')) return rawPath;
+  if (rawPath.includes('/')) {
+    return rawPath.startsWith('scripts/') ? rawPath : `scripts/${rawPath}`;
+  }
   const dir = folderForBasename(rawPath);
   return dir ? `${dir}/${rawPath}` : rawPath;
 }

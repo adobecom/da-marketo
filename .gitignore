@@ -9,3 +9,4 @@ nala/results/*
 log/*
 .claude/
 .cursor/
+.worktrees/
