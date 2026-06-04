@@ -1,13 +1,14 @@
 // ##
-// ## Updated 20241213T080000
+// ## Updated 20251001T201149
 // ##
 // ##
-// ## Cleaning and Validation
+// ##
+// ## 90_build/cleaning_validation.js - Cleaning and Validation 20251001T201149
 // ##
 
 var rendering_ready = false;
-if (typeof cleaning_validation != "function" && typeof form_dynamics !== "undefined") {
-  function cleaning_validation() {
+if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !== "undefined") {
+  window.cleaning_validation = function () {
     mkf_c.log("Cleaning & Validation - Loaded");
 
     var firstrun = true;
@@ -122,20 +123,19 @@ if (typeof cleaning_validation != "function" && typeof form_dynamics !== "undefi
             display: block;
         }
         .mktoForm--fade-in .mktoHtmlText[style] {
-            opacity: 0;
-            visibility: hidden;
-            -webkit-transition: opacity 0.1s ease-in, height 0.3s ease-in;
-            -moz-transition: opacity 0.1s ease-in, height 0.3s ease-in;
-            transition: opacity 0.1s ease-in, height 0.3s ease-in;
-        }
-        .mktoForm--fade-in .mktoHtmlText:not([style]) {
-            opacity: 1;
-            visibility: visible;
-            -webkit-transition: opacity 0.1s ease-in, height 0.3s ease-in;
-            -moz-transition: opacity 0.1s ease-in, height 0.3s ease-in;
-            transition: opacity 0.1s ease-in, height 0.3s ease-in;
-        }   
-
+          opacity: 0;
+          visibility: hidden;
+          -webkit-transition: opacity 0.1s ease-in, height 0.1s ease-in;
+          -moz-transition: opacity 0.1s ease-in, height 0.1s ease-in;
+          transition: opacity 0.1s ease-in, height 0.1s ease-in;
+      }
+      .mktoForm--fade-in .mktoHtmlText:not([style]) {
+          opacity: 1;
+          visibility: visible;
+          -webkit-transition: opacity 0.1s ease-in, height 0.1s ease-in;
+          -moz-transition: opacity 0.1s ease-in, height 0.1s ease-in;
+          transition: opacity 0.1s ease-in, height 0.1s ease-in;
+      }   
         form.mktoForm {
             max-height: 0;
             overflow: hidden;
@@ -143,10 +143,18 @@ if (typeof cleaning_validation != "function" && typeof form_dynamics !== "undefi
             -moz-transition: max-height 1s ease-in;
             transition: max-height 1s ease-in;
         }
-            
         form.mktoForm.mktoVisible {
             max-height: 10000px;
             overflow: visible;
+        }
+        .mktoForm--fade-in .mktoPrefill {
+            color : transparent;
+            transition: color 0.3s ease-in;
+            -webkit-transition: color 0.3s ease-in;
+            -moz-transition: color 0.3s ease-in;
+        }
+        .mktoForm--fade-in .mktoPrefill.mktoPrefilled {
+            color : inherit;
         }
         `;
 
@@ -358,9 +366,11 @@ if (typeof cleaning_validation != "function" && typeof form_dynamics !== "undefi
       // Turning off autocomplete on form. Whitelist selected inputs individually.
       mktoForm.setAttribute("autocomplete", "off");
 
-      const fieldNameMapToAutocomplete = window?.mcz_marketoForm_pref?.value_setup?.field_mapping_ac || {};
+      const fieldNameMapToAutocomplete =
+        window?.mcz_marketoForm_pref?.value_setup?.field_mapping_ac || {};
       const templateName = window?.mcz_marketoForm_pref?.form?.template;
-      const templateRule = (window?.templateRules || []).find((template) => template[templateName]) || {};
+      const templateRule =
+        (window?.templateRules || []).find((template) => template[templateName]) || {};
       const autoCompleteFields = templateRule[templateName]?.auto_complete || [];
 
       return (mktoFormElement) => {
@@ -369,7 +379,7 @@ if (typeof cleaning_validation != "function" && typeof form_dynamics !== "undefi
         if (autocompleteToken && autoCompleteFields.includes(fieldName)) {
           mktoFormElement.setAttribute("autocomplete", autocompleteToken);
         }
-      }
+      };
     })();
 
     var normalizeMktoStyles_run = 0;
@@ -1590,7 +1600,7 @@ if (typeof cleaning_validation != "function" && typeof form_dynamics !== "undefi
     if (!rendering_ready) {
       chkFrmInt = setInterval(cleaning_validation_main, 10);
     }
-  }
+  };
 }
 
 // ##

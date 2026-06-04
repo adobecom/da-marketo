@@ -14,12 +14,16 @@ const SCRIPTS = [
   'scripts/30_privacy/privacy_validation_process.js',
   'scripts/40_field_management/field_preferences.js',
   'scripts/50_analytics/adobe_analytics.js',
+  'scripts/60_enrichment/demandbase_config.js',
+  'scripts/60_enrichment/demandbase_mapping.js',
+  'scripts/60_enrichment/demandbase_processing.js',
   'scripts/40_field_management/form_dynamics.js',
   'scripts/20_template_manager/template_manager.js',
   'scripts/40_field_management/category_filters.js',
   'scripts/90_build/cleaning_validation.js',
   'scripts/80_translations/general_translations.js',
   'scripts/90_build/global.js',
+  'scripts/98_progressive/progressive_controller.js',
   'scripts/90_build/rendering_review.js',
 ];
 
