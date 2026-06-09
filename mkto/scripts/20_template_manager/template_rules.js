@@ -1,20 +1,37 @@
 // ##
-// ## Updated 20241213T080000
+// ## Updated 20251124T120556
 // ##
 // ##
-// ## Template Rules
+// ##
+// ## 20_template_manager/template_rules.js - 20251124T120556
 // ##
 // ##
 if (typeof templateRules == "undefined") {
-  const AUTO_COMPLETE_FIELDS = ["Email", "FirstName", "LastName", "Phone", "mktoFormsJobTitle", "mktoFormsCompany", "Country", "State", "PostalCode"];
+  //sets the default version of form to use for these templates
+  const templateVersion = "2277:MCZ Production(2277)";
+
+  //not used yet.
+  const AUTO_COMPLETE_FIELDS = [
+    "Email",
+    "FirstName",
+    "LastName",
+    "Phone",
+    "mktoFormsJobTitle",
+    "mktoFormsCompany",
+    "Country",
+    "State",
+    "PostalCode",
+  ];
 
   var templateRules = [
     {
       request_for_information: {
         formVersion: [
-          "2277: MCZ Production(2277)",
+          templateVersion,
+          // 3308:MCZ Staging (3308)- progressive testing
+
           // 1723:MCZ Staging (1723),
-          // 2277: MCZ Production(2277),
+          // 2277:MCZ Production(2277),
           // 2259:MCZ Short Form (2259),
           //
         ],
@@ -118,13 +135,44 @@ if (typeof templateRules == "undefined") {
           //
           //
         },
-        auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        program_id: "", //default program id for program detail sync if one isn't provided
+        auto_complete: AUTO_COMPLETE_FIELDS, //future controls
+        progressive: true, //will sync program details prior to showing the form
+        known_visitor: true, //pre-fills the form with the known profile from the session and Marketo known visitor
+        polling: true, //syncs program membership status with Marketo
+        autoSuccess: true, //if the form has been submitted it will automatically show the success message and fire analytics event
+        autoSuccessTimeFrameDays: 30, //if the form with the program id was submiited within last days it will set to auto success
+        multi_step: {
+          active: false, //will put form fields on to step pages based on visibility and rules below.
+          steps: [
+            {
+              step_lbl: "Step 1",
+              description: "Contact Fields",
+              fields: ["email", "country"],
+            },
+            {
+              step_lbl: "Step 2",
+              description: "Comnpany Fields",
+              fields: ["name", "phone", "mktoFormsJobTitle", "mktoFormsFunctionalArea"],
+            },
+            {
+              step_lbl: "Step 3",
+              description: "Request Fields",
+              fields: [
+                "company",
+                "state",
+                "postcode",
+                "mktoFormsPrimaryProductInterest",
+                "mktoFormsCompanyType",
+              ],
+            },
+          ],
+        },
       },
     },
     {
       trial: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["trial_download:Trial Download (trial_download)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -144,13 +192,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       content_evaluate: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["whitepaper_form:Whitepaper Download"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -170,13 +223,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       webinar_virtual: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["strategy_webinar:Strategy Webinar (strategy_webinar)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -196,13 +254,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       strategy_webinar: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["strategy_webinar:Strategy Webinar (strategy_webinar)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -222,13 +285,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       content_explore: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["whitepaper_form:Whitepaper Download"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -248,13 +316,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       content_discover: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["whitepaper_form:Whitepaper Download"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -274,13 +347,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["hidden:Hide Field (hidden)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       subscribe: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["subscribe:Subscribe"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -300,13 +378,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["hidden:Hide Field (hidden)"],
         },
+        program_id: "",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       flex_contact: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["request_for_information:Request for Information (request_for_information)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -326,13 +409,17 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "92815",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
       },
     },
     {
       flex_event: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["strategy_webinar:Strategy Webinar (strategy_webinar)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -352,13 +439,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DX:DX Specific Roles (DX)"],
         },
+        program_id: "92816",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       flex_content: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["whitepaper_form:Whitepaper Download"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -378,13 +470,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["hidden:Hide Field (hidden)"],
         },
+        program_id: "92814",
         auto_complete: AUTO_COMPLETE_FIELDS,
-        enrichment_fields: [],
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: true,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       dme_flex_contact: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["request_for_information:Request for Information (request_for_information)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -404,11 +501,17 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DMe:DMe Specific Roles (DMe)"],
         },
+        program_id: "92815",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
       },
     },
     {
       dme_flex_event: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["strategy_webinar:Strategy Webinar (strategy_webinar)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -428,11 +531,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["DMe:DMe Specific Roles (DMe)"],
         },
+        program_id: "92816",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       dme_flex_content: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["whitepaper_form:Whitepaper Download"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -452,11 +562,18 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["hidden:Hide Field (hidden)"],
         },
+        program_id: "92814",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       comb_flex_contact: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["request_for_information:Request for Information (request_for_information)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -471,16 +588,24 @@ if (typeof templateRules == "undefined") {
           demo: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
-          functional_area: ["Functional Area-Combined:DMe & DX Combined Options (Functional Area-Combined)"],
+          functional_area: [
+            "Functional Area-Combined:DMe & DX Combined Options (Functional Area-Combined)",
+          ],
           products: ["POI-Combined:DMe & DX Combined Products (POI-Combined)"],
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["Combined:DMe & DX Combined Roles (Combined)"],
         },
+        program_id: "92815",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
       },
     },
     {
       comb_flex_event: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["strategy_webinar:Strategy Webinar (strategy_webinar)"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -495,16 +620,58 @@ if (typeof templateRules == "undefined") {
           demo: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
-          functional_area: ["Functional Area-Combined:DMe & DX Combined Options (Functional Area-Combined)"],
+          functional_area: [
+            "Functional Area-Combined:DMe & DX Combined Options (Functional Area-Combined)",
+          ],
           products: ["hidden:Hide Field (hidden)"],
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["Combined:DMe & DX Combined Roles (Combined)"],
         },
+        program_id: "92816",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
+      },
+    },
+    {
+      comb_flex_webinar: {
+        formVersion: [templateVersion],
+        purpose: ["strategy_webinar:Strategy Webinar (strategy_webinar)"],
+        formSuccessType: ["redirect:redirect (redirect)"],
+        field_visibility: {
+          name: ["required:Make Required (required)"],
+          phone: ["hidden:Hide Field (hidden)"],
+          company: ["required:Make Required (required)"],
+          website: ["hidden:Hide Field (hidden)"],
+          state: ["hidden:Hide Field (hidden)"],
+          postcode: ["hidden:Hide Field (hidden)"],
+          company_size: ["hidden:Hide Field (hidden)"],
+          comments: ["hidden:Hide Field (hidden)"],
+          demo: ["hidden:Hide Field (hidden)"],
+        },
+        field_filters: {
+          functional_area: [
+            "Functional Area-Combined:DMe & DX Combined Options (Functional Area-Combined)",
+          ],
+          products: ["hidden:Hide Field (hidden)"],
+          industry: ["hidden:Hide Field (hidden)"],
+          job_role: ["Combined:DMe & DX Combined Roles (Combined)"],
+        },
+        program_id: "",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
       comb_flex_content: {
-        formVersion: ["2277: MCZ Production(2277)"],
+        formVersion: [templateVersion],
         purpose: ["whitepaper_form:Whitepaper Download"],
         formSuccessType: ["redirect:redirect (redirect)"],
         field_visibility: {
@@ -524,34 +691,46 @@ if (typeof templateRules == "undefined") {
           industry: ["hidden:Hide Field (hidden)"],
           job_role: ["hidden:Hide Field (hidden)"],
         },
+        program_id: "92814",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
     },
     {
-        subscription: {
-          formVersion: ["2277: MCZ Production(2277)"],
-          purpose: ["subscription:Subscription"],
-          formSuccessType: ["redirect:redirect (redirect)"],
-          field_visibility: {
-            name: ["required:Make Required (required)"],
-            phone: ["hidden:Hide Field (hidden)"],
-            company: ["hidden:Hide Field (hidden)"],
-            website: ["hidden:Hide Field (hidden)"],
-            state: ["hidden:Hide Field (hidden)"],
-            postcode: ["hidden:Hide Field (hidden)"],
-            company_size: ["hidden:Hide Field (hidden)"],
-            comments: ["hidden:Hide Field (hidden)"],
-            demo: ["hidden:Hide Field (hidden)"],
-          },
-          field_filters: {
-            functional_area: ["hidden:Hide Field (hidden)"],
-            products: ["hidden:Hide Field (hidden)"],
-            industry: ["hidden:Hide Field (hidden)"],
-            job_role: ["hidden:Hide Field (hidden)"],
-          },
-          auto_complete: AUTO_COMPLETE_FIELDS,
-          enrichment_fields: [],
+      subscription: {
+        formVersion: [templateVersion],
+        purpose: ["subscription:Subscription"],
+        formSuccessType: ["redirect:redirect (redirect)"],
+        field_visibility: {
+          name: ["required:Make Required (required)"],
+          phone: ["hidden:Hide Field (hidden)"],
+          company: ["hidden:Hide Field (hidden)"],
+          website: ["hidden:Hide Field (hidden)"],
+          state: ["hidden:Hide Field (hidden)"],
+          postcode: ["hidden:Hide Field (hidden)"],
+          company_size: ["hidden:Hide Field (hidden)"],
+          comments: ["hidden:Hide Field (hidden)"],
+          demo: ["hidden:Hide Field (hidden)"],
         },
+        field_filters: {
+          functional_area: ["hidden:Hide Field (hidden)"],
+          products: ["hidden:Hide Field (hidden)"],
+          industry: ["hidden:Hide Field (hidden)"],
+          job_role: ["hidden:Hide Field (hidden)"],
+        },
+        program_id: "",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
+        autoSuccessTimeFrameDays: 30,
       },
+    },
   ];
 
   mkf_c.log("Template Rules - Loaded");

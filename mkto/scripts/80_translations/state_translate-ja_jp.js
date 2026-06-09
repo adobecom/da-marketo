@@ -831,6 +831,7 @@ var translateState = {
   Monagas: "モナガス",
   Monaghan: "モナハン",
   Montana: "モンタナ州",
+  MT: "モンタナ州",
   Montevideo: "モンテビデオ",
   Moquegua: "モケグア",
   Morbihan: "モルビアン",

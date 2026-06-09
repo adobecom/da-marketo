@@ -1,12 +1,11 @@
 // ##
-// ## Updated 20241118T162401
+// ## Updated 20251001T195718
 // ##
 // ##
 // ##
-// ## Privacy Validation - Rules
+// ## 30_privacy/privacy_validation_rules.js - 20251001T195718
 // ##
 // ##
-// ####################################################################
 //
 // Supported Languages, this must align with Marketo Segmentation
 //
@@ -259,7 +258,20 @@ var PRIVACY_CODE_DEFAULT = {
 // Privacy Code Rules
 var PRIVACY_CODE_RULES = [
   {
-    purpose: ["request_for_information", "trial", "content_evaluate", "webinar_virtual", "strategy_webinar", "content_explore", "content_discover", "flex_contact", "flex_event", "flex_event", "whitepaper_form", "nurture"],
+    purpose: [
+      "request_for_information",
+      "trial",
+      "content_evaluate",
+      "webinar_virtual",
+      "strategy_webinar",
+      "content_explore",
+      "content_discover",
+      "flex_contact",
+      "flex_event",
+      "flex_event",
+      "whitepaper_form",
+      "nurture",
+    ],
     countries: ["DE"],
     privacycode: "cs3P;ve1;<lc>",
     optin_style: "explicit",

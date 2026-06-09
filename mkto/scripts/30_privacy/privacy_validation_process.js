@@ -1,21 +1,17 @@
 // ##
-// ## Updated 20241118T165731
+// ## Updated 20250929T200801
 // ##
 // ##
 // ##
-// ## Privacy Validation - Rule Processing
+// ## 30_privacy/privacy_validation_process.js - 20250929T200801
 // ##
 // ##
 
-if (typeof privacyValidation == "function" && typeof form_dynamics !== "undefined") {
-  if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
-    mkf_c.log("Known Visitor - Privacy Validation - Skip");
-  } else {
-    marketoFormSetup("stage1");
-  }
+if (typeof window?.privacyValidation == "function" && typeof form_dynamics !== "undefined") {
+  window.marketoFormSetup("stage1");
 }
 
-if (typeof privacyValidation != "function") {
+if (typeof window?.privacyValidation != "function") {
   mkf_c.log("Privacy Validation - Loaded");
 
   window.privacyValidation = function () {
@@ -660,10 +656,7 @@ if (typeof privacyValidation != "function") {
     function field_update_mktoFormsLocale(proposedLanguage) {
       const mktoFormsLocaleField = document.querySelector('[name="mktoFormsLocale"]');
       //mkf_c.log("field_update_mktoFormsLocale >>" + proposedLanguage);
-      if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
-        logPrivacy("Known Visitor - field_update_mktoFormsLocale");
-        return;
-      }
+
       if (mktoFormsLocaleField) {
         let temp = mktoFormsLocaleField.value;
         proposedLanguage = "" + proposedLanguage;
@@ -1110,18 +1103,16 @@ if (typeof privacyValidation != "function") {
         setTimeout(fetch_lang_code, 10);
         setTimeout(field_update_privacy_code, 10);
       } else {
-        if (window.knownMktoVisitor !== undefined && window.knownMktoVisitor !== null) {
-          mkf_c.log("Known Visitor - language code");
-          fetch_lang_code();
-        } else {
-          setTimeout(wait_for_field_country, 20);
-        }
+        setTimeout(wait_for_field_country, 20);
       }
     }
 
     wait_for_field_country();
   };
 }
+
+// ##
+// ##
 
 // ##
 // ##
