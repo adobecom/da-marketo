@@ -259,6 +259,38 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Field-visibility tests: flex templates must honor AUTHORED field visibility
+  // over template defaults, even after the PP callback re-runs template
+  // processing. Regression guard for MWPW-198019.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'fieldVisibility').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // Author sets Company to 'hidden' — opposite the flex template default
+        // ('required'). After PP re-runs mkto_checkTemplate, the renderer's
+        // source (form.field_visibility) must reflect the author's choice.
+        const result = await page.evaluate(() => {
+          const p = window.mcz_marketoForm_pref;
+          p.field_visibility = p.field_visibility || {};
+          p.field_visibility.company = 'hidden';
+          window.mkto_checkTemplate('PP');
+          return {
+            template: p.form.template,
+            renderedCompany: p.form.field_visibility.company,
+          };
+        });
+
+        expect(result.template, 'test page is not a flex template').toContain('flex');
+        expect(result.renderedCompany, 'authored visibility lost after PP').toBe('hidden');
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Form-off tests: verify post-submission state is shown via ?form=off param
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'formOff').forEach((feature) => {

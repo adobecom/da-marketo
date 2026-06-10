@@ -107,6 +107,14 @@ const features = [
     type: 'cdnRouting',
     formType: 'essential',
   },
+  {
+    tcid: '13',
+    name: '@marketo flex template respects authored field visibility',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFieldVisibility @regression',
+    type: 'fieldVisibility',
+    formType: 'full',
+  },
 ];
 
 export default features;
