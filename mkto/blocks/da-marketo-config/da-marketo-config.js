@@ -402,7 +402,7 @@ export default async function init(el) {
     await loadBlock(marketoBlock);
 
     const postMarketoRules = () => {
-      if (window?.MktoForms2) {
+      if (window?.MktoForms2 && window?.templateRules) {
         window.MktoForms2.whenReady(() => {
           window.parent.postMessage({ type: 'templateRules', data: window.templateRules }, window.location.origin);
           window.parent.postMessage({ type: 'supportedLanguages', data: window.SUPPORTED_LANGUAGES }, window.location.origin);
