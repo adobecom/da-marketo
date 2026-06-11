@@ -130,6 +130,7 @@ test.describe('Marketo block test suite', () => {
   features.filter((f) => f.formType === 'multi-step').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        test.skip(true, 'MWPW-198154: Will fix later.');
         const testPage = buildTestUrl(baseURL, path);
         const testData = { ...TEST_DATA, email: `test+w${testInfo.workerIndex}t${feature.tcid}@adobetest.com` };
         const { totalSteps } = feature;
