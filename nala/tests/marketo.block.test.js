@@ -291,6 +291,63 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Field-filter tests: POI auto-hide and category filters must use the
+  // canonical FLAT field_filters path, not the dead nested form.field_filters.
+  // Regression guard for MWPW-198019 (Fixes 2 & 3).
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'poiAutoHide').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // Setting a POI must hide the products field on the canonical FLAT
+        // path, and must not throw when field_filters is absent (null guard).
+        const result = await page.evaluate(() => {
+          const p = window.mcz_marketoForm_pref;
+          delete p.field_filters;
+          p.program.poi = 'adobe_journey_optimizer';
+          if (p.flags) { delete p.flags.poiSetByQS; delete p.flags.poiSetByQSHash; }
+          let threw = false;
+          try { window.mkto_checkTemplate('DataLayer'); } catch (e) { threw = String(e); }
+          return { threw, flatProducts: p.field_filters?.products };
+        });
+
+        expect(result.threw, 'POI auto-hide threw when field_filters was absent').toBe(false);
+        expect(result.flatProducts, 'POI did not hide products on the flat path').toBe('hidden');
+      });
+    });
+  });
+
+  features.filter((f) => f.type === 'categoryFilters').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // The products category filter must come from the canonical FLAT
+        // field_filters path, not the dead nested form.field_filters. Diverge
+        // the two and confirm the flat value wins.
+        const result = await page.evaluate(async () => {
+          const p = window.mcz_marketoForm_pref;
+          p.field_filters = { ...(p.field_filters || {}), products: 'POI-Dxonly' };
+          p.form = p.form || {};
+          p.form.field_filters = { products: 'POI-Combined' };
+          window.categoryFilters();
+          await new Promise((r) => { setTimeout(r, 400); });
+          const el = document.querySelector('[name="mktoprimaryProductInterestCategory"]');
+          return { present: !!el, value: el?.value };
+        });
+
+        expect(result.present, 'products category helper element not found').toBe(true);
+        expect(result.value, 'category filter did not read the flat field_filters path').toBe('POI-Dxonly');
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Form-off tests: verify post-submission state is shown via ?form=off param
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'formOff').forEach((feature) => {

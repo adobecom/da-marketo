@@ -115,6 +115,22 @@ const features = [
     type: 'fieldVisibility',
     formType: 'full',
   },
+  {
+    tcid: '14',
+    name: '@marketo POI auto-hides products via flat field_filters',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFieldFilters @regression',
+    type: 'poiAutoHide',
+    formType: 'full',
+  },
+  {
+    tcid: '15',
+    name: '@marketo category filters read the flat field_filters path',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFieldFilters @regression',
+    type: 'categoryFilters',
+    formType: 'full',
+  },
 ];
 
 export default features;
