@@ -27,6 +27,17 @@ export const [setLibs, getLibs] = (() => {
   ];
 })();
 
+export function getMarketoLibs(location = window.location) {
+  const { hostname, search } = location;
+  if (!['.aem.', '.hlx.', '.stage.', 'local'].some((i) => hostname.includes(i))) return '../mkto/libs.js';
+  const branch = new URLSearchParams(search).get('marketolibs');
+  if (!branch) return '../mkto/libs.js';
+  if (!/^[a-zA-Z0-9_-]+$/.test(branch)) throw new Error('Invalid marketolibs branch name.');
+  if (branch === 'local') return 'http://localhost:6586/mkto/libs.js';
+  const origin = branch.includes('--') ? `https://${branch}.aem.live` : `https://${branch}--da-marketo--adobecom.aem.live`;
+  return `${origin}/mkto/libs.js`;
+}
+
 function decorateArea() {
   const eagerLoad = (parent, selector) => {
     const img = parent.querySelector(selector);
@@ -91,7 +102,7 @@ const miloLibs = setLibs('/libs');
 (async function loadPage() {
   const { loadArea, getConfig, setConfig } = await import(`${miloLibs}/utils/utils.js`);
   setConfig({ ...CONFIG, miloLibs });
-  const mkto = await import('../mkto/libs.js');
+  const mkto = await import(getMarketoLibs());
   mkto.register({ getConfig, setConfig });
   await loadArea();
 }());
