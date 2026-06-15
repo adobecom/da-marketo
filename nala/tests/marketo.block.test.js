@@ -379,4 +379,53 @@ test.describe('Marketo block test suite', () => {
       });
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Program ID precedence tests: assert how mcz_marketoForm_pref.program.id
+  // resolves (template default vs authored vs passthrough). Reads the data
+  // layer directly and corroborates with the progressive sync request.
+  // tcid 17 documents CURRENT behavior (template overrides authored) — open
+  // question with Rob (MWPW-198019 follow-up).
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'programId').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        const syncRequests = [];
+        page.on('request', (req) => {
+          if (/\/mcz\d+\.html/.test(new URL(req.url()).pathname)) {
+            syncRequests.push(new URL(req.url()).pathname);
+          }
+        });
+
+        await test.step('step-1: Navigate and wait for the program id to resolve', async () => {
+          // waitForField:false — the passthrough template (comb_flex_webinar)
+          // hides Email; this test only inspects the data layer + sync request.
+          await marketoBlock.navigateTo(testPage, { waitForField: false });
+        });
+
+        await test.step('step-2: Resolved program.id matches expectation', async () => {
+          expect(await marketoBlock.getProgramId()).toBe(feature.expectedProgramId);
+        });
+
+        await test.step('step-3: Precedence flags match the source', async () => {
+          const flags = await marketoBlock.getProgramIdFlags();
+          if (feature.expectedSetBy === 'template') {
+            expect(flags.byTemplate).toBe(true);
+          } else {
+            expect(flags.byTemplate).toBe(false);
+            expect(flags.byQS).toBe(false);
+          }
+        });
+
+        await test.step('step-4: Progressive sync request uses the resolved id', async () => {
+          await expect
+            .poll(() => syncRequests, { timeout: 15000 })
+            .toContain(`/mcz${feature.expectedProgramId}.html`);
+        });
+      });
+    });
+  });
 });

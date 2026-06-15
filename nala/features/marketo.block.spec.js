@@ -131,6 +131,36 @@ const features = [
     type: 'categoryFilters',
     formType: 'full',
   },
+  {
+    tcid: '16',
+    name: '@marketo program id — template default (Path A)',
+    path: ['/drafts/nala/blocks/marketo/programid-template'],
+    tags: '@marketo @marketoProgramId @marketoProgramIdTemplate @regression',
+    type: 'programId',
+    formType: 'expanded',
+    expectedProgramId: '92816',
+    expectedSetBy: 'template',
+  },
+  {
+    tcid: '17',
+    name: '@marketo program id — template overrides authored (Path B, current behavior)',
+    path: ['/drafts/nala/blocks/marketo/programid-authored'],
+    tags: '@marketo @marketoProgramId @marketoProgramIdAuthored @regression',
+    type: 'programId',
+    formType: 'expanded',
+    expectedProgramId: '92816',
+    expectedSetBy: 'template',
+  },
+  {
+    tcid: '18',
+    name: '@marketo program id — authored passthrough on empty-default template',
+    path: ['/drafts/nala/blocks/marketo/programid-passthrough'],
+    tags: '@marketo @marketoProgramId @marketoProgramIdPassthrough @regression',
+    type: 'programId',
+    formType: 'expanded',
+    expectedProgramId: '99999',
+    expectedSetBy: 'authored',
+  },
 ];
 
 export default features;
