@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="NOINDEX, NOFOLLOW">
+  <title>Marketo form scripts diff</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./mkto-diff.css">
+</head>
+<body>
+  <div class="mkto-diff-page">
+    <h1>Marketo form scripts diff</h1>
+    <p class="mkto-diff-hint">Compares extracted scripts between two forms. Use <code>?formA=</code> and <code>?formB=</code>. Identical scripts are collapsed by default. Changed diffs open at the <strong>top</strong> of the file; use <strong>Prev change</strong> / <strong>Next change</strong> to move between hunks.</p>
+
+    <div class="mkto-diff-toolbar">
+      <label class="mkto-diff-toolbar-label" for="mkto-diff-form-a">Form A</label>
+      <input type="text" id="mkto-diff-form-a" class="mkto-diff-input" list="mkto-diff-list-a" placeholder="ID, e.g. 2277" aria-label="Marketo form A">
+      <datalist id="mkto-diff-list-a"></datalist>
+      <button id="mkto-diff-flip" type="button" class="mkto-diff-flip-btn" aria-label="Swap Form A and Form B">&#8645;</button>
+      <label class="mkto-diff-toolbar-label" for="mkto-diff-form-b">Form B</label>
+      <input type="text" id="mkto-diff-form-b" class="mkto-diff-input" list="mkto-diff-list-b" placeholder="ID, e.g. 2277" aria-label="Marketo form B">
+      <datalist id="mkto-diff-list-b"></datalist>
+    </div>
+
+    <div id="mkto-diff-status" class="mkto-diff-status" hidden></div>
+
+    <section class="mkto-diff-panel" id="mkto-diff-summary-section" hidden>
+      <h2>Summary</h2>
+      <div id="mkto-diff-summary"></div>
+    </section>
+
+    <section class="mkto-diff-panel">
+      <h2>Details</h2>
+      <div id="mkto-diff-details"></div>
+    </section>
+  </div>
+  <script type="module" src="./mkto-diff.js"></script>
+</body>
+</html>
