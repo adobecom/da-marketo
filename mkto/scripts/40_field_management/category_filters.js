@@ -7,7 +7,6 @@
 // ##
 // ##
 
-//# sourceURL=40_field_management/category_filters.js
 if (typeof window?.categoryFilters == "undefined") {
   mkf_c.log("Category Filters - Loaded");
   window.categoryFilters = function () {
@@ -82,3 +81,5 @@ if (typeof window?.categoryFilters == "undefined") {
 
 // ##
 // ##
+
+//# sourceURL=40_field_management/category_filters.js
