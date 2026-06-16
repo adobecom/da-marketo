@@ -349,6 +349,39 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Privacy locale tests (MWPW-189425): regional privacy link hrefs must match
+  // the URL locale segment (e.g. /ie/ pages must use /ie/ links, not /uk/).
+  // Requires MARKETO_LIBS set to the PR branch — prod is not yet patched, so
+  // main/stage runs are skipped.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'privacyLocale').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }) => {
+        test.skip(
+          !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
+          'Privacy locale test requires MARKETO_LIBS env var set to a non-main/stage branch',
+        );
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('step-1: Navigate to the locale page', async () => {
+          await marketoBlock.navigateTo(testPage);
+        });
+
+        await test.step(`step-2: Verify privacy link hrefs contain /${feature.locale}/`, async () => {
+          const privacyLinks = marketoBlock.marketo.locator('a[href*="/privacy"]');
+          await privacyLinks.first().waitFor({ state: 'attached', timeout: 30000 });
+          const hrefs = await privacyLinks.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+          expect(hrefs.length, 'no privacy links rendered').toBeGreaterThan(0);
+          hrefs.forEach((href) => {
+            expect(href, `privacy link ${href} missing /${feature.locale}/`).toContain(`/${feature.locale}/`);
+          });
+        });
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Form-off tests: verify post-submission state is shown via ?form=off param
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'formOff').forEach((feature) => {

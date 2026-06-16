@@ -161,6 +161,15 @@ const features = [
     expectedProgramId: '99999',
     expectedSetBy: 'authored',
   },
+  {
+    tcid: '19',
+    name: '@marketo /ie/ locale privacy link',
+    path: ['/ie/acrobat/contact'],
+    tags: '@marketo @marketoPrivacyLocale @regression',
+    type: 'privacyLocale',
+    formType: 'essential',
+    locale: 'ie',
+  },
 ];
 
 export default features;
