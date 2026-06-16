@@ -164,11 +164,22 @@ const features = [
   {
     tcid: '19',
     name: '@marketo /ie/ locale privacy link',
-    path: ['/ie/acrobat/contact'],
+    path: ['/ie/drafts/nala/blocks/marketo/full'],
     tags: '@marketo @marketoPrivacyLocale @regression',
     type: 'privacyLocale',
-    formType: 'essential',
+    formType: 'full',
     locale: 'ie',
+    countryLabel: 'Ireland',
+  },
+  {
+    tcid: '20',
+    name: '@marketo /jp/ locale form translation',
+    path: ['/jp/drafts/nala/blocks/marketo/essential'],
+    tags: '@marketo @marketoLocaleTranslation @regression',
+    type: 'localeTranslation',
+    formType: 'essential',
+    locale: 'jp',
+    expectedSubmitText: '送信',
   },
 ];
 

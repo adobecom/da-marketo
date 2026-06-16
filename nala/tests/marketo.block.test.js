@@ -368,14 +368,42 @@ test.describe('Marketo block test suite', () => {
           await marketoBlock.navigateTo(testPage);
         });
 
-        await test.step(`step-2: Verify privacy link hrefs contain /${feature.locale}/`, async () => {
-          const privacyLinks = marketoBlock.marketo.locator('a[href*="/privacy"]');
+        await test.step(`step-2: Select country ${feature.countryLabel} to trigger privacy link render`, async () => {
+          await marketoBlock.country.selectOption({ label: feature.countryLabel });
+        });
+
+        await test.step(`step-3: Verify privacy link hrefs contain /${feature.locale}/`, async () => {
+          const privacyLinks = marketoBlock.marketo.locator(`a[href*="/${feature.locale}/privacy"]`);
           await privacyLinks.first().waitFor({ state: 'attached', timeout: 30000 });
           const hrefs = await privacyLinks.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
           expect(hrefs.length, 'no privacy links rendered').toBeGreaterThan(0);
           hrefs.forEach((href) => {
             expect(href, `privacy link ${href} missing /${feature.locale}/`).toContain(`/${feature.locale}/`);
           });
+        });
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Locale translation tests: verify form UI is translated for locale pages
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'localeTranslation').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }) => {
+        test.skip(
+          !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
+          'Locale translation test requires MARKETO_LIBS env var set to a non-main/stage branch',
+        );
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('step-1: Navigate to the locale page', async () => {
+          await marketoBlock.navigateTo(testPage);
+        });
+
+        await test.step(`step-2: Verify submit button text is "${feature.expectedSubmitText}"`, async () => {
+          await expect(marketoBlock.submitButton).toHaveText(feature.expectedSubmitText, { timeout: 10000 });
         });
       });
     });
