@@ -181,6 +181,14 @@ const features = [
     locale: 'jp',
     expectedSubmitText: '送信',
   },
+  {
+    tcid: '21',
+    name: '@marketo JP State dropdown preserves prefecture order (no alphabetical sort)',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoJpPrefectures @regression',
+    type: 'jpPrefectures',
+    formType: 'full',
+  },
 ];
 
 export default features;
