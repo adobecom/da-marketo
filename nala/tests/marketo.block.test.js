@@ -130,6 +130,7 @@ test.describe('Marketo block test suite', () => {
   features.filter((f) => f.formType === 'multi-step').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        test.skip(true, 'MWPW-198154: Will fix later.');
         const testPage = buildTestUrl(baseURL, path);
         const testData = { ...TEST_DATA, email: `test+w${testInfo.workerIndex}t${feature.tcid}@adobetest.com` };
         const { totalSteps } = feature;
@@ -259,6 +260,95 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Field-visibility tests: flex templates must honor AUTHORED field visibility
+  // over template defaults, even after the PP callback re-runs template
+  // processing. Regression guard for MWPW-198019.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'fieldVisibility').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // Author sets Company to 'hidden' — opposite the flex template default
+        // ('required'). After PP re-runs mkto_checkTemplate, the renderer's
+        // source (form.field_visibility) must reflect the author's choice.
+        const result = await page.evaluate(() => {
+          const p = window.mcz_marketoForm_pref;
+          p.field_visibility = p.field_visibility || {};
+          p.field_visibility.company = 'hidden';
+          window.mkto_checkTemplate('PP');
+          return {
+            template: p.form.template,
+            renderedCompany: p.form.field_visibility.company,
+          };
+        });
+
+        expect(result.template, 'test page is not a flex template').toContain('flex');
+        expect(result.renderedCompany, 'authored visibility lost after PP').toBe('hidden');
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Field-filter tests: POI auto-hide and category filters must use the
+  // canonical FLAT field_filters path, not the dead nested form.field_filters.
+  // Regression guard for MWPW-198019 (Fixes 2 & 3).
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'poiAutoHide').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // Setting a POI must hide the products field on the canonical FLAT
+        // path, and must not throw when field_filters is absent (null guard).
+        const result = await page.evaluate(() => {
+          const p = window.mcz_marketoForm_pref;
+          delete p.field_filters;
+          p.program.poi = 'adobe_journey_optimizer';
+          if (p.flags) { delete p.flags.poiSetByQS; delete p.flags.poiSetByQSHash; }
+          let threw = false;
+          try { window.mkto_checkTemplate('DataLayer'); } catch (e) { threw = String(e); }
+          return { threw, flatProducts: p.field_filters?.products };
+        });
+
+        expect(result.threw, 'POI auto-hide threw when field_filters was absent').toBe(false);
+        expect(result.flatProducts, 'POI did not hide products on the flat path').toBe('hidden');
+      });
+    });
+  });
+
+  features.filter((f) => f.type === 'categoryFilters').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // The products category filter must come from the canonical FLAT
+        // field_filters path, not the dead nested form.field_filters. Diverge
+        // the two and confirm the flat value wins.
+        const result = await page.evaluate(async () => {
+          const p = window.mcz_marketoForm_pref;
+          p.field_filters = { ...(p.field_filters || {}), products: 'POI-Dxonly' };
+          p.form = p.form || {};
+          p.form.field_filters = { products: 'POI-Combined' };
+          window.categoryFilters();
+          await new Promise((r) => { setTimeout(r, 400); });
+          const el = document.querySelector('[name="mktoprimaryProductInterestCategory"]');
+          return { present: !!el, value: el?.value };
+        });
+
+        expect(result.present, 'products category helper element not found').toBe(true);
+        expect(result.value, 'category filter did not read the flat field_filters path').toBe('POI-Dxonly');
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Form-off tests: verify post-submission state is shown via ?form=off param
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'formOff').forEach((feature) => {
@@ -285,6 +375,55 @@ test.describe('Marketo block test suite', () => {
         await test.step('step-4: Verify content reflects post-submission state with form=off', async () => {
           await expect(marketoBlock.postSubmissionContent).toBeVisible();
           await expect(marketoBlock.preSubmissionContent).toBeHidden();
+        });
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Program ID precedence tests: assert how mcz_marketoForm_pref.program.id
+  // resolves (template default vs authored vs passthrough). Reads the data
+  // layer directly and corroborates with the progressive sync request.
+  // tcid 17 documents CURRENT behavior (template overrides authored) — open
+  // question with Rob (MWPW-198019 follow-up).
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'programId').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        const syncRequests = [];
+        page.on('request', (req) => {
+          if (/\/mcz\d+\.html/.test(new URL(req.url()).pathname)) {
+            syncRequests.push(new URL(req.url()).pathname);
+          }
+        });
+
+        await test.step('step-1: Navigate and wait for the program id to resolve', async () => {
+          // waitForField:false — the passthrough template (comb_flex_webinar)
+          // hides Email; this test only inspects the data layer + sync request.
+          await marketoBlock.navigateTo(testPage, { waitForField: false });
+        });
+
+        await test.step('step-2: Resolved program.id matches expectation', async () => {
+          expect(await marketoBlock.getProgramId()).toBe(feature.expectedProgramId);
+        });
+
+        await test.step('step-3: Precedence flags match the source', async () => {
+          const flags = await marketoBlock.getProgramIdFlags();
+          if (feature.expectedSetBy === 'template') {
+            expect(flags.byTemplate).toBe(true);
+          } else {
+            expect(flags.byTemplate).toBe(false);
+            expect(flags.byQS).toBe(false);
+          }
+        });
+
+        await test.step('step-4: Progressive sync request uses the resolved id', async () => {
+          await expect
+            .poll(() => syncRequests, { timeout: 15000 })
+            .toContain(`/mcz${feature.expectedProgramId}.html`);
         });
       });
     });

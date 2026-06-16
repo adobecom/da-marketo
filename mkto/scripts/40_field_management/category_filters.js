@@ -1,12 +1,13 @@
 // ##
-// ## Updated 20250918T125252
+// ## Updated 20260612T075440
 // ##
 // ##
 // ##
-// ## 40_field_management/category_filters.js - Category Filters 20250918T125252
+// ## 40_field_management/category_filters.js - Category Filters 20260612T075440
 // ##
 // ##
 
+//# sourceURL=40_field_management/category_filters.js
 if (typeof window?.categoryFilters == "undefined") {
   mkf_c.log("Category Filters - Loaded");
   window.categoryFilters = function () {
@@ -33,8 +34,8 @@ if (typeof window?.categoryFilters == "undefined") {
 
         const updateCategoryFilter = (selector, property) => {
           const element = document.querySelector(selector);
-          const value = window?.mcz_marketoForm_pref?.form?.field_filters?.[property];
-          if (value && value !== "") {
+          const value = window?.mcz_marketoForm_pref?.field_filters?.[property];
+          if (element && value && value !== "") {
             dispatchChangeEvent(element, value);
           }
         };

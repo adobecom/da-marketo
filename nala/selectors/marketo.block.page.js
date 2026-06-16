@@ -70,7 +70,7 @@ export default class MarketoBlock {
     };
   }
 
-  async navigateTo(testPage) {
+  async navigateTo(testPage, { waitForField = true } = {}) {
     const marketoLibsBranch = new URL(testPage).searchParams.get('marketolibs');
     const expectedOrigin = expectedMarketoLibsOrigin(marketoLibsBranch);
 
@@ -91,12 +91,19 @@ export default class MarketoBlock {
     // Scroll the marketo block into view — on mobile the form is often below
     // the fold and won't render until it enters the viewport.
     await this.marketo.scrollIntoViewIfNeeded();
-    // Form is ready once the email input is visible AND accepting input.
-    // `toBeEnabled` guards against a brief window where MktoForms2 has
-    // painted but not yet wired event listeners.
-    await expect(this.email).toBeVisible({ timeout: 20000 });
-    await expect(this.email).toBeEnabled();
-    await expect(this.marketo).not.toHaveClass(/loading/, { timeout: 20000 });
+    if (waitForField) {
+      // Form is ready once the email input is visible AND accepting input.
+      // `toBeEnabled` guards against a brief window where MktoForms2 has
+      // painted but not yet wired event listeners.
+      await expect(this.email).toBeVisible({ timeout: 20000 });
+      await expect(this.email).toBeEnabled();
+      await expect(this.marketo).not.toHaveClass(/loading/, { timeout: 20000 });
+    } else {
+      // Some templates legitimately hide standard fields (e.g. known-visitor
+      // webinar forms hide Email). When the test only inspects the data layer,
+      // wait for the program id to resolve instead of a visible field.
+      await this.waitForProgramIdResolved();
+    }
 
     if (expectedOrigin) {
       expect(
@@ -121,6 +128,44 @@ export default class MarketoBlock {
       () => window.mcz_marketoForm_pref?.form?.template,
     );
     return template || 'unknown';
+  }
+
+  /**
+   * Waits until program.id is FINAL. An authored program.id is set at block
+   * init, then template processing may override it — so "non-empty" is not
+   * enough. form.status flips to 'ready' only after the last MCZ script runs
+   * (post template processing), at which point program.id will not change
+   * again (the PP pass does not re-derive it).
+   * @returns {Promise<void>}
+   */
+  async waitForProgramIdResolved() {
+    await this.page.waitForFunction(
+      () => window.mcz_marketoForm_pref?.form?.status === 'ready',
+      undefined,
+      { timeout: 20000 },
+    );
+  }
+
+  /**
+   * Returns the resolved Marketo program id as a string ('' if unset).
+   * @returns {Promise<string>}
+   */
+  async getProgramId() {
+    const id = await this.page.evaluate(
+      () => window.mcz_marketoForm_pref?.program?.id ?? '',
+    );
+    return String(id);
+  }
+
+  /**
+   * Returns the precedence flags the form sets while resolving program id.
+   * @returns {Promise<{ byTemplate: boolean, byQS: boolean }>}
+   */
+  async getProgramIdFlags() {
+    return this.page.evaluate(() => ({
+      byTemplate: window.mcz_marketoForm_pref?.flags?.programIdSetByTemplate === true,
+      byQS: window.mcz_marketoForm_pref?.flags?.programIdSetByQS === true,
+    }));
   }
 
   // ---------------------------------------------------------------------------

@@ -39,8 +39,8 @@ export default defineConfig({
     /* Per-action timeout */
     actionTimeout: 30000,
 
-    /* Base URL for the da-marketo project — override with env vars as needed */
-    baseURL: process.env.BASE_URL || 'https://main--da-bacom--adobecom.aem.live',
+    /* Base URL for the da-marketo project — override with BASE_URL env as needed */
+    baseURL: process.env.BASE_URL || 'https://main--da-marketo--adobecom.aem.live',
 
     /* Collect trace on first retry for debugging */
     trace: 'on-first-retry',
