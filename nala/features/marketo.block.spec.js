@@ -161,6 +161,26 @@ const features = [
     expectedProgramId: '99999',
     expectedSetBy: 'authored',
   },
+  {
+    tcid: '19',
+    name: '@marketo /ie/ locale privacy link',
+    path: ['/ie/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoPrivacyLocale @regression',
+    type: 'privacyLocale',
+    formType: 'full',
+    locale: 'ie',
+    countryLabel: 'Ireland',
+  },
+  {
+    tcid: '20',
+    name: '@marketo /jp/ locale form translation',
+    path: ['/jp/drafts/nala/blocks/marketo/essential'],
+    tags: '@marketo @marketoLocaleTranslation @regression',
+    type: 'localeTranslation',
+    formType: 'essential',
+    locale: 'jp',
+    expectedSubmitText: '送信',
+  },
 ];
 
 export default features;

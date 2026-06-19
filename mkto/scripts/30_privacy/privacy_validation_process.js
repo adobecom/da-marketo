@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20250929T200801
+// ## Updated 20260612T141917
 // ##
 // ##
 // ##
-// ## 30_privacy/privacy_validation_process.js - 20250929T200801
+// ## 30_privacy/privacy_validation_process.js - 20260612T141917
 // ##
 // ##
 
@@ -532,6 +532,13 @@ if (typeof window?.privacyValidation != "function") {
       return null;
     }
 
+    function check_url_path_locale() {
+      const pathSegment = window.location.pathname.split("/").filter(Boolean)[0];
+      if (!pathSegment) return null;
+      const knownRegionalSites = new Set(Object.values(adobeRegionalSite));
+      return knownRegionalSites.has(pathSegment) ? pathSegment : null;
+    }
+
     function check_browser_lang() {
       const sources = [
         window?.adobeid?.locale,
@@ -967,35 +974,38 @@ if (typeof window?.privacyValidation != "function") {
           tempPrivacyLinks[key] = matchingRulePrivacyLinks[key];
         }
 
-        let rSLChk = check_content_lang();
-        if (rSLChk == null || rSLChk == "") {
-          rSLChk = "en_us";
-        }
-        if (rSLChk.length < 3 || rSLChk.indexOf("_") < 0) {
-          rSLChk = rSLChk + "_" + rSLChk;
-        }
-        let localRegionalSite = adobeRegionalSite[rSLChk];
-        if (typeof localRegionalSite == "undefined" || localRegionalSite == null) {
-          localRegionalSite = "";
-        }
-        if (localRegionalSite == "") {
-          if (localRegionalSite.indexOf("en") != 0) {
-            let rSLChk = check_content_lang();
-            if (rSLChk == null || rSLChk == "") {
-              rSLChk = "en_us";
+        let localRegionalSite = check_url_path_locale();
+        if (localRegionalSite === null) {
+          let rSLChk = check_content_lang();
+          if (rSLChk == null || rSLChk == "") {
+            rSLChk = "en_us";
+          }
+          if (rSLChk.length < 3 || rSLChk.indexOf("_") < 0) {
+            rSLChk = rSLChk + "_" + rSLChk;
+          }
+          localRegionalSite = adobeRegionalSite[rSLChk];
+          if (typeof localRegionalSite == "undefined" || localRegionalSite == null) {
+            localRegionalSite = "";
+          }
+          if (localRegionalSite == "") {
+            if (localRegionalSite.indexOf("en") != 0) {
+              let rSLChkFallback = check_content_lang();
+              if (rSLChkFallback == null || rSLChkFallback == "") {
+                rSLChkFallback = "en_us";
+              }
+              rSLChkFallback = rSLChkFallback.substring(0, 2);
+              rSLChkFallback = rSLChkFallback.toLowerCase();
+              let keys = Object.keys(adobeRegionalSite);
+              let filteredKeys = keys.filter((key) => key.startsWith(rSLChkFallback));
+              if (filteredKeys.length > 0) {
+                logPrivacy(
+                  "Regional Site not found for [" + rSLChkFallback + "] using [" + filteredKeys[0] + "]"
+                );
+                localRegionalSite = adobeRegionalSite[filteredKeys[0]];
+              }
+            } else {
+              logPrivacy("Regional Site not found for [" + rSLChk + "]");
             }
-            rSLChk = rSLChk.substring(0, 2);
-            rSLChk = rSLChk.toLowerCase();
-            let keys = Object.keys(adobeRegionalSite);
-            let filteredKeys = keys.filter((key) => key.startsWith(rSLChk));
-            if (filteredKeys.length > 0) {
-              logPrivacy(
-                "Regional Site not found for [" + rSLChk + "] using [" + filteredKeys[0] + "]"
-              );
-              localRegionalSite = adobeRegionalSite[filteredKeys[0]];
-            }
-          } else {
-            logPrivacy("Regional Site not found for [" + rSLChk + "]");
           }
         }
         let base_site = "" + mcz_marketoForm_pref?.form?.baseSite;
@@ -1116,3 +1126,5 @@ if (typeof window?.privacyValidation != "function") {
 
 // ##
 // ##
+
+//# sourceURL=privacy_validation_process.js
