@@ -291,10 +291,42 @@ test.describe('Marketo block test suite', () => {
     });
   });
 
+  // Flex templates must also honor AUTHORED field filters over template
+  // defaults, mirroring field_visibility. Regression guard for the 2026-06-19
+  // preview follow-up (global.js flex branch was missing the field_filters merge).
+  features.filter((f) => f.type === 'fieldFiltersFlex').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // Author sets a products filter that differs from the flex template
+        // default. After PP re-runs mkto_checkTemplate, the renderer's source
+        // (form.field_filters) must reflect the author's choice, not the default.
+        const result = await page.evaluate(() => {
+          const p = window.mcz_marketoForm_pref;
+          p.field_filters = p.field_filters || {};
+          p.field_filters.products = 'POI-Authored';
+          window.mkto_checkTemplate('PP');
+          return {
+            template: p.form.template,
+            renderedProducts: p.form?.field_filters?.products,
+          };
+        });
+
+        expect(result.template, 'test page is not a flex template').toContain('flex');
+        expect(result.renderedProducts, 'authored filter lost after PP').toBe('POI-Authored');
+      });
+    });
+  });
+
   // -------------------------------------------------------------------------
-  // Field-filter tests: POI auto-hide and category filters must use the
-  // canonical FLAT field_filters path, not the dead nested form.field_filters.
-  // Regression guard for MWPW-198019 (Fixes 2 & 3).
+  // Field-filter tests: POI auto-hide and category filters read the canonical
+  // FLAT field_filters path when authored config exists (author wins), and
+  // fall back to the nested form.field_filters in Marketo preview, where no DA
+  // page config exists so the flat path is never populated. Regression guard
+  // for MWPW-198019 (Fixes 2 & 3) and the 2026-06-19 preview follow-up.
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'poiAutoHide').forEach((feature) => {
     feature.path.forEach((path) => {
@@ -328,9 +360,9 @@ test.describe('Marketo block test suite', () => {
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
 
-        // The products category filter must come from the canonical FLAT
-        // field_filters path, not the dead nested form.field_filters. Diverge
-        // the two and confirm the flat value wins.
+        // The products category filter prefers the canonical FLAT field_filters
+        // path when authored config exists. Diverge the flat and nested values
+        // and confirm the flat value wins (author-wins precedence).
         const result = await page.evaluate(async () => {
           const p = window.mcz_marketoForm_pref;
           p.field_filters = { ...(p.field_filters || {}), products: 'POI-Dxonly' };
@@ -344,6 +376,40 @@ test.describe('Marketo block test suite', () => {
 
         expect(result.present, 'products category helper element not found').toBe(true);
         expect(result.value, 'category filter did not read the flat field_filters path').toBe('POI-Dxonly');
+      });
+    });
+  });
+
+  features.filter((f) => f.type === 'categoryFiltersFallback').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // Simulate Marketo preview: no DA page config, so the flat field_filters
+        // path is absent and only the nested form.field_filters is populated.
+        // category_filters.js must fall back to the nested value.
+        const result = await page.evaluate(async () => {
+          const p = window.mcz_marketoForm_pref;
+          const sel = '[name="mktoprimaryProductInterestCategory"]';
+          // Nested-only sentinel must differ from the page's rendered default so
+          // a no-op (the pre-fix bug, which reads the now-absent flat path) is
+          // distinguishable from the fallback actually applying the value.
+          const NESTED_ONLY = 'POI-Dxonly';
+          const valBefore = document.querySelector(sel)?.value;
+          delete p.field_filters;
+          p.form = p.form || {};
+          p.form.field_filters = { products: NESTED_ONLY };
+          window.categoryFilters();
+          await new Promise((r) => { setTimeout(r, 400); });
+          return { valBefore, sentinel: NESTED_ONLY, value: document.querySelector(sel)?.value };
+        });
+
+        expect(result.valBefore, 'sentinel collides with page default — test would be a tautology')
+          .not.toBe(result.sentinel);
+        expect(result.value, 'category filter did not fall back to nested form.field_filters')
+          .toBe(result.sentinel);
       });
     });
   });

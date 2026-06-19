@@ -181,6 +181,22 @@ const features = [
     locale: 'jp',
     expectedSubmitText: '送信',
   },
+  {
+    tcid: '21',
+    name: '@marketo category filters fall back to nested form.field_filters (Marketo preview)',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFieldFilters @regression',
+    type: 'categoryFiltersFallback',
+    formType: 'full',
+  },
+  {
+    tcid: '22',
+    name: '@marketo flex template respects authored field filters',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFieldFilters @regression',
+    type: 'fieldFiltersFlex',
+    formType: 'full',
+  },
 ];
 
 export default features;
