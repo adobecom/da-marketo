@@ -1,9 +1,10 @@
 // ##
-// ## Updated 20251125T141902
+// ## Updated 20260619T203941
 // ##
 // ##
-// ##  90_build/global.js - 20251125T141902
+// ##  90_build/global.js - 20260619T203941
 // ##
+
 if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
   var adobeOrg = "";
   if (window?.imsOrgId) {
@@ -945,7 +946,7 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
       programIdSetBy = "DataLayer";
     }
 
-    if (templateTemp.indexOf("flex") > -1 && src === "DataLayer") {
+    if (templateTemp.indexOf("flex") > -1) {
       enforceRules = false;
       aTLg("\nThis is a Flex Template, rules will be relaxed.");
     }
@@ -1098,6 +1099,27 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
     //Template Processing Rules
     if (enforceRules === false) {
       aTLg(`\nTemplate Rules are not enforced from "${src}".`);
+      // Flex templates: author field visibility wins; the template default only
+      // fills fields the author left unset. (MWPW-198019)
+      if (rule.field_visibility) {
+        const authored = mczPrefs.field_visibility || {};
+        Object.keys(rule.field_visibility).forEach((key) => {
+          const templateDefault = rule.field_visibility[key][0].split(":")[0];
+          mczPrefs.form.field_visibility[key] =
+            authored[key] && authored[key] !== "" ? authored[key] : templateDefault;
+        });
+        aTLg("Flex: author field visibility applied; template defaults fill gaps.");
+      }
+ if (rule.field_filters) {
+        mczPrefs.form.field_filters = mczPrefs.form.field_filters || {};
+        const authored = mczPrefs.field_filters || {};
+        Object.keys(rule.field_filters).forEach((key) => {
+          const templateDefault = rule.field_filters[key][0].split(":")[0];
+          mczPrefs.form.field_filters[key] =
+            authored[key] && authored[key] !== "" ? authored[key] : templateDefault;
+        });
+        aTLg("Flex: author field filters applied; template defaults fill gaps.");
+      }
       aTLg("---");
     } else {
       aTLg(`\nTemplate Processing Rules Enforced from "${src}".`);
@@ -1215,12 +1237,9 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
       mczPrefs.program.poi = poi;
       aTLg(`POI: "${poi}", Set By: ${poiSetBy}.`);
 
-      if (
-        poiHide?.toLowerCase().trim() === "true" ||
-        mczPrefs?.flags?.poiSetByQSHash === true ||
-        mczPrefs?.flags?.poiSetByQS === true
-      ) {
-        mczPrefs.form.field_filters.products = "hidden";
+      if (!mczPrefs.field_filters?.products) {
+        mczPrefs.field_filters = mczPrefs.field_filters || {};
+        mczPrefs.field_filters.products = "hidden";
         aTLg(`POI Hide: "true", Products Hidden by POI. Set By: ${poiSetBy}.`);
       }
     }
@@ -1392,3 +1411,5 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
 
 // ##
 // ##
+
+//# sourceURL=global.js

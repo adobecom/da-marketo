@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20251124T120556
+// ## Updated 20260615T160532
 // ##
 // ##
 // ##
-// ## 20_template_manager/template_rules.js - 20251124T120556
+// ## 20_template_manager/template_rules.js - 20260615T160532
 // ##
 // ##
 if (typeof templateRules == "undefined") {
@@ -698,6 +698,36 @@ if (typeof templateRules == "undefined") {
         polling: true,
         autoSuccess: false,
         autoSuccessTimeFrameDays: 30,
+      },
+    },
+      {
+      dalp_flex_contact: {
+        formVersion: [templateVersion],
+        purpose: ["request_for_information:Request for Information (request_for_information)"],
+        formSuccessType: ["redirect:redirect (redirect)"],
+        field_visibility: {
+          name: ["required:Make Required (required)"],
+          phone: ["required:Make Required (required)"],
+          company: ["required:Make Required (required)"],
+          website: ["hidden:Hide Field (hidden)"],
+          state: ["required:Make Required (required)"],
+          postcode: ["required:Make Required (required)"],
+          company_size: ["hidden:Hide Field (hidden)"],
+          comments: ["hidden:Hide Field (hidden)"],
+          demo: ["hidden:Hide Field (hidden)"],
+        },
+        field_filters: {
+          functional_area: ["Functional Area-DALP:DALP Specific Options (Functional Area-DALP)"],
+          products: ["POI-DALP:DALP Products (POI-DALP)"],
+          industry: ["hidden:Hide Field (hidden)"],
+          job_role: ["DALP:DALP Specific Roles (DALP)"],
+        },
+        program_id: "92815",
+        auto_complete: AUTO_COMPLETE_FIELDS,
+        progressive: true,
+        known_visitor: true,
+        polling: true,
+        autoSuccess: false,
       },
     },
     {
