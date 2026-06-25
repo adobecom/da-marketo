@@ -68,6 +68,22 @@ export default class MarketoBlock {
       postalCode: this.postalCode,
       primaryProductInterest: this.primaryProductInterest,
     };
+
+    // Maps field_visibility keys to their input locators.
+    this.visibilityRowMap = {
+      name: [
+        this.marketo.locator('[name="FirstName"]'),
+        this.marketo.locator('[name="LastName"]'),
+      ],
+      phone: this.marketo.locator('[name="Phone"]'),
+      company: this.marketo.locator('[name="mktoFormsCompany"]'),
+      website: this.marketo.locator('[name="mktodemandbaseWebsite"]'),
+      state: this.marketo.locator('[name="State"]'),
+      postcode: this.marketo.locator('[name="PostalCode"]'),
+      company_size: this.marketo.locator('[name="mktoDemandbaseEmployeeRange"]'),
+      comments: this.marketo.locator('[name="mktoQuestionComments"]'),
+      demo: this.marketo.locator('[name="mktoRequestProductDemo"]'),
+    };
   }
 
   async navigateTo(testPage, { waitForField = true } = {}) {
@@ -141,6 +157,22 @@ export default class MarketoBlock {
   async waitForProgramIdResolved() {
     await this.page.waitForFunction(
       () => window.mcz_marketoForm_pref?.form?.status === 'ready',
+      undefined,
+      { timeout: 20000 },
+    );
+  }
+
+  /**
+   * Waits until templateManager has written field_visibility into the form
+   * data layer. Used by fieldVisibility tests before asserting DOM state.
+   * @returns {Promise<void>}
+   */
+  async waitForFieldVisibilityApplied() {
+    await this.page.waitForFunction(
+      () => {
+        const fv = window.mcz_marketoForm_pref?.form?.field_visibility;
+        return fv && Object.keys(fv).length > 0;
+      },
       undefined,
       { timeout: 20000 },
     );
@@ -383,6 +415,29 @@ export default class MarketoBlock {
    * evaluating the page to discover the template at runtime.
    * @param {'full'|'expanded'|'essential'} formType
    */
+  /**
+   * Asserts DOM field states match the authored field_visibility config.
+   * @param {Record<string, 'hidden'|'visible'|'required'>} expectedFields
+   */
+  async checkFieldVisibility(expectedFields) {
+    for (const [key, expected] of Object.entries(expectedFields)) {
+      const fields = [].concat(this.visibilityRowMap[key]);
+      for (const field of fields) {
+        if (expected === 'hidden') {
+          // Marketo removes the row from the DOM entirely when hidden
+          await expect(field, `${key} should be hidden (not in DOM)`).not.toBeAttached();
+        } else {
+          await expect(field, `${key} should be visible`).toBeVisible();
+          if (expected === 'required') {
+            await expect(field, `${key} should be required`).toHaveClass(/mktoRequired/);
+          } else {
+            await expect(field, `${key} should not be required`).not.toHaveClass(/mktoRequired/);
+          }
+        }
+      }
+    }
+  }
+
   getFormElements(formType) {
     const fieldNames = ['firstName', 'lastName', 'email', 'company', 'country'];
 

@@ -271,22 +271,39 @@ test.describe('Marketo block test suite', () => {
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
 
-        // Author sets Company to 'hidden' — opposite the flex template default
-        // ('required'). After PP re-runs mkto_checkTemplate, the renderer's
-        // source (form.field_visibility) must reflect the author's choice.
-        const result = await page.evaluate(() => {
-          const p = window.mcz_marketoForm_pref;
-          p.field_visibility = p.field_visibility || {};
-          p.field_visibility.company = 'hidden';
-          window.mkto_checkTemplate('PP');
-          return {
-            template: p.form.template,
-            renderedCompany: p.form.field_visibility.company,
-          };
-        });
+        if (feature.expectedFields) {
+          await test.step('step-1: wait for field_visibility to be applied by MCZ', async () => {
+            await marketoBlock.waitForFieldVisibilityApplied();
+          });
 
-        expect(result.template, 'test page is not a flex template').toContain('flex');
-        expect(result.renderedCompany, 'authored visibility lost after PP').toBe('hidden');
+          await test.step('step-2: data layer — authored field_visibility matches renderer', async () => {
+            const mismatches = await page.evaluate(() => {
+              const p = window.mcz_marketoForm_pref;
+              const authored = p.field_visibility || {};
+              const renderer = p.form?.field_visibility || {};
+              return Object.keys(authored).filter((k) => authored[k] !== renderer[k]);
+            });
+            expect(mismatches, `field_visibility mismatch on keys: ${mismatches.join(', ')}`).toHaveLength(0);
+          });
+
+          await test.step('step-3: DOM — field states match authored config', async () => {
+            await marketoBlock.checkFieldVisibility(feature.expectedFields);
+          });
+        } else {
+          const result = await page.evaluate(() => {
+            const p = window.mcz_marketoForm_pref;
+            p.field_visibility = p.field_visibility || {};
+            p.field_visibility.company = 'hidden';
+            window.mkto_checkTemplate('PP');
+            return {
+              template: p.form.template,
+              renderedCompany: p.form.field_visibility.company,
+            };
+          });
+
+          expect(result.template, 'test page is not a flex template').toContain('flex');
+          expect(result.renderedCompany, 'authored visibility lost after PP').toBe('hidden');
+        }
       });
     });
   });
