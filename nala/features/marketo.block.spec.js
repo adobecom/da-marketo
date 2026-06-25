@@ -183,6 +183,14 @@ const features = [
   },
   {
     tcid: '21',
+    name: '@marketo JP State dropdown preserves prefecture order (no alphabetical sort)',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoJpPrefectures @regression',
+    type: 'jpPrefectures',
+    formType: 'full',
+  },
+  {
+    tcid: '22',
     name: '@marketo field visibility — essential all-hidden',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/essential-all-hidden'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -200,7 +208,7 @@ const features = [
     },
   },
   {
-    tcid: '22',
+    tcid: '23',
     name: '@marketo field visibility — essential show-all',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/essential-show-all'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -218,7 +226,7 @@ const features = [
     },
   },
   {
-    tcid: '23',
+    tcid: '24',
     name: '@marketo field visibility — expanded all-hidden',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/expanded-all-hidden'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -236,7 +244,7 @@ const features = [
     },
   },
   {
-    tcid: '24',
+    tcid: '25',
     name: '@marketo field visibility — expanded show-all',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/expanded-show-all'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -254,7 +262,7 @@ const features = [
     },
   },
   {
-    tcid: '25',
+    tcid: '26',
     name: '@marketo field visibility — full all-hidden',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/full-all-hidden'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -272,7 +280,7 @@ const features = [
     },
   },
   {
-    tcid: '26',
+    tcid: '27',
     name: '@marketo field visibility — full show-all',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/full-show-all'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -290,7 +298,7 @@ const features = [
     },
   },
   {
-    tcid: '27',
+    tcid: '28',
     name: '@marketo field visibility — expanded dx mixed config',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/expanded-dx'],
     tags: '@marketo @marketoFieldVisibility @regression',
@@ -308,7 +316,7 @@ const features = [
     },
   },
   {
-    tcid: '28',
+    tcid: '29',
     name: '@marketo field visibility — full dme mixed config',
     path: ['/drafts/denli/blocks/marketo/field-pref-test/full-dme'],
     tags: '@marketo @marketoFieldVisibility @regression',

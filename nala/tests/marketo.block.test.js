@@ -459,6 +459,89 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
+  // JP prefecture order tests: translateDDlbls must skip alphabetical sort
+  // when Country = JP so Marketo's natural prefecture order is preserved.
+  // Uses page.evaluate() to inject JP translation data directly, bypassing
+  // the locale-specific script load that only happens on ja_JP forms.
+  // Regression guard for github.com/adobecom/mkto-frms/issues/18.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'jpPrefectures').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        // State is a conditional field not added to the DOM until a country with
+        // states/provinces is selected. Select US first to bring State into the
+        // DOM, then select JP via Playwright so the Country <select> truly
+        // reflects JP (option:checked = JP) when translateDDlbls re-runs.
+        // Programmatic JS assignment (select.value = 'JP') does not fire change
+        // events and has been observed to give stale option:checked results
+        // during MutationObserver callbacks.
+        await marketoBlock.country.selectOption({ value: 'US' });
+        await expect(marketoBlock.state).toBeVisible({ timeout: 10000 });
+        await marketoBlock.country.selectOption({ value: 'JP' });
+        await expect(marketoBlock.state).toBeVisible({ timeout: 10000 });
+
+        // Inject JP translation data and repopulate State with prefectures in the
+        // correct geographic order (Tokyo, Osaka, Aichi). Alphabetical sort by
+        // translated text (Unicode codepoint) would put Aichi (愛 U+611B) before
+        // Tokyo (東 U+6771), so Tokyo-first confirms the sort was skipped.
+        const result = await page.evaluate(() => new Promise((resolve) => {
+          const stateEl = document.querySelector('select[name="State"]');
+          const countryEl = document.querySelector('select[name="Country"]');
+          if (!stateEl || !countryEl) {
+            resolve({ error: 'Country or State select not found' });
+            return;
+          }
+
+          // Override translateState with a subset of real JP prefecture data.
+          window.translateState = {
+            東京都: '東京',
+            大阪府: '大阪',
+            愛知県: '愛知',
+          };
+
+          // Repopulate State with prefectures in correct geographic order.
+          // Country is already JP from the Playwright selectOption above; do not
+          // reassign countryEl.value here — it bypasses change events and leaves
+          // option:checked in stale state during the MutationObserver callback.
+          stateEl.innerHTML = '';
+          stateEl.appendChild(new Option('Select', '', true, true));
+          ['東京都', '大阪府', '愛知県'].forEach((val) => stateEl.appendChild(new Option(val, val)));
+
+          // Remove .translated so translateDDlbls will process State on next run.
+          stateEl.classList.remove('translated');
+
+          // Trigger the MutationObserver (cleaning_validation watches the form).
+          const mktoForm = document.querySelector('.mktoForm[id]');
+          if (mktoForm) {
+            const dummy = mktoForm.appendChild(document.createElement('span'));
+            setTimeout(() => mktoForm.removeChild(dummy), 50);
+          }
+
+          setTimeout(() => {
+            const opts = Array.from(stateEl.options)
+              .filter((o) => o.value !== '')
+              .map((o) => ({ value: o.value, text: o.text }));
+            resolve({ opts });
+          }, 400);
+        }));
+
+        expect(result.error, `Setup failed: ${result.error}`).toBeUndefined();
+        expect(result.opts.length, 'State should have 3 JP prefecture options').toBe(3);
+
+        // Tokyo (東京都 → 東京) must be first — the correct geographic order.
+        // If the sort ran, Aichi (愛 U+611B < 東 U+6771) would appear before Tokyo.
+        expect(result.opts[0].value, 'First option should be 東京都 (Tokyo)').toBe('東京都');
+        expect(result.opts[0].text, 'Tokyo option text should be translated to 東京').toBe('東京');
+        expect(result.opts[2].value, 'Third option should be 愛知県 (Aichi)').toBe('愛知県');
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Program ID precedence tests: assert how mcz_marketoForm_pref.program.id
   // resolves (template default vs authored vs passthrough). Reads the data
   // layer directly and corroborates with the progressive sync request.
