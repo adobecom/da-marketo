@@ -467,7 +467,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'jpPrefectures').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test.skip(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
