@@ -180,7 +180,7 @@ var translateState = {
   PE: "Du-Prince-Édouard",
   "Penghu County": "Comté de Penghu",
   Perugia: "Pérouse",
-  Pest: "La lutte antiparasitaire",
+  Pest: "Pest",
   "Pingtung County": "Comté de Pingtung",
   "Pinhal Interior N.": "Pinhal Intérieur N.",
   Pisa: "Pise",
