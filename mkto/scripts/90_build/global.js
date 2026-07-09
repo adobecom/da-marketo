@@ -1,8 +1,8 @@
 // ##
-// ## Updated 20260612T075440
+// ## Updated 20260619T203941
 // ##
 // ##
-// ##  90_build/global.js - 20260612T075440
+// ##  90_build/global.js - 20260619T203941
 // ##
 
 if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
@@ -1110,6 +1110,16 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
         });
         aTLg("Flex: author field visibility applied; template defaults fill gaps.");
       }
+ if (rule.field_filters) {
+        mczPrefs.form.field_filters = mczPrefs.form.field_filters || {};
+        const authored = mczPrefs.field_filters || {};
+        Object.keys(rule.field_filters).forEach((key) => {
+          const templateDefault = rule.field_filters[key][0].split(":")[0];
+          mczPrefs.form.field_filters[key] =
+            authored[key] && authored[key] !== "" ? authored[key] : templateDefault;
+        });
+        aTLg("Flex: author field filters applied; template defaults fill gaps.");
+      }
       aTLg("---");
     } else {
       aTLg(`\nTemplate Processing Rules Enforced from "${src}".`);
@@ -1402,4 +1412,4 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
 // ##
 // ##
 
-//# sourceURL=90_build/global.js
+//# sourceURL=global.js
