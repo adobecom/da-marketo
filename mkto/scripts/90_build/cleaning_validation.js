@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20251001T201149
+// ## Updated 20260615T104331
 // ##
 // ##
 // ##
-// ## 90_build/cleaning_validation.js - Cleaning and Validation 20251001T201149
+// ## 90_build/cleaning_validation.js - Cleaning and Validation 20260615T104331
 // ##
 
 var rendering_ready = false;
@@ -333,19 +333,19 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
           dropdownField.add(select_lbloption);
         }
 
-        optionsArray = optionsArray.concat(unsortedOptions);
+          optionsArray = optionsArray.concat(unsortedOptions);
 
-        optionsArray.sort((a, b) => {
-          let aText = a.text.toLowerCase();
-          let bText = b.text.toLowerCase();
-          if (aText < bText) {
-            return -1;
-          }
-          if (aText > bText) {
-            return 1;
-          }
-          return 0;
-        });
+          optionsArray.sort((a, b) => {
+            let aText = a.text.toLowerCase();
+            let bText = b.text.toLowerCase();
+            if (aText < bText) {
+              return -1;
+            }
+            if (aText > bText) {
+              return 1;
+            }
+            return 0;
+          });
 
         if (select_lbloption) {
           optionsArray.unshift(select_lbloption);
