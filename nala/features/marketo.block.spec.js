@@ -170,6 +170,7 @@ const features = [
     formType: 'full',
     locale: 'ie',
     countryLabel: 'Ireland',
+    sites: ['da-marketo'],
   },
   {
     tcid: '20',
@@ -180,6 +181,7 @@ const features = [
     formType: 'essential',
     locale: 'jp',
     expectedSubmitText: '送信',
+    sites: ['da-marketo'],
   },
   {
     tcid: '21',
