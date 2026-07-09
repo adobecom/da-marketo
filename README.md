@@ -38,21 +38,8 @@ npm run test:watch
 ### E2E Tests
 ```sh
 npm run test:nala           # headless
-npm run test:nala:headed    # headed
-npm run test:nala:bstack    # BrowserStack cross-browser
 ```
-
-To test against a local or branch build, set `MARKETO_LIBS` before the command:
-```sh
-MARKETO_LIBS=local npm run test:nala                    # localhost:6586
-MARKETO_LIBS=sync-forms npm run test:nala               # deployed branch
-MARKETO_LIBS=org--repo--branch npm run test:nala        # forked branch
-```
-
-To run a single test:
-```sh
-npx playwright test nala/tests/marketo.block.test.js --grep "Full template"
-```
+See [nala/README.md](nala/README.md) for test structure, env vars (`BASE_URL`, `MILO_LIBS`, `MARKETO_LIBS`), and more examples.
 
 ## Linting
 ```sh

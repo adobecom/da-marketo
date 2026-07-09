@@ -8,6 +8,13 @@ const miloLibs = process.env.MILO_LIBS || '';
 const cdnBranch = process.env.MARKETO_LIBS || '';
 const marketoLibs = cdnBranch ? `${miloLibs ? '&' : '?'}marketolibs=${cdnBranch}` : '';
 const buildTestUrl = (baseURL, path) => `${baseURL}${path}${miloLibs}${marketoLibs}`.toLowerCase();
+const currentSite = (() => {
+  const baseUrl = process.env.BASE_URL || 'https://main--da-marketo--adobecom.aem.live';
+  const [label] = new URL(baseUrl).hostname.split('.');
+  const parts = label.split('--');
+  return parts.length === 3 ? parts[1] : label;
+})();
+const isFeatureAllowedOnSite = (feature) => !feature.sites || feature.sites.includes(currentSite);
 
 test.describe('Marketo block test suite', () => {
   let marketoBlock;
@@ -374,6 +381,7 @@ test.describe('Marketo block test suite', () => {
   features.filter((f) => f.type === 'privacyLocale').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
         test.skip(
           !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
           'Privacy locale test requires MARKETO_LIBS env var set to a non-main/stage branch',
@@ -408,6 +416,7 @@ test.describe('Marketo block test suite', () => {
   features.filter((f) => f.type === 'localeTranslation').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
         test.skip(
           !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
           'Locale translation test requires MARKETO_LIBS env var set to a non-main/stage branch',

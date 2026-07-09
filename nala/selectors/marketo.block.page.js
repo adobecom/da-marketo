@@ -102,7 +102,8 @@ export default class MarketoBlock {
       });
     }
 
-    await this.page.goto(testPage, { waitUntil: 'domcontentloaded' });
+    const response = await this.page.goto(testPage, { waitUntil: 'domcontentloaded' });
+    expect(response?.status(), `test page returned ${response?.status()}: ${testPage}`).not.toBe(404);
     await expect(this.page).toHaveURL(testPage);
     // Scroll the marketo block into view — on mobile the form is often below
     // the fold and won't render until it enters the viewport.
