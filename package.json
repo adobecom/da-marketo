@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "description": "Website foundation technology.",
   "scripts": {
-    "test": "wtr \"./test/**/*.test.js\" --node-resolve --port=2000 --coverage",
+    "test": "wtr \"./test/mkto/libs.test.js\" \"./test/scripts/*.test.js\" --node-resolve --port=2000 --coverage && wtr \"./test/mkto/scripts/**/*.test.js\" --node-resolve --port=2000",
     "test:watch": "npm test -- --watch",
     "test:nala": "playwright test",
     "test:nala:headed": "playwright test --headed",

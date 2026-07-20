@@ -44,6 +44,20 @@ Run by tag (tags are embedded in the test title, e.g. `@smoke`, `@regression`):
 npx playwright test nala/tests/marketo.block.test.js --grep "@smoke"
 ```
 
+## Running full regression faster
+
+`playwright.config.js` sets `workers: 2` by default. Override it with `--workers=<n>` to run more tests in parallel — e.g. `--workers=6`.
+
+```sh
+npx playwright test --workers=6
+```
+
+Combine with `--project` to further cut scope when you don't need full cross-browser coverage (e.g. skip `webkit`/mobile-Safari):
+
+```sh
+MARKETO_LIBS=local npx playwright test --workers=6 --project=chromium --project=firefox --project=mobile-chrome-pixel7
+```
+
 ## Environment variables
 
 | Var | Purpose | Default |
@@ -56,12 +70,22 @@ npx playwright test nala/tests/marketo.block.test.js --grep "@smoke"
 
 Some tests (`cdnRouting`, `privacyLocale`, `localeTranslation`) are skipped unless `MARKETO_LIBS` is set to a non-`main`/`stage` branch — these validate PR-branch behavior against prod/stage baselines, which aren't yet patched.
 
+`MARKETO_LIBS=local` is unreliable on Safari/WebKit browsers that block mixed-content. Use a pushed branch for full cross-browser coverage.
+
+New test should call the `skipMixedContent(testInfo)` helper in `tests/marketo.block.test.js` before navigating.
+
 ### Examples
 
 Run against the default `da-marketo` test pages, no `?marketolibs` override:
 
 ```sh
 npm run test:nala
+```
+
+Run against the local `mkto/` scripts with `MARKETO_LIBS=local`:
+
+```sh
+MARKETO_LIBS=local npm run test:nala
 ```
 
 Test a `da-marketo` PR branch's block + `mkto/` scripts against `da-marketo`'s own pages:
@@ -105,6 +129,7 @@ The current site is derived from `BASE_URL`'s `<branch>--<repo>--<org>.aem.live`
 1. Add an entry to `features/marketo.block.spec.js` with a unique `tcid`, a descriptive `name`, the authored DA `path`, `tags`, and a `type` that matches (or introduces) a test group.
 2. If `type` is new, add a corresponding `features.filter((f) => f.type === '<type>')` block in `tests/marketo.block.test.js`.
 3. Add any new locators or helper methods to `selectors/marketo.block.page.js` rather than inlining selectors in the test.
+4. Call `skipMixedContent(testInfo)` at the top of the test body — every test in the suite calls it unconditionally, since any test can be run with `MARKETO_LIBS=local` (see [`MARKETO_LIBS=local` is unreliable on WebKit-family projects](#environment-variables) above).
 
 ## Notes
 

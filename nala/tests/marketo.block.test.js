@@ -16,11 +16,23 @@ const currentSite = (() => {
 })();
 const isFeatureAllowedOnSite = (feature) => !feature.sites || feature.sites.includes(currentSite);
 
+// WebKit blocks the mixed-content http://localhost fetch that ?marketolibs=local relies on, so the
+// page silently falls back to whatever script is already live instead of the local, not-yet-pushed
+// change under test. Any test asserting on local-only behavior should call this before navigating.
+const skipMixedContent = (testInfo) => {
+  test.skip(
+    cdnBranch === 'local' && /webkit|safari/i.test(testInfo.project.name),
+    'MARKETO_LIBS=local is unreliable on WebKit-family projects — push the branch and use '
+      + 'MARKETO_LIBS=<branch> for WebKit coverage (see nala/README.md).',
+  );
+};
+
 test.describe('Marketo block test suite', () => {
   let marketoBlock;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
     test.setTimeout(process.env.CI ? 1000 * 60 * 3 : 1000 * 60 * 2);
+    skipMixedContent(testInfo);
     marketoBlock = new MarketoBlock(page);
   });
 
@@ -219,7 +231,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'cdnRouting').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         // MARKETO_LIBS is set to the PR branch by nala.yml (github.head_ref); unset on scheduled runs.
         // 'main' and 'stage' map to http:// in da-bacom getMarketoLibs — skip those to avoid mixed-content failures.
         test.skip(
@@ -273,7 +285,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'fieldVisibility').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
@@ -322,7 +334,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'poiAutoHide').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
@@ -345,9 +357,41 @@ test.describe('Marketo block test suite', () => {
     });
   });
 
+  // -------------------------------------------------------------------------
+  // Regression guard for MWPW-200958: POI arriving via QS/hash must still
+  // force products to "hidden" even when an authored field_filters.products
+  // value is already present. The 07-09 flex-template guard
+  // (`if (!field_filters?.products)`) silently skipped this override because
+  // the authored value already occupied the field.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'poiAutoHideOverridesAuthored').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+        await marketoBlock.navigateTo(testPage);
+
+        const result = await page.evaluate(() => {
+          const p = window.mcz_marketoForm_pref;
+          p.program.poi = 'adobe_journey_optimizer';
+          p.field_filters = { products: 'POI-Combined' };
+          p.flags = p.flags || {};
+          p.flags.poiSetByQS = true;
+          window.mkto_checkTemplate('DataLayer');
+          return { flatProducts: p.field_filters?.products };
+        });
+
+        expect(
+          result.flatProducts,
+          'QS-driven POI did not override an already-authored products filter',
+        ).toBe('hidden');
+      });
+    });
+  });
+
   features.filter((f) => f.type === 'categoryFilters').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
@@ -380,7 +424,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'privacyLocale').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }, testInfo) => {
         test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
         test.skip(
           !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
@@ -415,7 +459,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'localeTranslation').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }, testInfo) => {
         test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
         test.skip(
           !cdnBranch || cdnBranch === 'main' || cdnBranch === 'stage',
@@ -440,7 +484,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'formOff').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
 
@@ -476,7 +520,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'jpPrefectures').forEach((feature) => {
     feature.path.forEach((path) => {
-      test.skip(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test.skip(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
         await marketoBlock.navigateTo(testPage);
@@ -559,7 +603,7 @@ test.describe('Marketo block test suite', () => {
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'programId').forEach((feature) => {
     feature.path.forEach((path) => {
-      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
 

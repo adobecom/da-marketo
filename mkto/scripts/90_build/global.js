@@ -1,8 +1,8 @@
 // ##
-// ## Updated 20260619T203941
+// ## Updated 20260720T183306
 // ##
 // ##
-// ##  90_build/global.js - 20260619T203941
+// ##  90_build/global.js - 20260720T183306
 // ##
 
 if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
@@ -1237,7 +1237,12 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
       mczPrefs.program.poi = poi;
       aTLg(`POI: "${poi}", Set By: ${poiSetBy}.`);
 
-      if (!mczPrefs.field_filters?.products) {
+      if (
+        poiHide?.toLowerCase().trim() === "true" ||
+        mczPrefs?.flags?.poiSetByQSHash === true ||
+        mczPrefs?.flags?.poiSetByQS === true ||
+        !mczPrefs.field_filters?.products
+      ) {
         mczPrefs.field_filters = mczPrefs.field_filters || {};
         mczPrefs.field_filters.products = "hidden";
         aTLg(`POI Hide: "true", Products Hidden by POI. Set By: ${poiSetBy}.`);
