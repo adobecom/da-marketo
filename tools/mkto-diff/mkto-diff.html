@@ -11,16 +11,32 @@
 <body>
   <div class="mkto-diff-page">
     <h1>Marketo form scripts diff</h1>
-    <p class="mkto-diff-hint">Compares extracted scripts between two forms. Use <code>?formA=</code> and <code>?formB=</code>. Identical scripts are collapsed by default. Changed diffs open at the <strong>top</strong> of the file; use <strong>Prev change</strong> / <strong>Next change</strong> to move between hunks.</p>
+    <p class="mkto-diff-hint">Compares extracted scripts between two sides, each either a Marketo form or a da-marketo codebase branch. Use <code>?formA=</code> and <code>?b=</code> — each is a numeric form ID or a branch name. Identical scripts are collapsed by default. Changed diffs open at the <strong>top</strong> of the file; use <strong>Prev change</strong> / <strong>Next change</strong> to move between hunks.</p>
 
     <div class="mkto-diff-toolbar">
-      <label class="mkto-diff-toolbar-label" for="mkto-diff-form-a">Form A</label>
-      <input type="text" id="mkto-diff-form-a" class="mkto-diff-input" list="mkto-diff-list-a" placeholder="ID, e.g. 2277" aria-label="Marketo form A">
-      <datalist id="mkto-diff-list-a"></datalist>
-      <button id="mkto-diff-flip" type="button" class="mkto-diff-flip-btn" aria-label="Swap Form A and Form B">&#8645;</button>
-      <label class="mkto-diff-toolbar-label" for="mkto-diff-form-b">Form B</label>
-      <input type="text" id="mkto-diff-form-b" class="mkto-diff-input" list="mkto-diff-list-b" placeholder="ID, e.g. 2277" aria-label="Marketo form B">
-      <datalist id="mkto-diff-list-b"></datalist>
+      <span class="mkto-diff-field">
+        <label class="mkto-diff-toolbar-label" for="mkto-diff-form-a">A</label>
+        <input type="text" id="mkto-diff-form-a" class="mkto-diff-input mkto-diff-input-branch" list="mkto-diff-list-a" placeholder="2277 or branch" aria-label="Marketo form or codebase branch A">
+        <datalist id="mkto-diff-list-a"></datalist>
+      </span>
+
+      <button id="mkto-diff-flip" type="button" class="mkto-diff-flip-btn" aria-label="Swap A and B">&#8645;</button>
+
+      <span class="mkto-diff-field">
+        <label class="mkto-diff-toolbar-label" for="mkto-diff-form-b">B</label>
+        <input type="text" id="mkto-diff-form-b" class="mkto-diff-input mkto-diff-input-branch" list="mkto-diff-list-b" placeholder="2277 or branch" aria-label="Marketo form or codebase branch B">
+        <datalist id="mkto-diff-list-b"></datalist>
+      </span>
+
+      <label class="mkto-diff-toggle">
+        <input type="checkbox" id="mkto-diff-ignore-structural" checked>
+        Ignore structural diffs
+      </label>
+
+      <label class="mkto-diff-toggle">
+        <input type="checkbox" id="mkto-diff-ignore-whitespace">
+        Ignore whitespace
+      </label>
     </div>
 
     <div id="mkto-diff-status" class="mkto-diff-status" hidden></div>

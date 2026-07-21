@@ -35,6 +35,12 @@ export function loadJsonp(url) {
   });
 }
 
+export async function fetchTextFile(url) {
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) return { ok: false, status: res.status, content: '' };
+  return { ok: true, status: res.status, content: await res.text() };
+}
+
 function flattenRows(arr, accum) {
   const out = accum || [];
   if (!arr) return out;

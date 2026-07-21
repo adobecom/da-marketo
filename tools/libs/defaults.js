@@ -24,6 +24,34 @@ export const MKTO_DEFAULTS = {
 
 export const DEFAULT_FORM_ID = 2277;
 
+export const KNOWN_SCRIPT_LOCALES = [
+  'cs', 'da', 'de', 'en', 'es_es', 'fi', 'fr_fr', 'it', 'ja_jp', 'ko',
+  'nl', 'no', 'pl', 'pt', 'ru', 'sv', 'tr', 'zh_cn', 'zh_tw',
+];
+
+export const CODEBASE_DEFAULTS = {
+  org: 'adobecom',
+  repo: 'da-marketo',
+  env: 'live',
+};
+
+export const BRANCH_OPTIONS = ['main', 'stage'];
+
+function slugifyBranch(branch) {
+  return String(branch || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function buildCodebaseFileUrl(branch, filePath, options = {}) {
+  const { org, repo, env } = { ...CODEBASE_DEFAULTS, ...options };
+  const slug = slugifyBranch(branch);
+  const path = String(filePath || '').replace(/^\/+/, '');
+  return `https://${slug}--${repo}--${org}.aem.${env}/mkto/${path}`;
+}
+
 export const FORM_OPTIONS = [
   { id: 1723, label: 'MCZ Staging — Stage testing' },
   { id: 2259, label: 'MCZ Short Form — Staging' },

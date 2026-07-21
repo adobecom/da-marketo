@@ -1,18 +1,23 @@
 /**
- * Compare Marketo form scripts between two form IDs.
- * Exposes window.mktoScriptsDiff after a successful compare.
- * Query: ?formA=<id>&formB=<id>
+ * Compare Marketo form scripts between a form ID and either another form ID or a
+ * da-marketo codebase branch. Exposes window.mktoScriptsDiff after a successful compare.
+ * Query: ?formA=<id>&b=<id-or-branch>
  */
 
 import {
   buildGetFormBaseUrl,
   extractFromFormData,
+  fetchTextFile,
   loadJsonp,
 } from '../libs/form-fetch.js';
 import {
+  BRANCH_OPTIONS,
+  buildCodebaseFileUrl,
   FORM_OPTIONS,
+  KNOWN_SCRIPT_LOCALES,
   MKTO_DEFAULTS,
 } from '../libs/defaults.js';
+import { listKnownScriptPaths } from '../libs/filename-mapping.js';
 import {
   lineCount,
   normalizeNewlines,
@@ -42,8 +47,46 @@ function scriptsToMap(scripts) {
   return m;
 }
 
+// Structural boilerplate that isn't meaningful code, e.g. CDATA wrapper comments.
+const STRUCTURAL_LINE_PATTERNS = [
+  /^\/\/\s*<!\[CDATA\[\s*$/,
+  /^\/\/\s*\]\]>\s*$/,
+  /^\s*const templateVersion = ".*";?\s*$/,
+];
+
+let ignoreStructural = true; // eslint-disable-line prefer-const -- set by the toolbar checkbox
+let ignoreWhitespace = false; // eslint-disable-line prefer-const -- set by the toolbar checkbox
+
+function stripIgnoredLines(text) {
+  const patterns = ignoreStructural ? [...STRUCTURAL_LINE_PATTERNS] : [];
+  return text
+    .split('\n')
+    .filter((line) => !patterns.some((re) => re.test(line)))
+    .join('\n')
+    .trim();
+}
+
 function normalizeForCompare(s) {
-  return normalizeNewlines(scriptDisplayText(s));
+  return stripIgnoredLines(normalizeNewlines(scriptDisplayText(s)));
+}
+
+function whitespaceKey(line) {
+  return line.replace(/\s+/g, '');
+}
+
+function getLineKey() {
+  return ignoreWhitespace ? whitespaceKey : undefined;
+}
+
+// A whitespace-only line differing purely in blank-line count (extra/missing blank
+// line) still changes the total line count, so lineKey alone can't align it away —
+// drop blank lines outright before diffing when whitespace is being ignored.
+function stripBlankLinesIfIgnoringWhitespace(text) {
+  if (!ignoreWhitespace) return text;
+  return text
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .join('\n');
 }
 
 function lineClassForUnified(line) {
@@ -55,29 +98,10 @@ function lineClassForUnified(line) {
   return '';
 }
 
-function renderPlainWithLineNumbers(text) {
+function renderLinesWithNumbers(text, { unified } = {}) {
   const lines = String(text).split('\n');
   const wrap = document.createElement('div');
-  wrap.className = 'mkto-diff-pre-lined';
-  for (let i = 0; i < lines.length; i += 1) {
-    const row = document.createElement('div');
-    row.className = 'mkto-diff-line-row';
-    const num = document.createElement('span');
-    num.className = 'mkto-diff-linenum';
-    num.textContent = String(i + 1);
-    const content = document.createElement('span');
-    content.className = 'mkto-diff-line-text';
-    content.textContent = lines[i];
-    row.append(num, content);
-    wrap.appendChild(row);
-  }
-  return wrap;
-}
-
-function renderUnifiedWithLineNumbers(diffText) {
-  const lines = String(diffText).split('\n');
-  const wrap = document.createElement('div');
-  wrap.className = 'mkto-diff-pre-lined mkto-diff-pre-unified';
+  wrap.className = unified ? 'mkto-diff-pre-lined mkto-diff-pre-unified' : 'mkto-diff-pre-lined';
   for (let i = 0; i < lines.length; i += 1) {
     const row = document.createElement('div');
     row.className = 'mkto-diff-line-row';
@@ -87,10 +111,9 @@ function renderUnifiedWithLineNumbers(diffText) {
     const content = document.createElement('span');
     content.className = 'mkto-diff-line-text';
     const line = lines[i];
-    const cls = lineClassForUnified(line);
-    const esc = escapeHtml(line);
+    const cls = unified ? lineClassForUnified(line) : '';
     if (cls) {
-      content.innerHTML = `<span class="${cls}">${esc}</span>`;
+      content.innerHTML = `<span class="${cls}">${escapeHtml(line)}</span>`;
     } else {
       content.textContent = line;
     }
@@ -216,24 +239,25 @@ function attachUnifiedDiffNavigator(wrapEl) {
   return bar;
 }
 
-function getFormIdFromInput(id) {
+function getRawInputValue(id) {
   const el = document.getElementById(id);
-  const val = (el && el.value ? el.value : '').trim();
-  return /^\d+$/.test(val) ? val : '';
+  return (el && el.value ? el.value : '').trim();
+}
+
+/** A numeric value is a form ID; anything else is treated as a branch name. */
+function classifyInput(raw) {
+  if (!raw) return { kind: 'none', value: '' };
+  return /^\d+$/.test(raw) ? { kind: 'form', value: raw } : { kind: 'branch', value: raw };
 }
 
 function parseFormPairFromUrl() {
   const sp = new URLSearchParams(window.location.search);
-  const rawA = sp.get('formA');
-  const rawB = sp.get('formB');
-  let a = null;
-  let b = null;
-  if (rawA && /^\d+$/.test(rawA)) a = parseInt(rawA, 10);
-  if (rawB && /^\d+$/.test(rawB)) b = parseInt(rawB, 10);
-  return { formA: a, formB: b };
+  const rawA = sp.get('formA') || '';
+  const rawB = sp.get('b') || '';
+  return { rawA, rawB };
 }
 
-function populateFormDatalist(datalistId) {
+function populateComboDatalist(datalistId) {
   const dl = document.getElementById(datalistId);
   if (!dl) return;
   dl.replaceChildren();
@@ -244,14 +268,26 @@ function populateFormDatalist(datalistId) {
     opt.textContent = `${o.id} — ${o.label}`;
     dl.appendChild(opt);
   }
+  for (let i = 0; i < BRANCH_OPTIONS.length; i += 1) {
+    const opt = document.createElement('option');
+    opt.value = BRANCH_OPTIONS[i];
+    dl.appendChild(opt);
+  }
 }
 
 function syncInputsToUrl() {
-  const { formA, formB } = parseFormPairFromUrl();
+  const { rawA, rawB } = parseFormPairFromUrl();
   const inA = document.getElementById('mkto-diff-form-a');
   const inB = document.getElementById('mkto-diff-form-b');
-  if (inA) inA.value = formA != null ? String(formA) : '';
-  if (inB) inB.value = formB != null ? String(formB) : '';
+  const structuralCheckbox = document.getElementById('mkto-diff-ignore-structural');
+  const whitespaceCheckbox = document.getElementById('mkto-diff-ignore-whitespace');
+  const sp = new URLSearchParams(window.location.search);
+  if (inA) inA.value = rawA;
+  if (inB) inB.value = rawB;
+  ignoreStructural = sp.get('ignoreStructural') !== '0';
+  ignoreWhitespace = sp.get('ignoreWhitespace') === '1';
+  if (structuralCheckbox) structuralCheckbox.checked = ignoreStructural;
+  if (whitespaceCheckbox) whitespaceCheckbox.checked = ignoreWhitespace;
 }
 
 function setStatus(el, message, isError) {
@@ -272,6 +308,24 @@ async function loadFormExtracted(formIdStr) {
   }
   const extracted = extractFromFormData(raw, { formId });
   return { formId: formIdStr, raw, extracted, error: null };
+}
+
+async function loadCodebaseExtracted(branch) {
+  const paths = listKnownScriptPaths(KNOWN_SCRIPT_LOCALES);
+  const scripts = [];
+  const results = await Promise.all(paths.map(async (p) => {
+    const url = buildCodebaseFileUrl(branch, p);
+    try {
+      const { ok, content } = await fetchTextFile(url);
+      return ok ? { filename: p, content } : null;
+    } catch {
+      return null;
+    }
+  }));
+  for (let i = 0; i < results.length; i += 1) {
+    if (results[i]) scripts.push(results[i]);
+  }
+  return { branch, extracted: { html: '', scripts }, error: null };
 }
 
 function aggregateChangedLineStats(results) {
@@ -308,6 +362,7 @@ function compareMaps(mapA, mapB, labelA, labelB) {
         status: 'onlyA',
         scriptA: a,
         scriptB: null,
+        normA: ca,
         lineStats: { lines: lineCount(ca) },
       });
     } else if (!a && b) {
@@ -318,6 +373,7 @@ function compareMaps(mapA, mapB, labelA, labelB) {
         status: 'onlyB',
         scriptA: null,
         scriptB: b,
+        normB: cb,
         lineStats: { lines: lineCount(cb) },
       });
     } else if (a && b) {
@@ -330,23 +386,39 @@ function compareMaps(mapA, mapB, labelA, labelB) {
           status: 'identical',
           scriptA: a,
           scriptB: b,
+          normA: ca,
           lineStats: { lines: lineCount(ca) },
         });
       } else {
-        changed += 1;
-        const { diffText, stats } = unifiedDiffWithStats(ca, cb, labelA, labelB);
-        results.push({
-          filename,
-          status: 'changed',
-          scriptA: a,
-          scriptB: b,
-          diffText,
-          lineStats: {
-            added: stats.added,
-            removed: stats.removed,
-            unchanged: stats.unchanged,
-          },
-        });
+        const opts = { lineKey: getLineKey() };
+        const da = stripBlankLinesIfIgnoringWhitespace(ca);
+        const db = stripBlankLinesIfIgnoringWhitespace(cb);
+        const { diffText, stats } = unifiedDiffWithStats(da, db, labelA, labelB, opts);
+        if (stats.added === 0 && stats.removed === 0) {
+          identical += 1;
+          results.push({
+            filename,
+            status: 'identical',
+            scriptA: a,
+            scriptB: b,
+            normA: ca,
+            lineStats: { lines: lineCount(ca) },
+          });
+        } else {
+          changed += 1;
+          results.push({
+            filename,
+            status: 'changed',
+            scriptA: a,
+            scriptB: b,
+            diffText,
+            lineStats: {
+              added: stats.added,
+              removed: stats.removed,
+              unchanged: stats.unchanged,
+            },
+          });
+        }
       }
     }
   }
@@ -363,14 +435,14 @@ function getFormLabel(id) {
   return opt ? opt.label : null;
 }
 
-function renderSummary(host, counts, aggregate, formIdA, formIdB) {
+function formDisplayName(id) {
+  const label = getFormLabel(id);
+  return label ? `${id} — ${label}` : String(id);
+}
+
+function renderSummary(host, counts, aggregate, nameA, nameB) {
   if (!host) return;
   host.replaceChildren();
-
-  const labelA = getFormLabel(formIdA);
-  const labelB = getFormLabel(formIdB);
-  const nameA = labelA ? `${formIdA} \u2014 ${labelA}` : String(formIdA);
-  const nameB = labelB ? `${formIdB} \u2014 ${labelB}` : String(formIdB);
 
   const comparing = document.createElement('p');
   comparing.className = 'mkto-diff-summary-comparing';
@@ -410,7 +482,16 @@ function formatChunkStats(r) {
   return '';
 }
 
-function renderDetails(host, comparison, formIdA, formIdB) {
+function badgeTextForStatus(status, nameA, nameB) {
+  switch (status) {
+    case 'identical': return '(identical)';
+    case 'onlyA': return `(only in A — ${nameA})`;
+    case 'onlyB': return `(only in B — ${nameB})`;
+    default: return '(changed)';
+  }
+}
+
+function renderDetails(host, comparison, nameA, nameB) {
   if (!host) return;
   host.replaceChildren();
 
@@ -418,11 +499,7 @@ function renderDetails(host, comparison, formIdA, formIdB) {
     const r = comparison.results[i];
     const badge = document.createElement('span');
     badge.className = 'mkto-diff-badge';
-    let badgeText = '(changed)';
-    if (r.status === 'identical') badgeText = '(identical)';
-    else if (r.status === 'onlyA') badgeText = `(only form A — ${formIdA})`;
-    else if (r.status === 'onlyB') badgeText = `(only form B — ${formIdB})`;
-    badge.textContent = badgeText;
+    badge.textContent = badgeTextForStatus(r.status, nameA, nameB);
 
     const statsText = formatChunkStats(r);
     let statsEl = null;
@@ -438,13 +515,13 @@ function renderDetails(host, comparison, formIdA, formIdB) {
 
     let bodyEl = null;
     if (r.status === 'identical') {
-      bodyEl = renderPlainWithLineNumbers(normalizeForCompare(r.scriptA));
+      bodyEl = renderLinesWithNumbers(r.normA);
     } else if (r.status === 'changed' && r.diffText) {
-      bodyEl = renderUnifiedWithLineNumbers(r.diffText);
+      bodyEl = renderLinesWithNumbers(r.diffText, { unified: true });
     } else if (r.status === 'onlyA' && r.scriptA) {
-      bodyEl = renderPlainWithLineNumbers(normalizeForCompare(r.scriptA));
+      bodyEl = renderLinesWithNumbers(r.normA);
     } else if (r.status === 'onlyB' && r.scriptB) {
-      bodyEl = renderPlainWithLineNumbers(normalizeForCompare(r.scriptB));
+      bodyEl = renderLinesWithNumbers(r.normB);
     }
 
     if (r.status === 'identical') {
@@ -495,43 +572,10 @@ function renderDetails(host, comparison, formIdA, formIdB) {
   }
 }
 
-async function loadCompare() {
-  const statusEl = document.getElementById('mkto-diff-status');
-  const summarySection = document.getElementById('mkto-diff-summary-section');
-  const summaryUl = document.getElementById('mkto-diff-summary');
-  const details = document.getElementById('mkto-diff-details');
-
-  const idAStr = getFormIdFromInput('mkto-diff-form-a');
-  const idBStr = getFormIdFromInput('mkto-diff-form-b');
-
-  if (!idAStr || !idBStr) {
-    setStatus(statusEl, 'Enter a numeric form ID for both Form A and Form B.', false);
-    if (details) details.textContent = '';
-    if (summarySection) summarySection.hidden = true;
-    window.mktoScriptsDiff = {
-      formA: idAStr || '',
-      formB: idBStr || '',
-      error: null,
-      rawA: null,
-      rawB: null,
-      extractedA: null,
-      extractedB: null,
-      byFilename: [],
-      aggregateLineDiff: null,
-    };
-    return;
-  }
-
-  const formIdA = parseInt(idAStr, 10);
-  const formIdB = parseInt(idBStr, 10);
-
-  setStatus(statusEl, 'Loading…', false);
-  if (details) details.textContent = '';
-  if (summarySection) summarySection.hidden = true;
-
-  window.mktoScriptsDiff = {
-    formA: idAStr,
-    formB: idBStr,
+function emptyDiffState(formA, b) {
+  return {
+    formA,
+    b,
     error: null,
     rawA: null,
     rawB: null,
@@ -540,20 +584,47 @@ async function loadCompare() {
     byFilename: [],
     aggregateLineDiff: null,
   };
+}
+
+async function loadCompare() {
+  const statusEl = document.getElementById('mkto-diff-status');
+  const summarySection = document.getElementById('mkto-diff-summary-section');
+  const summaryUl = document.getElementById('mkto-diff-summary');
+  const details = document.getElementById('mkto-diff-details');
+
+  const a = classifyInput(getRawInputValue('mkto-diff-form-a'));
+  const b = classifyInput(getRawInputValue('mkto-diff-form-b'));
+
+  if (a.kind === 'none' || b.kind === 'none') {
+    setStatus(statusEl, 'Enter a form ID or branch name for A, and a form ID or branch name for B.', false);
+    if (details) details.textContent = '';
+    if (summarySection) summarySection.hidden = true;
+    window.mktoScriptsDiff = emptyDiffState(a.value, b.value);
+    return;
+  }
+
+  const nameA = a.kind === 'form' ? formDisplayName(parseInt(a.value, 10)) : `codebase:${a.value}`;
+  const nameB = b.kind === 'form' ? formDisplayName(parseInt(b.value, 10)) : `codebase:${b.value}`;
+
+  setStatus(statusEl, 'Loading…', false);
+  if (details) details.textContent = '';
+  if (summarySection) summarySection.hidden = true;
+
+  window.mktoScriptsDiff = emptyDiffState(a.value, b.value);
 
   try {
     const [outA, outB] = await Promise.all([
-      loadFormExtracted(idAStr),
-      loadFormExtracted(idBStr),
+      a.kind === 'form' ? loadFormExtracted(a.value) : loadCodebaseExtracted(a.value),
+      b.kind === 'form' ? loadFormExtracted(b.value) : loadCodebaseExtracted(b.value),
     ]);
 
-    window.mktoScriptsDiff.rawA = outA.raw;
-    window.mktoScriptsDiff.rawB = outB.raw;
+    window.mktoScriptsDiff.rawA = outA.raw || null;
+    window.mktoScriptsDiff.rawB = outB.raw || null;
 
     if (outA.error || outB.error) {
       const parts = [];
-      if (outA.error) parts.push(`Form A: ${outA.error}`);
-      if (outB.error) parts.push(`Form B: ${outB.error}`);
+      if (outA.error) parts.push(`${a.kind === 'form' ? 'Form A' : 'Codebase'}: ${outA.error}`);
+      if (outB.error) parts.push(`${b.kind === 'form' ? 'Form B' : 'Codebase'}: ${outB.error}`);
       setStatus(statusEl, parts.join(' · '), true);
       window.mktoScriptsDiff.error = parts.join(' · ');
       window.mktoScriptsDiff.extractedA = outA.extracted;
@@ -563,8 +634,8 @@ async function loadCompare() {
 
     const mapA = scriptsToMap(outA.extracted.scripts);
     const mapB = scriptsToMap(outB.extracted.scripts);
-    const labelA = `form-${formIdA}`;
-    const labelB = `form-${formIdB}`;
+    const labelA = a.kind === 'form' ? `form-${a.value}` : `codebase-${a.value}`;
+    const labelB = b.kind === 'form' ? `form-${b.value}` : `codebase-${b.value}`;
     const comparison = compareMaps(mapA, mapB, labelA, labelB);
 
     window.mktoScriptsDiff.extractedA = outA.extracted;
@@ -574,8 +645,8 @@ async function loadCompare() {
 
     setStatus(statusEl, 'Done. Data is on window.mktoScriptsDiff', false);
     if (summarySection) summarySection.hidden = false;
-    renderSummary(summaryUl, comparison.counts, comparison.aggregate, formIdA, formIdB);
-    renderDetails(details, comparison, formIdA, formIdB);
+    renderSummary(summaryUl, comparison.counts, comparison.aggregate, nameA, nameB);
+    renderDetails(details, comparison, nameA, nameB);
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
     setStatus(statusEl, msg, true);
@@ -585,15 +656,22 @@ async function loadCompare() {
 
 function onInputChange() {
   const inA = document.getElementById('mkto-diff-form-a');
-  const inB = document.getElementById('mkto-diff-form-b');
-  if (!inA || !inB) return;
+  if (!inA) return;
   const u = new URL(window.location.href);
-  const idA = getFormIdFromInput('mkto-diff-form-a');
-  const idB = getFormIdFromInput('mkto-diff-form-b');
-  if (idA) u.searchParams.set('formA', idA);
+  const rawA = getRawInputValue('mkto-diff-form-a');
+  const rawB = getRawInputValue('mkto-diff-form-b');
+  const structuralCheckbox = document.getElementById('mkto-diff-ignore-structural');
+  const whitespaceCheckbox = document.getElementById('mkto-diff-ignore-whitespace');
+  if (rawA) u.searchParams.set('formA', rawA);
   else u.searchParams.delete('formA');
-  if (idB) u.searchParams.set('formB', idB);
-  else u.searchParams.delete('formB');
+  if (rawB) u.searchParams.set('b', rawB);
+  else u.searchParams.delete('b');
+  ignoreStructural = !structuralCheckbox || structuralCheckbox.checked;
+  ignoreWhitespace = !!whitespaceCheckbox && whitespaceCheckbox.checked;
+  if (ignoreStructural) u.searchParams.delete('ignoreStructural');
+  else u.searchParams.set('ignoreStructural', '0');
+  if (ignoreWhitespace) u.searchParams.set('ignoreWhitespace', '1');
+  else u.searchParams.delete('ignoreWhitespace');
   window.history.replaceState(null, '', u.toString());
   loadCompare();
 }
@@ -609,15 +687,19 @@ function flipForms() {
 }
 
 function init() {
-  populateFormDatalist('mkto-diff-list-a');
-  populateFormDatalist('mkto-diff-list-b');
+  populateComboDatalist('mkto-diff-list-a');
+  populateComboDatalist('mkto-diff-list-b');
   syncInputsToUrl();
   const inA = document.getElementById('mkto-diff-form-a');
   const inB = document.getElementById('mkto-diff-form-b');
   const flipBtn = document.getElementById('mkto-diff-flip');
+  const structuralCheckbox = document.getElementById('mkto-diff-ignore-structural');
+  const whitespaceCheckbox = document.getElementById('mkto-diff-ignore-whitespace');
   if (inA) inA.addEventListener('change', onInputChange);
   if (inB) inB.addEventListener('change', onInputChange);
   if (flipBtn) flipBtn.addEventListener('click', flipForms);
+  if (structuralCheckbox) structuralCheckbox.addEventListener('change', onInputChange);
+  if (whitespaceCheckbox) whitespaceCheckbox.addEventListener('change', onInputChange);
   loadCompare();
 }
 

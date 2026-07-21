@@ -52,6 +52,19 @@ const BASENAME_TO_FOLDER = {
   'progressive_controller.js': 'scripts/98_progressive',
 };
 
+export function listKnownScriptPaths(locales = []) {
+  const paths = new Set();
+  Object.keys(BASENAME_TO_FOLDER).forEach((basename) => {
+    if (basename === 'state_translate.js') return; // expanded per-locale below
+    paths.add(`${BASENAME_TO_FOLDER[basename]}/${basename}`);
+  });
+  const translationsFolder = BASENAME_TO_FOLDER['state_translate.js'];
+  locales.forEach((locale) => {
+    paths.add(`${translationsFolder}/state_translate-${locale}.js`);
+  });
+  return [...paths].sort();
+}
+
 function shortHash(str) {
   let h = 5381;
   const s = String(str);
@@ -124,7 +137,11 @@ function applyLayout(rawPath) {
 
 export default function resolveScriptFilename(content, src, position, usedPaths, formId = null) {
   if (src) {
-    return { filename: `marketo-script-external-${shortHash(src)}.js` };
+    const logicalPath = `marketo-script-external-${shortHash(src)}.js`;
+    const n = (usedPaths.get(logicalPath) || 0) + 1;
+    usedPaths.set(logicalPath, n);
+    const filename = n === 1 ? logicalPath : logicalPath.replace(/\.js$/i, `-${n}.js`);
+    return { filename, sourcePath: logicalPath };
   }
   const trimmed = String(content || '').trim();
   if (!trimmed) {

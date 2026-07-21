@@ -8,12 +8,21 @@ export function splitLines(str) {
   return n.split('\n');
 }
 
+function defaultLineKey(line) {
+  return line;
+}
+
 /**
+ * Comparison keys are computed once per line (O(n+m)), not per DP cell (O(n*m)),
+ * so an expensive lineKey (e.g. stripping whitespace) doesn't blow up runtime.
  * @param {string[]} oldLines
  * @param {string[]} newLines
+ * @param {(line: string) => string} lineKey
  * @returns {{ type: 'same'|'del'|'add', line: string }[]}
  */
-function buildEditScript(oldLines, newLines) {
+function buildEditScript(oldLines, newLines, lineKey) {
+  const oldKeys = oldLines.map(lineKey);
+  const newKeys = newLines.map(lineKey);
   const m = oldLines.length;
   const n = newLines.length;
   const dp = new Array(m + 1);
@@ -24,7 +33,7 @@ function buildEditScript(oldLines, newLines) {
   for (let j = 0; j <= n; j += 1) dp[0][j] = 0;
   for (let i = 1; i <= m; i += 1) {
     for (let j = 1; j <= n; j += 1) {
-      if (oldLines[i - 1] === newLines[j - 1]) {
+      if (oldKeys[i - 1] === newKeys[j - 1]) {
         dp[i][j] = dp[i - 1][j - 1] + 1;
       } else {
         dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
@@ -35,7 +44,7 @@ function buildEditScript(oldLines, newLines) {
   let i = m;
   let j = n;
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
+    if (i > 0 && j > 0 && oldKeys[i - 1] === newKeys[j - 1]) {
       ops.push({ type: 'same', line: oldLines[i - 1] });
       i -= 1;
       j -= 1;
@@ -56,12 +65,14 @@ function buildEditScript(oldLines, newLines) {
  * @param {string} b
  * @param {string} labelA
  * @param {string} labelB
+ * @param {{ lineKey?: (line: string) => string }} [options]
  * @returns {{ diffText: string, stats: { added: number, removed: number, unchanged: number } }}
  */
-export function unifiedDiffWithStats(a, b, labelA, labelB) {
+export function unifiedDiffWithStats(a, b, labelA, labelB, options = {}) {
+  const lineKey = options.lineKey || defaultLineKey;
   const oldLines = splitLines(a);
   const newLines = splitLines(b);
-  const ops = buildEditScript(oldLines, newLines);
+  const ops = buildEditScript(oldLines, newLines, lineKey);
   let added = 0;
   let removed = 0;
   let unchanged = 0;
