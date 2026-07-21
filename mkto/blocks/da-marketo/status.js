@@ -1,6 +1,6 @@
 import { LIBS } from '../../constants.js';
 
-const { createTag, loadStyle, getMetadata } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, loadStyle } = await import(`${LIBS}/utils/utils.js`);
 
 const BLOCK_BASE = new URL('../../', import.meta.url).href;
 
@@ -12,8 +12,8 @@ function createWidget(el, formID) {
   if (el.classList.contains('multi-step')) {
     multiStep = el.classList.contains('multi-3') ? '3-step' : '2-step';
   }
-  const searchParams = new URLSearchParams(window.location.search);
-  const marketoLibs = searchParams.get('marketolibs') || getMetadata('marketo-libs');
+  const { hostname } = new URL(BLOCK_BASE);
+  const marketoLibs = hostname === 'localhost' ? 'local' : hostname.split('--')[0];
   const widget = createTag('div', { class: 'marketo-info-widget' });
   widget.innerHTML = `
     <span class="miw-badge"><span class="miw-icon"></span>Marketo</span>
@@ -24,7 +24,7 @@ function createWidget(el, formID) {
       <p>Multi-step: <span>${multiStep || '(not set)'}</span></p>
       <p>Success type: <span>${successType || '(not set)'}</span></p>
       <p>Success content: <span>${successContent || '(not set)'}</span></p>
-      <p>marketolibs: <span>${marketoLibs || '(not set)'}</span></p>
+      <p>Marketo libs: <span>${marketoLibs || '(not set)'}</span></p>
     </div>
   `;
 
