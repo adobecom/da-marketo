@@ -346,6 +346,7 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
             }
             return 0;
           });
+        
 
         if (select_lbloption) {
           optionsArray.unshift(select_lbloption);
