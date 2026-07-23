@@ -268,7 +268,7 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         nurture: "submit", // Nurturing Leads
         whitepaper_form: "submit", // Whitepaper Download
         webinar: "register",
-        strategy_webinar: "register", // Strategy Webinar.
+        strategy_webinar: "submit", // Strategy Webinar.
         demo: "submit",
         trial_download: "download", // Trial Download
         trial: "download", // Trial Download
@@ -281,7 +281,7 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         content_evaluate: "submit", // Nurturing Leads
         flex_contact: "submit", //Request for Information
         flex_content: "submit", //Whitepaper Download
-        flex_event: "register", //Strategy Webinar
+        flex_event: "submit", //Strategy Webinar
         email: "join", // Subscriptions
       },
       templateVersions: {
