@@ -1,0 +1,207 @@
+description = "da-marketo search quality evaluation"
+
+# --- identifier queries ---
+
+[[queries]]
+id = "ident-1"
+query = "bindCompanyAutocomplete"
+class = "identifier"
+
+[judgments.ident-1]
+"mkto/scripts/60_enrichment/demandbase_processing.js" = 3
+"mkto/scripts/60_enrichment/demandbase_config.js" = 1
+
+[[queries]]
+id = "ident-2"
+query = "decorateForm"
+class = "identifier"
+
+[judgments.ident-2]
+"mkto/blocks/da-marketo/da-marketo.js" = 3
+
+[[queries]]
+id = "ident-3"
+query = "updateFieldPreferences"
+class = "identifier"
+
+[judgments.ident-3]
+"mkto/scripts/40_field_management/field_preferences.js" = 3
+
+[[queries]]
+id = "ident-4"
+query = "refreshCategoryFilters"
+class = "identifier"
+
+[judgments.ident-4]
+"mkto/scripts/40_field_management/category_filters.js" = 3
+
+[[queries]]
+id = "ident-5"
+query = "getMarketoLibs"
+class = "identifier"
+
+[judgments.ident-5]
+"scripts/scripts.js" = 3
+"mkto/libs.js" = 1
+
+[[queries]]
+id = "ident-6"
+query = "createDataBlock"
+class = "identifier"
+
+[judgments.ident-6]
+"mkto/blocks/da-marketo-config/da-marketo-config.js" = 3
+
+[[queries]]
+id = "ident-7"
+query = "translateDDlbls"
+class = "identifier"
+
+[judgments.ident-7]
+"mkto/scripts/90_build/cleaning_validation.js" = 3
+
+[[queries]]
+id = "ident-8"
+query = "mergeDataLayer"
+class = "identifier"
+
+[judgments.ident-8]
+"mkto/scripts/98_progressive/progressive_controller.js" = 3
+
+[[queries]]
+id = "ident-9"
+query = "marketoFormSetup"
+class = "identifier"
+
+[judgments.ident-9]
+"mkto/scripts/90_build/marketo_form_setup_process.js" = 3
+
+[[queries]]
+id = "ident-10"
+query = "decorateArea"
+class = "identifier"
+
+[judgments.ident-10]
+"scripts/scripts.js" = 3
+
+# --- natural language queries ---
+
+[[queries]]
+id = "nl-1"
+query = "how does the block decide which environment or branch to load marketo scripts from"
+class = "natural_language"
+
+[judgments.nl-1]
+"scripts/scripts.js" = 3
+"mkto/blocks/da-marketo/da-marketo.js" = 2
+"mkto/libs.js" = 2
+
+[[queries]]
+id = "nl-2"
+query = "how does the config UI let form authors set field preferences"
+class = "natural_language"
+
+[judgments.nl-2]
+"mkto/blocks/da-marketo-config/da-marketo-config.js" = 3
+"mkto/scripts/40_field_management/field_preferences.js" = 2
+"mkto/blocks/da-marketo-config/step-panel.js" = 1
+
+[[queries]]
+id = "nl-3"
+query = "how is form privacy consent locale determined"
+class = "natural_language"
+
+[judgments.nl-3]
+"mkto/scripts/30_privacy/privacy_validation_process.js" = 3
+"mkto/scripts/30_privacy/privacy_validation_rules.js" = 2
+
+[[queries]]
+id = "nl-4"
+query = "how does progressive profiling hide fields already known about the visitor"
+class = "natural_language"
+
+[judgments.nl-4]
+"mkto/scripts/98_progressive/progressive_controller.js" = 3
+
+[[queries]]
+id = "nl-5"
+query = "how does demandbase company autocomplete enrichment work"
+class = "natural_language"
+
+[judgments.nl-5]
+"mkto/scripts/60_enrichment/demandbase_processing.js" = 3
+"mkto/scripts/60_enrichment/demandbase_config.js" = 2
+
+[[queries]]
+id = "nl-6"
+query = "how does the block translate DA authored content into the mkto script pipeline state"
+class = "natural_language"
+
+[judgments.nl-6]
+"mkto/blocks/da-marketo/da-marketo.js" = 3
+"mkto/libs.js" = 2
+
+[[queries]]
+id = "nl-7"
+query = "central state object shared across marketo script modules"
+class = "natural_language"
+
+[judgments.nl-7]
+"mkto/README.md" = 3
+"mkto/scripts/40_field_management/field_preferences.js" = 1
+
+# --- filtered queries ---
+
+[[queries]]
+id = "filt-1"
+query = "field_preferences"
+class = "filtered"
+paths = ["mkto/scripts/40_field_management"]
+extensions = ["js"]
+
+[judgments.filt-1]
+"mkto/scripts/40_field_management/field_preferences.js" = 3
+"mkto/scripts/40_field_management/category_filters.js" = 1
+
+[[queries]]
+id = "filt-2"
+query = "demandbase"
+class = "filtered"
+paths = ["mkto/scripts/60_enrichment"]
+
+[judgments.filt-2]
+"mkto/scripts/60_enrichment/demandbase_processing.js" = 3
+"mkto/scripts/60_enrichment/demandbase_config.js" = 2
+
+[[queries]]
+id = "filt-3"
+query = "privacy"
+class = "filtered"
+paths = ["mkto/scripts/30_privacy"]
+
+[judgments.filt-3]
+"mkto/scripts/30_privacy/privacy_validation_process.js" = 3
+"mkto/scripts/30_privacy/privacy_validation_rules.js" = 2
+
+[[queries]]
+id = "filt-4"
+query = "config"
+class = "filtered"
+paths = ["mkto/blocks/da-marketo-config"]
+extensions = ["js"]
+
+[judgments.filt-4]
+"mkto/blocks/da-marketo-config/da-marketo-config.js" = 3
+"mkto/blocks/da-marketo-config/step-panel.js" = 1
+"mkto/blocks/da-marketo-config/context.js" = 1
+
+[[queries]]
+id = "filt-5"
+query = "translate"
+class = "filtered"
+paths = ["mkto/scripts/80_translations"]
+extensions = ["js"]
+
+[judgments.filt-5]
+"mkto/scripts/80_translations/general_translations.js" = 2
+"mkto/scripts/80_translations/state_translate-ja_jp.js" = 1
