@@ -335,6 +335,14 @@ const features = [
       demo: 'hidden',
     },
   },
+  {
+    tcid: '30',
+    name: '@marketo POI from QS/hash must override an already-authored products filter',
+    path: ['/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoFieldFilters @regression',
+    type: 'poiAutoHideOverridesAuthored',
+    formType: 'full',
+  },
 ];
 
 export default features;

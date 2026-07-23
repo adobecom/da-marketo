@@ -68,6 +68,21 @@ This repo has two purposes:
 
 2. **`mkto/`** — An EDS-agnostic Marketo script pipeline (migrated from `mkto-frms`). These scripts know nothing about EDS or DA — the block translates DA content into the state they need to run against the Marketo Forms2 API.
 
+### Editing `mkto/scripts/` files
+
+Each file carries a header timestamp comment (`// ## Updated <YYYYMMDDTHHMMSS>` / `// ##  <path> - <YYYYMMDDTHHMMSS>`) and a `//# sourceURL=<filename>` at the end. When updating any `mkto/scripts/` file:
+
+- Update the timestamp comment at the top to the current UTC time in `YYYYMMDDTHHMMSS` format.
+- Ensure the `//# sourceURL=<filename>` line is still present at the end of the file.
+
+### Development and testing cadence for `mkto/scripts`
+
+1. Optionally write a unit test first, if expedient.
+2. Develop the feature.
+3. Test locally with `?marketolibs=local` (nala + manual verification).
+4. Check the diff, commit, and push the branch.
+5. Test again with `?marketolibs=<branch>` against the pushed branch.
+
 ## Architecture
 
 See `ARCHITECTURE.md` for the full loading chain, phase descriptions, and environment matrix. Summary:
@@ -113,6 +128,16 @@ Each block is a directory under `blocks/` with at least `<name>.js` and `<name>.
 ### Test structure
 
 **Unit tests** (`test/`) use `@web/test-runner` + Chai. The runner config (`web-test-runner.config.js`) blocks all external network requests, so tests must mock any external dependencies.
+
+**Unit testing `mkto/scripts/` files**: these are plain classic scripts (no `import`/`export`), loaded at runtime via `<script src>` injection in production, not ES modules — they attach everything to `window`/global scope with idempotency guards (`if (typeof window.X == "undefined")`) and rely on load order. Don't `import` them like `test/mkto/libs.test.js` does for `mkto/libs.js` (a real ES module) — top-level `var`/function declarations won't land on `window` the same way. Instead:
+
+1. Load the real source files as classic `<script>` tags via a small helper (`createElement('script')` + `src` + await `onload`), mirroring production's `loadScript` behavior.
+2. Provide only the dependency scripts the target code path actually touches, plus the minimum DOM/state needed to avoid early-return guards. For example, `mkto_checkTemplate` in `90_build/global.js` needs: a stub `<form class="mktoForm">` in the DOM (touched directly by `90_build/marketo_form_setup_process.js`), `00_config/marketo_form_setup_rules.js` (defines `mkf_c`), `90_build/marketo_form_setup_process.js` (defines `mktoFrmParams`), and `20_template_manager/template_rules.js` (defines `window.templateRules` — required because the function bails out early unless `mczPrefs.form.template` matches a real template with a `program_id` key).
+3. Set up `window.mcz_marketoForm_pref` with just enough shape to pass those guards, call the real global function (e.g. `window.mkto_checkTemplate(...)`), and assert on the resulting `window.mcz_marketoForm_pref` state — same pattern as the nala tests, but in a real (Chrome) browser via `@web/test-runner`, no network or live DA page required.
+
+See `test/mkto/scripts/` for worked examples of this pattern.
+
+**Why `npm test` runs two `wtr` invocations**: every `mkto/scripts/` file ends with a `//# sourceURL=<filename>` comment (required — see "Editing `mkto/scripts/` files" above). When one of these is loaded via `<script src>`, V8 reports its coverage entry under that bare `sourceURL` (e.g. `global.js`) instead of a full URL, which crashes `@web/test-runner-coverage-v8`'s `new URL(entry.url)` call — before any `coverageConfig.exclude` pattern gets a chance to filter it out. `package.json`'s `test` script therefore runs `test/mkto/scripts/**` in a second, separate `wtr` call without `--coverage`, after the main coverage-instrumented run. Keep new `mkto/scripts/` unit test files under `test/mkto/scripts/` so they stay on the non-coverage path.
 
 **E2E tests** (`nala/`) use Playwright / NALA:
 - `nala/features/*.spec.js` — human-readable test specs (URL, scenarios, data)
