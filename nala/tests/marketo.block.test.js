@@ -389,6 +389,46 @@ test.describe('Marketo block test suite', () => {
     });
   });
 
+  features.filter((f) => f.type === 'poiQueryParam').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('step-1: Verify baseline before mktfrm_poi is present', async () => {
+          await marketoBlock.navigateTo(testPage);
+
+          await expect(
+            marketoBlock.primaryProductInterest,
+            'POI select should still be visible before the mktfrm_poi param is added',
+          ).toBeVisible();
+
+          const poi = await page.evaluate(() => window.mcz_marketoForm_pref?.program?.poi);
+          expect(poi, 'Baseline hard-coded POI did not match the authored value').toBe(feature.basePoi);
+        });
+
+        await test.step('step-2: Add mktfrm_poi and verify it overrides the hard-coded POI', async () => {
+          const poiParam = testPage.includes('?') ? '&' : '?';
+          const testPageWithParam = `${testPage}${poiParam}mktfrm_poi=${feature.poiParamValue}`;
+          await marketoBlock.navigateTo(testPageWithParam);
+
+          await expect(
+            marketoBlock.primaryProductInterest,
+            'POI select should be hidden once the mktfrm_poi param is present',
+          ).not.toBeVisible();
+
+          const result = await page.evaluate(() => ({
+            poi: window.mcz_marketoForm_pref?.program?.poi,
+            productsFilter: window.mcz_marketoForm_pref?.field_filters?.products,
+          }));
+
+          expect(result.poi, 'POI did not change from the hard-coded value to the mktfrm_poi param value').toBe(feature.expectedPoi);
+          expect(result.productsFilter, 'Products filter was not forced to hidden').toBe('hidden');
+        });
+      });
+    });
+  });
+
   features.filter((f) => f.type === 'categoryFilters').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {

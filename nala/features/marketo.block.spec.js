@@ -343,6 +343,17 @@ const features = [
     type: 'poiAutoHideOverridesAuthored',
     formType: 'full',
   },
+  {
+    tcid: '31',
+    name: '@marketo mktfrm_poi query param overrides the hard-coded POI and hides the field',
+    path: ['/drafts/nala/blocks/marketo/poi-param'],
+    tags: '@marketo @marketoFieldFilters @regression',
+    type: 'poiQueryParam',
+    formType: 'full',
+    basePoi: 'WORKFRONT',
+    poiParamValue: 'commerce',
+    expectedPoi: 'COMMERCE',
+  },
 ];
 
 export default features;
