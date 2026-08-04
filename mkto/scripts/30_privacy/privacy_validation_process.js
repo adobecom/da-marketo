@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260612T141917
+// ## Updated 20260804T155027
 // ##
 // ##
 // ##
-// ## 30_privacy/privacy_validation_process.js - 20260612T141917
+// ## 30_privacy/privacy_validation_process.js - 20260804T155027
 // ##
 // ##
 
@@ -579,7 +579,7 @@ if (typeof window?.privacyValidation != "function") {
         }
       }
 
-      proposedBrowserLanguage = window?.mcz_marketoForm_pref?.profile?.prefLanguage ?? null;
+      proposedBrowserLanguage = check_content_lang();
       if (proposedBrowserLanguage != null && proposedBrowserLanguage != "") {
         proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
         if (has_langbeenSet == false) {
@@ -588,12 +588,13 @@ if (typeof window?.privacyValidation != "function") {
         }
         return proposedBrowserLanguage;
       } else {
-        proposedBrowserLanguage = check_content_lang();
+        proposedBrowserLanguage = window?.mcz_marketoForm_pref?.profile?.prefLanguage ?? null;
         if (proposedBrowserLanguage != null && proposedBrowserLanguage != "") {
           proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
-          dl_update_lang_pref(proposedBrowserLanguage);
-          field_update_mktoFormsLocale(proposedBrowserLanguage);
-          //mkf_c.log("proposedBrowserLanguage : ", proposedBrowserLanguage);
+          if (has_langbeenSet == false) {
+            dl_update_lang_pref(proposedBrowserLanguage);
+            field_update_mktoFormsLocale(proposedBrowserLanguage);
+          }
           return proposedBrowserLanguage;
         }
         proposedBrowserLanguage = check_browser_lang();
@@ -617,6 +618,8 @@ if (typeof window?.privacyValidation != "function") {
         return proposedBrowserLanguage;
       }
     }
+    window.fetch_lang_code = fetch_lang_code;
+
     function field_update_privacy_code(privacycode) {
       if (typeof privacycode == "undefined") {
         return;
