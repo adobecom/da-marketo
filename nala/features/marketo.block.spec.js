@@ -354,6 +354,17 @@ const features = [
     poiParamValue: 'commerce',
     expectedPoi: 'COMMERCE',
   },
+  {
+    tcid: '32',
+    name: '@marketo MWPW-201774: comb_flex_event normalizes to flex_event and resolves strategy_webinar subtype',
+    path: ['/drafts/nala/blocks/marketo/template-versions'],
+    tags: '@marketo @marketoTemplateVersions @regression',
+    type: 'templateVersion',
+    formType: 'full',
+    expectedTemplate: 'flex_event',
+    expectedSubtype: 'strategy_webinar',
+    sites: ['da-marketo'],
+  },
 ];
 
 export default features;
