@@ -51,7 +51,6 @@
 }
 
 .marketo-info-widget.miw-open .miw-icon::after {
-  top: 3px;
   transform: rotate(135deg);
   transition-duration: 0.2s;
 }
@@ -94,6 +93,11 @@
 .marketo-info-widget .miw-details span {
   font-weight: 300;
   word-break: break-all;
+}
+
+.marketo-info-widget .miw-details a {
+  color: #eee;
+  text-decoration: underline;
 }
 
 .marketo-info-widget .miw-close {

@@ -1,8 +1,8 @@
 // ##
-// ## Updated 20260720T183306
+// ## Updated 20260806T154953
 // ##
 // ##
-// ##  90_build/global.js - 20260720T183306
+// ##  90_build/global.js - 20260806T154953
 // ##
 
 if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
@@ -1257,6 +1257,8 @@ if (typeof window?.mkto_checkAdobePrivacy == "undefined") {
 
     aTLg("---");
     mkf_c.log(templateLog);
+    mczPrefs.flags = mczPrefs.flags || {};
+    mczPrefs.flags.mkto_checkTemplate = true;
     mkf_c.groupEnd(groupLBL);
   };
 
