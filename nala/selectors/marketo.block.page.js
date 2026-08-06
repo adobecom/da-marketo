@@ -168,7 +168,7 @@ export default class MarketoBlock {
    */
   async waitForProgramIdResolved() {
     await this.page.waitForFunction(
-      () => window.mcz_marketoForm_pref?.form?.status === 'ready',
+      () => window.mcz_marketoForm_pref?.flags?.mkto_checkTemplate === true,
       undefined,
       { timeout: 20000 },
     );
