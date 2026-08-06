@@ -5618,10 +5618,11 @@ function coerceNumberOrBlank(num){
 
 function checkValid(e, min, max){
   var elem = e.get(0);
-  if(elem.validity && !elem.validity.valid){
-    //Some browsers support html5 but don't support min/max on numbers.
-    //For those browsers, we can't trust valid and have to do the rest ourselves.
-    return false;
+  if(elem.validity){
+    // badInput: browser accepted input it cannot convert (e.g. "abc" in a number field).
+    // Some browsers (Safari) sanitise element.value to "" but leave validity.valid=true,
+    // so we check badInput explicitly rather than relying on valid alone.
+    if(!elem.validity.valid || elem.validity.badInput){ return false; }
   }
   var v = e.val();
   if(!v){
@@ -5668,7 +5669,32 @@ function makeValFn(e, min, max){
 
 number.newField = function(field, formData){
   var e = fh.renderInput("number", field, formData);
-  var wrap = 
+  // WebKit (Safari) sanitises element.value to "" for bad input but sets no validity flags.
+  // Track bad input state via the input event: an event that fires with value="" when the
+  // field previously also had value="" means bad chars were typed (not a clear from valid).
+  var lastKnownValue = '';
+  var hasBadInput = false;
+  e.on('input', function(){
+    var elem = e.get(0);
+    if(elem.validity){
+      if(!elem.validity.valid || elem.validity.badInput){
+        hasBadInput = true;
+        lastKnownValue = '';
+        return;
+      }
+    }
+    var v = elem.value;
+    if(v !== ''){
+      lastKnownValue = v;
+      hasBadInput = false;
+    } else if(lastKnownValue !== ''){
+      lastKnownValue = '';
+      hasBadInput = false; // transitioned from valid value to empty: user cleared it
+    } else {
+      hasBadInput = true; // empty→empty input event: WebKit bad input
+    }
+  });
+
   e.attr({
     min:coerceNumberOrBlank(field.MinimumNumber),
     max:coerceNumberOrBlank(field.MaximumNumber),
@@ -5680,8 +5706,9 @@ number.newField = function(field, formData){
     val:makeValFn(e, field.MinimumNumber, field.MaximumNumber),
     elem:fh.formatStandardField(e, field, formData),
     required:field.IsRequired,
-    validator:function (v){
-      return checkNumber(v, field.MinimumNumber, field.MaximumNumber);
+    validator:function (){
+      if(hasBadInput){ return false; }
+      return checkValid(e, field.MinimumNumber, field.MaximumNumber);
     },
     validatorElem:e,
     onChange:function (fn){
