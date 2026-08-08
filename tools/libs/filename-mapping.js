@@ -45,11 +45,25 @@ const BASENAME_TO_FOLDER = {
   'global.js': 'scripts/90_build',
   'cleaning_validation.js': 'scripts/90_build',
   'marketo_form_setup_process.js': 'scripts/90_build',
+  'marketo_form_setup_processing.js': 'scripts/90_build',
   'rendering_review.js': 'scripts/90_build',
   'known_visitor.js': 'scripts/95_known_visitor',
   'progressive_config.js': 'scripts/98_progressive',
   'progressive_controller.js': 'scripts/98_progressive',
 };
+
+export function listKnownScriptPaths(locales = []) {
+  const paths = new Set();
+  Object.keys(BASENAME_TO_FOLDER).forEach((basename) => {
+    if (basename === 'state_translate.js') return; // expanded per-locale below
+    paths.add(`${BASENAME_TO_FOLDER[basename]}/${basename}`);
+  });
+  const translationsFolder = BASENAME_TO_FOLDER['state_translate.js'];
+  locales.forEach((locale) => {
+    paths.add(`${translationsFolder}/state_translate-${locale}.js`);
+  });
+  return [...paths].sort();
+}
 
 function shortHash(str) {
   let h = 5381;
@@ -78,7 +92,6 @@ function findFromFingerprints(content, formId) {
 
 function findFromLangComment(content) {
   const lines = String(content).split('\n').slice(0, 10);
-
   for (let i = 0; i < lines.length; i += 1) {
     const t = lines[i].trim();
     if (!t.startsWith('//')) continue; // eslint-disable-line no-continue
@@ -96,7 +109,6 @@ function findFromLangComment(content) {
     const locale = t.match(/\bform\s+locale\s*=\s*([a-zA-Z]{2,3}(?:[_-][a-zA-Z]{2,3})?)/i);
     if (locale) return `state_translate-${locale[1].toLowerCase().replace(/-/g, '_')}.js`;
   }
-
   return null;
 }
 
@@ -123,14 +135,18 @@ function applyLayout(rawPath) {
   return dir ? `${dir}/${rawPath}` : rawPath;
 }
 
-export default function resolveScriptFilename(
-  content,
-  position,
-  usedPaths,
-  formId = null,
-) {
+export default function resolveScriptFilename(content, src, position, usedPaths, formId = null) {
+  if (src) {
+    const logicalPath = `marketo-script-external-${shortHash(src)}.js`;
+    const n = (usedPaths.get(logicalPath) || 0) + 1;
+    usedPaths.set(logicalPath, n);
+    const filename = n === 1 ? logicalPath : logicalPath.replace(/\.js$/i, `-${n}.js`);
+    return { filename, sourcePath: logicalPath };
+  }
   const trimmed = String(content || '').trim();
-  if (!trimmed) return { filename: `marketo-script-empty-${position}.js` };
+  if (!trimmed) {
+    return { filename: `marketo-script-empty-${position}.js` };
+  }
 
   const rawPath = findRawPath(content, formId);
   const logicalPath = applyLayout(rawPath);
