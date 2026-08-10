@@ -148,6 +148,17 @@ export default class MarketoBlock {
   }
 
   /**
+   * Returns the Marketo form subtype (channel) resolved from the template.
+   * @returns {Promise<string>} e.g. 'strategy_webinar', 'unknown'
+   */
+  async getFormSubtype() {
+    const subtype = await this.page.evaluate(
+      () => window.mcz_marketoForm_pref?.form?.subtype,
+    );
+    return subtype || 'unknown';
+  }
+
+  /**
    * Waits until program.id is FINAL. An authored program.id is set at block
    * init, then template processing may override it — so "non-empty" is not
    * enough. form.status flips to 'ready' only after the last MCZ script runs
@@ -157,7 +168,7 @@ export default class MarketoBlock {
    */
   async waitForProgramIdResolved() {
     await this.page.waitForFunction(
-      () => window.mcz_marketoForm_pref?.form?.status === 'ready',
+      () => window.mcz_marketoForm_pref?.flags?.mkto_checkTemplate === true,
       undefined,
       { timeout: 20000 },
     );

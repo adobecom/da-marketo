@@ -682,4 +682,36 @@ test.describe('Marketo block test suite', () => {
       });
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Template version normalization tests (MWPW-201774): templateVersions must
+  // map dme_/comb_ prefixed template variants (e.g. comb_flex_event) down to
+  // their bare template key (flex_event) BEFORE subtypeTemplate resolves the
+  // channel/subtype. Regression guard for the June 2026 templateVersions
+  // regression that left flex_event variants unnormalized, mis-assigning
+  // strategy_webinar forms as request_for_information.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'templateVersion').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('step-1: Navigate and wait for template processing to resolve', async () => {
+          // waitForField:false — flex_event hides several standard fields;
+          // this test only inspects the resolved data layer state.
+          await marketoBlock.navigateTo(testPage, { waitForField: false });
+        });
+
+        await test.step(`step-2: form.template normalizes to "${feature.expectedTemplate}"`, async () => {
+          expect(await marketoBlock.getFormTemplate()).toBe(feature.expectedTemplate);
+        });
+
+        await test.step(`step-3: form.subtype resolves to "${feature.expectedSubtype}"`, async () => {
+          expect(await marketoBlock.getFormSubtype()).toBe(feature.expectedSubtype);
+        });
+      });
+    });
+  });
 });
