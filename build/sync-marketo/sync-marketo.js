@@ -15,36 +15,24 @@ import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 import { parseArgs } from 'util';
 import { fileURLToPath } from 'url';
-import resolveScriptFilename from './filename-mapping.js';
+import resolveScriptFilename from '../../tools/libs/filename-mapping.js';
+import {
+  MKTO_DEFAULTS,
+  DEFAULT_FORM_ID,
+  FORM_OPTIONS,
+  buildGetFormBaseUrl,
+} from '../../tools/libs/defaults.js';
+import { getFlattenedFields } from '../../tools/libs/form-fetch.js';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '../..');
 const OUTPUT_DIR = join(REPO_ROOT, 'mkto');
 
-const MKTO_DEFAULTS = {
-  host: 'engage.adobe.com',
-  munchkinId: '360-KCI-804',
-  pageUrl: 'https://milo.adobe.com/tools/marketo',
-  formId: 2277,
-};
-
-const FORM_OPTIONS = [
-  { id: 2277, label: 'MCZ Production' },
-  { id: 2259, label: 'MCZ Short Form' },
-  { id: 1723, label: 'MCZ Staging' },
-  { id: 3844, label: 'Progressive Profiling' },
-  { id: 2945, label: 'DA Sandbox' },
-  { id: 3131, label: 'Data Layer Testing' },
-  { id: 3410, label: 'Stage Clone' },
-  { id: 3577, label: 'Magma Stage' },
-  { id: 3770, label: 'Magma Sandbox' },
-];
-
 function helpText() {
   return `Usage: node build/sync-marketo/sync-marketo.js [options]
 
 Options:
-  --form <id>   Form ID to sync (default: ${MKTO_DEFAULTS.formId})
+  --form <id>   Form ID to sync (default: ${DEFAULT_FORM_ID})
   --help        Show this help
 
 Form IDs:
@@ -70,7 +58,7 @@ function parseCli() {
     process.exit(0);
   }
 
-  const formId = values.form !== undefined ? parseInt(values.form, 10) : MKTO_DEFAULTS.formId;
+  const formId = values.form !== undefined ? parseInt(values.form, 10) : DEFAULT_FORM_ID;
   if (Number.isNaN(formId)) {
     console.error('Invalid --form: expected a number.');
     process.exit(1);
@@ -81,14 +69,7 @@ function parseCli() {
 
 async function fetchFormData(host, munchkinId, formId, pageUrl) {
   const cbName = `mktoSync${Date.now()}`;
-  const qs = new URLSearchParams({
-    munchkinId: String(munchkinId),
-    form: String(formId),
-    url: pageUrl,
-    _: String(Date.now()),
-    callback: cbName,
-  });
-  const url = `https://${host}/index.php/form/getForm?${qs}`;
+  const url = `${buildGetFormBaseUrl(host, munchkinId, formId, pageUrl)}&callback=${cbName}`;
   console.log(`  → GET ${url.split('?')[0]}...`);
 
   const res = await fetch(url, {
@@ -113,45 +94,31 @@ function extractScriptTags(html) {
   return Array.from(html.matchAll(re), (m) => m[1] || '');
 }
 
-function flattenRows(arr, accum = []) {
-  if (!arr) return accum;
-  arr.forEach((v) => {
-    if (Array.isArray(v)) flattenRows(v, accum);
-    else accum.push(v);
-  });
-  return accum;
-}
-
-function getAllHtmltextFields(raw) {
-  const fields = flattenRows(raw.rows || []);
-  if (raw.fieldsetRows && typeof raw.fieldsetRows === 'object') {
-    Object.values(raw.fieldsetRows).forEach((vals) => flattenRows(vals, fields));
-  }
-  return fields.filter((f) => f && typeof f.Htmltext === 'string' && f.Htmltext.length > 0);
-}
-
 function extractScripts(raw, formId) {
   const usedPaths = new Map();
   let pos = 0;
   const scripts = [];
 
-  getAllHtmltextFields(raw).forEach((field) => {
-    extractScriptTags(field.Htmltext).forEach((content) => {
-      const { filename, sourcePath } = resolveScriptFilename(
-        content,
-        pos,
-        usedPaths,
-        formId,
-      );
-      scripts.push({
-        filename,
-        content,
-        sourcePath,
-        pos,
+  getFlattenedFields(raw)
+    .filter((f) => f && typeof f.Htmltext === 'string' && f.Htmltext.length > 0)
+    .forEach((field) => {
+      extractScriptTags(field.Htmltext).forEach((content) => {
+        const { filename, sourcePath } = resolveScriptFilename(
+          content,
+          null,
+          pos,
+          usedPaths,
+          formId,
+        );
+        scripts.push({
+          filename,
+          content,
+          sourcePath,
+          pos,
+        });
+        pos += 1;
       });
-      pos += 1;
     });
-  });
 
   return scripts;
 }
