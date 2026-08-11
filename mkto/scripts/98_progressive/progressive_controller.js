@@ -1,8 +1,8 @@
 // ##
-// ## Updated 20260508T83048
+// ## Updated 20260811T092535
 // ##
 /**
- *  98_progressive/progressive_controller.js - 20260508T83048
+ *  98_progressive/progressive_controller.js - 20260811T092535
  */
 (function () {
   if (window?.mkto_PrgrsCtrlr) {
@@ -28,6 +28,8 @@
         "https://news.adobe.com",
         "https://partners.adobe.com",
         "https://www.adobe.com",
+        "https://stage.adobe.com",
+        "https://www.stage.adobe.com",
         "https://main--cc--adobecom.aem.live",
         "https://main--cc--adobecom.aem.page",
         "https://main--cc--adobecom.aem.reviews",
@@ -1467,3 +1469,5 @@
 
 // ##
 // ##
+
+//# sourceURL=progressive_controller.js
