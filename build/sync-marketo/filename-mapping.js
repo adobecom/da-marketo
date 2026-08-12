@@ -109,7 +109,7 @@ function folderForBasename(basename) {
 
 function findRawPath(content, formId) {
   const text = String(content);
-  const m = text.match(/\/\/\s*#+\s*(\S+\.js)/);
+  const m = text.match(/\/\/\s*#+\s*(?:sourceURL=)?(\S+\.js)/);
   if (m) return m[1];
   return findFromLangComment(text) || findFromMarkers(text) || findFromFingerprints(text, formId);
 }
