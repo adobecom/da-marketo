@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260804T165957
+// ## Updated 20260813T153111
 // ##
 // ##
 // ##
-// ##  00_config/marketo_form_setup_rules.js - 20260804T165957
+// ##  00_config/marketo_form_setup_rules.js - 20260813T153111
 // ##
 // ##
 
@@ -294,13 +294,19 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
       },
       subtypeTemplate: {
         //subtypes assigned to templates
-        flex_contact: "request_for_information", //Request for Information
-        flex_content: "whitepaper_form", //Whitepaper Download
-        flex_event: "strategy_webinar", //Strategy Webinar
-        content_explore: "whitepaper_form", // Nurturing Leads
-        content_discover: "whitepaper_form", // Nurturing Leads
-        content_evaluate: "whitepaper_form", // Nurturing Leads
-        subscription: "email", //Subscriptions
+        flex_contact: "request_for_information",
+        dme_flex_contact: "request_for_information",
+        comb_flex_contact: "request_for_information",
+        flex_content: "whitepaper_form",
+        dme_flex_content: "whitepaper_form",
+        comb_flex_content: "whitepaper_form",
+        flex_event: "strategy_webinar",
+        dme_flex_event: "strategy_webinar",
+        comb_flex_event: "strategy_webinar",
+        content_explore: "whitepaper_form",
+        content_discover: "whitepaper_form",
+        content_evaluate: "whitepaper_form",
+        subscription: "email",
       },
       mktoInstantInquiry: {
         //Trigger Inquiry from Person Activity Log (defaults to true)

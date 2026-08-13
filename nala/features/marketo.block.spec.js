@@ -361,7 +361,7 @@ const features = [
     tags: '@marketo @marketoTemplateVersions @regression',
     type: 'templateVersion',
     formType: 'full',
-    expectedTemplate: 'flex_event',
+    expectedTemplate: 'dme_flex_event',
     expectedSubtype: 'strategy_webinar',
     sites: ['da-marketo'],
   },
