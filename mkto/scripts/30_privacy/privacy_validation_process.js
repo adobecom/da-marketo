@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260804T155027
+// ## Updated 20260813T164213
 // ##
 // ##
 // ##
-// ## 30_privacy/privacy_validation_process.js - 20260804T155027
+// ## 30_privacy/privacy_validation_process.js - 20260813T164213
 // ##
 // ##
 
@@ -507,7 +507,7 @@ if (typeof window?.privacyValidation != "function") {
           }
         }
       }
-      return foundCode ?? "en";
+      return foundCode ?? DEFAULT_LANGUAGE;
     }
 
     function check_content_lang() {
@@ -567,7 +567,7 @@ if (typeof window?.privacyValidation != "function") {
         proposedBrowserLanguage = lang;
         proposedBrowserLanguage = confirm_lang_ok(proposedBrowserLanguage);
         if (
-          proposedBrowserLanguage != "en" &&
+          proposedBrowserLanguage != DEFAULT_LANGUAGE &&
           proposedBrowserLanguage != null &&
           proposedBrowserLanguage != ""
         ) {
@@ -672,6 +672,9 @@ if (typeof window?.privacyValidation != "function") {
         proposedLanguage = "" + proposedLanguage;
         proposedLanguage = proposedLanguage.replace("undefined", "");
         proposedLanguage = proposedLanguage.trim();
+        if (proposedLanguage.split("_")[0] === "en" && proposedLanguage !== DEFAULT_LANGUAGE) {
+          proposedLanguage = DEFAULT_LANGUAGE;
+        }
         let d = new Date();
         let n = d.getTime();
         if (proposedLanguage != "" && temp != proposedLanguage) {

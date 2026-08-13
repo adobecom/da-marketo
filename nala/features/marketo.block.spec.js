@@ -365,6 +365,26 @@ const features = [
     expectedSubtype: 'strategy_webinar',
     sites: ['da-marketo'],
   },
+  {
+    tcid: '33',
+    name: '@marketo MWPW-203203: required field warning message shows on /au/ locale',
+    path: ['/au/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoRequiredFieldWarning @regression',
+    type: 'requiredFieldWarning',
+    formType: 'full',
+    locale: 'au',
+    sites: ['da-marketo'],
+  },
+  {
+    tcid: '34',
+    name: '@marketo MWPW-203203: required field warning message shows on /in/ locale',
+    path: ['/in/drafts/nala/blocks/marketo/full'],
+    tags: '@marketo @marketoRequiredFieldWarning @regression',
+    type: 'requiredFieldWarning',
+    formType: 'full',
+    locale: 'in',
+    sites: ['da-marketo'],
+  },
 ];
 
 export default features;
