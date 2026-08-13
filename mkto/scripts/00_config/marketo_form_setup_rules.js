@@ -285,12 +285,12 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         email: "join", // Subscriptions
       },
       templateVersions: {
-        dme_flex_contact: "flex_contact",
-        dme_flex_content: "flex_content",
-        dme_flex_event: "flex_event",
-        comb_flex_contact: "flex_contact",
-        comb_flex_content: "flex_content",
-        comb_flex_event: "flex_event",
+        dme_flex_contact: "dme_flex_contact",
+        dme_flex_content: "dme_flex_content",
+        dme_flex_event: "dme_flex_event",
+        comb_flex_contact: "comb_flex_contact",
+        comb_flex_content: "comb_flex_content",
+        comb_flex_event: "comb_flex_event",
       },
       subtypeTemplate: {
         //subtypes assigned to templates
