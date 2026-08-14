@@ -303,9 +303,9 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         flex_event: "strategy_webinar",
         dme_flex_event: "strategy_webinar",
         comb_flex_event: "strategy_webinar",
-        content_explore: "whitepaper_form",
+        content_explore: "strategy_webinar",
         content_discover: "whitepaper_form",
-        content_evaluate: "whitepaper_form",
+        content_evaluate: "request_for_information",
         subscription: "email",
       },
       mktoInstantInquiry: {
