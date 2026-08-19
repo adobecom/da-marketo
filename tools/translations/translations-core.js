@@ -48,3 +48,24 @@ export function countTranslated(rows, lang) {
   const done = rows.filter((r) => !isBlank(r[lang]) && !hasStrayPipe(r[lang])).length;
   return { done, total: rows.length };
 }
+
+export function addLanguageColumn(rows, code) {
+  return rows.map((r) => (code in r ? { ...r } : { ...r, [code]: '' }));
+}
+
+export function checkExportReady(rows, lang) {
+  let blanks = 0;
+  let invalids = 0;
+  rows.forEach((r) => {
+    if (isBlank(r[lang])) blanks += 1;
+    else if (hasStrayPipe(r[lang])) invalids += 1;
+  });
+  return { ready: blanks === 0 && invalids === 0, blanks, invalids };
+}
+
+export function composeExportColumn(rows, lang) {
+  return [...rows]
+    .sort((a, b) => Number(a.sortPosition) - Number(b.sortPosition))
+    .map((r) => `${String(r[lang]).trim()}|${r.value}`)
+    .join('\n');
+}

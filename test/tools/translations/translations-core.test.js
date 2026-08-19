@@ -1,6 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import {
   FIELDS, LANGUAGES, validateLangCode, normalizeCell, isBlank, hasStrayPipe, countTranslated,
+  addLanguageColumn, checkExportReady, composeExportColumn,
 } from '../../../tools/translations/translations-core.js';
 
 describe('translations-core: registry', () => {
@@ -68,5 +69,27 @@ describe('translations-core: status', () => {
   });
   it('countTranslated counts non-blank, pipe-free cells', () => {
     expect(countTranslated(rows, 'ar')).to.eql({ done: 1, total: 4 });
+  });
+});
+
+describe('translations-core: add/export', () => {
+  it('addLanguageColumn adds an empty column immutably', () => {
+    const rows = [{ value: 'A', label: 'Alpha' }];
+    const next = addLanguageColumn(rows, 'ar');
+    expect(next[0].ar).to.equal('');
+    expect(rows[0].ar).to.be.undefined; // original untouched
+  });
+  it('checkExportReady counts blanks and stray pipes', () => {
+    const rows = [
+      { value: 'A', ar: 'x' }, { value: 'B', ar: '' }, { value: 'C', ar: 'y|Z' },
+    ];
+    expect(checkExportReady(rows, 'ar')).to.eql({ ready: false, blanks: 1, invalids: 1 });
+  });
+  it('composeExportColumn sorts by sortPosition and appends |value', () => {
+    const rows = [
+      { value: 'CXO_EVP', ar: 'المدير', sortPosition: '2' },
+      { value: 'MGR', ar: 'مدير', sortPosition: '1' },
+    ];
+    expect(composeExportColumn(rows, 'ar')).to.equal('مدير|MGR\nالمدير|CXO_EVP');
   });
 });
