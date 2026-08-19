@@ -10,3 +10,4 @@ log/*
 .claude/
 .cursor/
 .worktrees/
+tools/translations/migrate/out/

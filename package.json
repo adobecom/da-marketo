@@ -20,7 +20,8 @@
     "lint:fix": "npm run lint:js:fix && npm run lint:css:fix",
     "prepare": "husky",
     "build:forms2": "node build/forms2/build-forms2.js",
-    "build:sync-marketo": "node build/sync-marketo/sync-marketo.js"
+    "build:sync-marketo": "node build/sync-marketo/sync-marketo.js",
+    "migrate:translations": "node tools/translations/migrate/migrate.js"
   },
   "repository": {
     "type": "git",
@@ -58,7 +59,8 @@
     "microbundle": "^0.15.1",
     "sinon": "^21.1.2",
     "stylelint": "^17.9.1",
-    "stylelint-config-standard": "^40.0.0"
+    "stylelint-config-standard": "^40.0.0",
+    "xlsx": "^0.18.5"
   },
   "lint-staged": {
     "*.js": "eslint",
