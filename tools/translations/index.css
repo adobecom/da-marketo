@@ -1,0 +1,72 @@
+/* tools/translations/index.css */
+mkto-translations {
+  display: block;
+  max-width: 100%;
+  padding: 24px;
+  font-family: system-ui, sans-serif;
+}
+
+mkto-translations .picker button,
+mkto-translations .toolbar button {
+  margin: 0 6px 6px 0;
+}
+
+mkto-translations .toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+mkto-translations .progress {
+  font-weight: 600;
+}
+
+mkto-translations .status {
+  color: #b00;
+}
+
+mkto-translations .grid-wrap {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  max-height: 70vh;
+}
+
+mkto-translations table.grid {
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+mkto-translations .grid th,
+mkto-translations .grid td {
+  border: 1px solid #eee;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+mkto-translations .grid th {
+  position: sticky;
+  top: 0;
+  background: #fafafa;
+  z-index: 1;
+}
+
+mkto-translations .grid .sticky {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 2;
+}
+
+mkto-translations .grid th.sticky {
+  z-index: 3;
+}
+
+mkto-translations .grid .target {
+  background: #eef6ff;
+}
+
+mkto-translations .grid .target input {
+  width: 220px;
+}
