@@ -69,3 +69,19 @@ export function composeExportColumn(rows, lang) {
     .map((r) => `${String(r[lang] ?? '').trim()}|${r.value}`)
     .join('\n');
 }
+
+export function normalizeSheet(json) {
+  if (json && json[':type'] === 'sheet') return json.data ?? [];
+  return [];
+}
+
+export function toSheetFormat(rows) {
+  return {
+    total: rows.length,
+    limit: rows.length,
+    offset: 0,
+    data: rows,
+    ':type': 'sheet',
+    ':sheetname': 'data',
+  };
+}

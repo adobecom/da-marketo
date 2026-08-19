@@ -23,7 +23,7 @@ export default {
       '**/deps/**',
     ],
   },
-  plugins: [importMapsPlugin({})],
+  plugins: [importMapsPlugin({ inject: { importMap: { imports: { 'da-fetch': '/test/tools/translations/__mocks__/da-fetch.js' } } } })],
   reporters: [
     defaultReporter({ reportTestResults: true, reportTestProgress: true }),
     customReporter(),
