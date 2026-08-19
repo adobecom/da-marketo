@@ -1,5 +1,7 @@
 import { expect } from '@esm-bundle/chai';
-import { FIELDS, LANGUAGES, validateLangCode, normalizeCell } from '../../../tools/translations/translations-core.js';
+import {
+  FIELDS, LANGUAGES, validateLangCode, normalizeCell, isBlank, hasStrayPipe, countTranslated,
+} from '../../../tools/translations/translations-core.js';
 
 describe('translations-core: registry', () => {
   it('defines the 7 fields with unique keys and json paths', () => {
@@ -45,5 +47,26 @@ describe('translations-core: normalizeCell', () => {
   });
   it('flags a stray pipe whose suffix does not match value', () => {
     expect(normalizeCell('A|B|WRONG', 'CXO_EVP')).to.eql({ value: 'A|B|WRONG', valid: false });
+  });
+});
+
+describe('translations-core: status', () => {
+  const rows = [
+    { value: 'A', ar: 'الف' },
+    { value: 'B', ar: '' },
+    { value: 'C', ar: '  ' },
+    { value: 'D', ar: 'x|Y' },
+  ];
+  it('isBlank treats empty and whitespace as blank', () => {
+    expect(isBlank('')).to.be.true;
+    expect(isBlank('  ')).to.be.true;
+    expect(isBlank('x')).to.be.false;
+  });
+  it('hasStrayPipe detects a pipe', () => {
+    expect(hasStrayPipe('x|Y')).to.be.true;
+    expect(hasStrayPipe('x')).to.be.false;
+  });
+  it('countTranslated counts non-blank, pipe-free cells', () => {
+    expect(countTranslated(rows, 'ar')).to.eql({ done: 1, total: 4 });
   });
 });

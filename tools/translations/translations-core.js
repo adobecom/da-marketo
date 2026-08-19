@@ -35,3 +35,16 @@ export function normalizeCell(input, value) {
   if (suffix === value && !label.includes('|')) return { value: label, valid: true };
   return { value: trimmed, valid: false };
 }
+
+export function isBlank(cell) {
+  return !cell || !String(cell).trim();
+}
+
+export function hasStrayPipe(cell) {
+  return String(cell ?? '').includes('|');
+}
+
+export function countTranslated(rows, lang) {
+  const done = rows.filter((r) => !isBlank(r[lang]) && !hasStrayPipe(r[lang])).length;
+  return { done, total: rows.length };
+}
