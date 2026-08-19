@@ -1,0 +1,49 @@
+import { expect } from '@esm-bundle/chai';
+import { FIELDS, LANGUAGES, validateLangCode, normalizeCell } from '../../../tools/translations/translations-core.js';
+
+describe('translations-core: registry', () => {
+  it('defines the 7 fields with unique keys and json paths', () => {
+    expect(FIELDS).to.have.length(7);
+    const keys = FIELDS.map((f) => f.key);
+    expect(new Set(keys).size).to.equal(7);
+    FIELDS.forEach((f) => expect(f.path).to.match(/^\/tools\/translations\/.+\.json$/));
+  });
+  it('flags job-role as the only field with regionalCols', () => {
+    const jr = FIELDS.find((f) => f.key === 'job-role');
+    expect(jr.regionalCols).to.eql(['anz', 'in', 'sea']);
+    expect(FIELDS.filter((f) => f.regionalCols)).to.have.length(1);
+  });
+  it('lists 20 languages starting with en_us', () => {
+    expect(LANGUAGES[0]).to.equal('en_us');
+    expect(LANGUAGES).to.have.length(20);
+  });
+});
+
+describe('translations-core: validateLangCode', () => {
+  it('accepts and lowercases a two-letter code', () => {
+    expect(validateLangCode('AR')).to.eql({ ok: true, code: 'ar' });
+  });
+  it('accepts a language_region code', () => {
+    expect(validateLangCode('pt_br')).to.eql({ ok: true, code: 'pt_br' });
+  });
+  it('rejects a malformed code', () => {
+    expect(validateLangCode('arabic').ok).to.be.false;
+  });
+  it('rejects a code already in LANGUAGES', () => {
+    const res = validateLangCode('de', LANGUAGES);
+    expect(res.ok).to.be.false;
+    expect(res.error).to.match(/already/i);
+  });
+});
+
+describe('translations-core: normalizeCell', () => {
+  it('trims plain label input', () => {
+    expect(normalizeCell('  Director  ', 'DIR')).to.eql({ value: 'Director', valid: true });
+  });
+  it('auto-strips a matching |VALUE suffix', () => {
+    expect(normalizeCell('المدير|CXO_EVP', 'CXO_EVP')).to.eql({ value: 'المدير', valid: true });
+  });
+  it('flags a stray pipe whose suffix does not match value', () => {
+    expect(normalizeCell('A|B|WRONG', 'CXO_EVP')).to.eql({ value: 'A|B|WRONG', valid: false });
+  });
+});
