@@ -66,6 +66,6 @@ export function checkExportReady(rows, lang) {
 export function composeExportColumn(rows, lang) {
   return [...rows]
     .sort((a, b) => Number(a.sortPosition) - Number(b.sortPosition))
-    .map((r) => `${String(r[lang]).trim()}|${r.value}`)
+    .map((r) => `${String(r[lang] ?? '').trim()}|${r.value}`)
     .join('\n');
 }

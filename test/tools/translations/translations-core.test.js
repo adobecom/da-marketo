@@ -79,6 +79,11 @@ describe('translations-core: add/export', () => {
     expect(next[0].ar).to.equal('');
     expect(rows[0].ar).to.be.undefined; // original untouched
   });
+  it('addLanguageColumn preserves existing language column values', () => {
+    const rows = [{ value: 'A', ar: 'existing' }];
+    const next = addLanguageColumn(rows, 'ar');
+    expect(next[0].ar).to.equal('existing');
+  });
   it('checkExportReady counts blanks and stray pipes', () => {
     const rows = [
       { value: 'A', ar: 'x' }, { value: 'B', ar: '' }, { value: 'C', ar: 'y|Z' },
@@ -87,8 +92,8 @@ describe('translations-core: add/export', () => {
   });
   it('composeExportColumn sorts by sortPosition and appends |value', () => {
     const rows = [
-      { value: 'CXO_EVP', ar: 'المدير', sortPosition: '2' },
-      { value: 'MGR', ar: 'مدير', sortPosition: '1' },
+      { value: 'CXO_EVP', ar: 'المدير', sortPosition: '10' },
+      { value: 'MGR', ar: 'مدير', sortPosition: '2' },
     ];
     expect(composeExportColumn(rows, 'ar')).to.equal('مدير|MGR\nالمدير|CXO_EVP');
   });
