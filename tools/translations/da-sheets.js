@@ -2,7 +2,7 @@
 import { daFetch } from 'da-fetch';
 import { normalizeSheet, toSheetFormat } from './translations-core.js';
 
-export { normalizeSheet, toSheetFormat } from './translations-core.js';
+export { normalizeSheet, toSheetFormat };
 
 const ORG = 'adobecom';
 const REPO = 'da-marketo';

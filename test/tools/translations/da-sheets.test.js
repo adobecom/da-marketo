@@ -17,10 +17,17 @@ describe('da-sheets', () => {
   });
   it('readFieldSheet GETs the source URL and normalizes', async () => {
     let calledUrl;
-    const fake = async (url) => { calledUrl = url; return { ok: true, json: async () => ({ ':type': 'sheet', data: [{ value: 'A' }] }) }; };
+    let opts;
+    const fake = async (url, o) => { calledUrl = url; opts = o; return { ok: true, json: async () => ({ ':type': 'sheet', data: [{ value: 'A' }] }) }; };
     const rows = await readFieldSheet('/tools/translations/country.json', fake);
     expect(calledUrl).to.equal('https://admin.da.live/source/adobecom/da-marketo/tools/translations/country.json');
+    expect(opts.headers.accept).to.equal('application/json');
     expect(rows).to.eql([{ value: 'A' }]);
+  });
+  it('readFieldSheet returns null on non-ok response', async () => {
+    const fake = async () => ({ ok: false });
+    const result = await readFieldSheet('/tools/translations/country.json', fake);
+    expect(result).to.be.null;
   });
   it('saveFieldSheet PUTs FormData and returns response.ok', async () => {
     let opts;
@@ -30,5 +37,6 @@ describe('da-sheets', () => {
     expect(opts.method).to.equal('PUT');
     expect(opts.body).to.be.instanceOf(FormData);
     expect(opts.body.get('data')).to.be.instanceOf(Blob);
+    expect(opts.body.get('data').type).to.equal('application/json');
   });
 });
