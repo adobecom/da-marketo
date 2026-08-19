@@ -54,6 +54,7 @@ class MktoTranslations extends LitElement {
     this.rows = addLanguageColumn(this.rows, res.code);
     this.langs = [...this.langs, res.code];
     this.target = res.code;
+    this.querySelector('#new-lang').value = '';
     this.status = `Added "${res.code}". Fill every row before exporting.`;
   }
 
@@ -92,9 +93,9 @@ class MktoTranslations extends LitElement {
   renderToolbar() {
     const progress = this.target ? countTranslated(this.rows, this.target) : null;
     return html`<div class="toolbar">
-      <input id="new-lang" placeholder="new code e.g. ar" />
+      <input id="new-lang" placeholder="new code e.g. ar" aria-label="New language code" />
       <button @click=${() => this.addLanguage()}>Add language</button>
-      <select @change=${(e) => { this.target = e.target.value; }}>
+      <select @change=${(e) => { this.target = e.target.value; }} aria-label="Language to edit">
         <option value="">— edit language —</option>
         ${this.langs.map((l) => html`<option value=${l} ?selected=${l === this.target}>${l}</option>`)}
       </select>
@@ -108,11 +109,13 @@ class MktoTranslations extends LitElement {
     return html`<div class="grid-wrap"><table class="grid">
       <thead><tr>
         <th class="sticky">label</th>
+        <th>value</th>
         ${this.langs.map((l) => html`<th class=${l === this.target ? 'target' : ''}>${l}</th>`)}
       </tr></thead>
       <tbody>
         ${this.rows.map((r, i) => html`<tr>
           <td class="sticky">${r.label}</td>
+          <td>${r.value}</td>
           ${this.langs.map((l) => (l === this.target
     ? html`<td class="target"><input .value=${r[l] ?? ''}
         @change=${(e) => this.editCell(i, e.target.value)} /></td>`

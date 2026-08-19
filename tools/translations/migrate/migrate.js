@@ -6,6 +6,10 @@ import { read, utils } from 'xlsx';
 import { FIELDS, LANGUAGES, toSheetFormat } from '../translations-core.js';
 import { migrateRow } from './parse-workbook.js';
 
+// NOTE: xlsx (SheetJS) npm build 0.18.5 has known CVEs (prototype pollution / ReDoS);
+// used here only as dev-only, run-once, local script over trusted first-party workbooks.
+// SheetJS recommends their CDN build for production use.
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT = join(HERE, 'out');
 const SHEET_NAME = 'Language Select Filter List';
