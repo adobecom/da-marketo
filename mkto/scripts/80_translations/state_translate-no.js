@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T132021
+// ## 80_translations/state_translate-no.js
 // ##
 //lang code =no, form locale = no_NO, form language = Norwegian (Norway)
 var translateState = {
@@ -155,3 +156,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-no.js

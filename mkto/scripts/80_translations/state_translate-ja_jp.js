@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T131129
+// ## 80_translations/state_translate-ja_jp.js
 // ##
 //lang code =ja_jp, form locale = ja_JP, territory = JP
 var translateState = {
@@ -1553,3 +1554,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-ja_jp.js

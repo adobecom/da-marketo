@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T131340
+// ## 80_translations/state_translate-zh_tw.js
 // ##
 //lang code =zh_tw, form locale = zh_tw, form language = 繁體中文 (Chinese Traditional)
 var translateState = {
@@ -1518,3 +1519,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-zh_tw.js

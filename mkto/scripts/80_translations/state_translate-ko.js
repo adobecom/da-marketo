@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T131300
+// ## 80_translations/state_translate-ko.js
 // ##
 //lang code =ko, form locale = ko_KR, form language = 한국어 (Korean)
 
@@ -1192,3 +1193,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-ko.js

@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T132059
+// ## 80_translations/state_translate-pt.js
 // ##
 //lang code =pt, form locale = pt_BR, form language = Portuguese (Brazil)
 var translateState = {
@@ -283,3 +284,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-pt.js

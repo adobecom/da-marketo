@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230727T004122
+// ## 80_translations/state_translate-fr_fr.js
 // ##
 //lang code =fr_fr, form locale = fr_FR, form language = Français
 var translateState = {
@@ -323,3 +324,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-fr_fr.js

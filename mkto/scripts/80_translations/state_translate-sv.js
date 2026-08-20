@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T131514
+// ## 80_translations/state_translate-sv.js
 // ##
 //lang code =sv, form locale = sv_SE, form language = Svenska (Swedish)
 var translateState = {
@@ -195,3 +196,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-sv.js

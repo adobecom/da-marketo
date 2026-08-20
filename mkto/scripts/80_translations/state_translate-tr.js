@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T132254
+// ## 80_translations/state_translate-tr.js
 // ##
 //lang code =tr, form locale = tr_TR, lang name = Turkish (Turkey)
 var translateState = {
@@ -303,3 +304,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-tr.js

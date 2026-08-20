@@ -1,0 +1,2 @@
+# Hand-maintained, not generated - keep full diffs visible in PR review
+mkto/scripts/**/*.js -linguist-generated
