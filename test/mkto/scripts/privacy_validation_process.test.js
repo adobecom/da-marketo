@@ -62,4 +62,13 @@ describe('privacy_validation_process.js: fetch_lang_code (MWPW-199375)', () => {
     window.history.replaceState({}, '', window.location.pathname);
     expect(result).to.equal('ja_jp');
   });
+
+  it('resolves an Arabic page locale to ar instead of coercing to en_us (MWPW-204656)', async () => {
+    document.documentElement.lang = 'ar';
+    window.mcz_marketoForm_pref = { profile: {} };
+
+    const result = await window.fetch_lang_code();
+
+    expect(result).to.equal('ar');
+  });
 });

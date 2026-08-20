@@ -30,6 +30,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Gönder",
       pl: "Zatwierdź",
       cs: "Odeslat",
+      ar: "إرسال",
 
       en_au: "Submit",
       en_nz: "Submit",
@@ -66,6 +67,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Eyalet/İl",
       pl: "Województwo",
       cs: "Stát/oblast",
+      ar: "المحافظة/الولاية",
 
       en_au: "State/province",
       en_nz: "State/province",
@@ -101,6 +103,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Sonraki",
       pl: "Następny",
       cs: "Další",
+      ar: "التالي",
 
       en_au: "Next",
       en_nz: "Next",
@@ -136,6 +139,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Gönderiniz için teşekkür ederiz.",
       pl: "Dziękujemy za przesłanie.",
       cs: "Děkujeme za vaše příspěvky.",
+      ar: "شكرًا لك على تقديمك.",
 
       en_au: "Thank you for your submission.",
       en_nz: "Thank you for your submission.",
@@ -171,6 +175,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Lütfen bekleyin",
       pl: "Proszę czekać",
       cs: "Prosím počkejte",
+      ar: "يرجى الانتظار",
 
       en_au: "Please Wait",
       en_nz: "Please Wait",
@@ -206,6 +211,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "tr",
       pl: "pl",
       cs: "cs",
+      ar: "ar",
 
       en_au: "en_au",
       en_nz: "en_nz",
@@ -241,6 +247,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Tekrar hoşgeldiniz",
       pl: "Witamy z powrotem",
       cs: "Vítejte zpět",
+      ar: "مرحبًا بعودتك",
 
       en_au: "Welcome back",
       en_nz: "Welcome back",
@@ -276,6 +283,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Siz değil misiniz?",
       pl: "Nie ty?",
       cs: "Nejste to vy?",
+      ar: "لست أنت؟",
 
       en_au: "Not you?",
       en_nz: "Not you?",
@@ -311,6 +319,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "İndir",
       pl: "Pobieranie",
       cs: "Stáhnout",
+      ar: "تنزيل",
 
       en_au: "Download",
       en_nz: "Download",
@@ -346,6 +355,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Kayıt ol",
       pl: "Zarejestruj się",
       cs: "Zaregistrovat",
+      ar: "التسجيل",
 
       en_au: "Register",
       en_nz: "Register",
@@ -381,6 +391,7 @@ if (typeof translateFormElems_temp === "undefined") {
       tr: "Şimdi katılın",
       pl: "Dołącz teraz",
       cs: "Připojte se nyní",
+      ar: "انضم الآن",
 
       en_au: "Join Now",
       en_nz: "Join Now",

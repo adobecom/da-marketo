@@ -31,6 +31,7 @@ var SUPPORTED_LANGUAGES = [
   "tr", // Turkish
   "pl", // Polish
   "cs", // Czech
+  "ar", // Arabic
 
   "en_au", // English (Australian)
   "en_nz", // English (New Zealand)
