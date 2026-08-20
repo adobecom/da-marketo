@@ -684,6 +684,31 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Required field warning message tests (MWPW-203203): the authored
+  // "This field is required.." warning must render on empty submit
+  // regardless of the page's locale. Reuses checkForErrorMessages(), which
+  // already asserts this on the default (en_us) locale for tcid 0-5.
+  // -------------------------------------------------------------------------
+  features.filter((f) => f.type === 'requiredFieldWarning').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ baseURL }, testInfo) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
+        const testPage = buildTestUrl(baseURL, path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step(`step-1: Navigate to the /${feature.locale}/ locale page`, async () => {
+          await marketoBlock.navigateTo(testPage);
+        });
+
+        await test.step('step-2: Submit empty and verify the required field warning message', async () => {
+          await marketoBlock.submitButton.click();
+          await marketoBlock.checkForErrorMessages();
+        });
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // Template version normalization tests (MWPW-201774): templateVersions must
   // map dme_/comb_ prefixed template variants (e.g. comb_flex_event) down to
   // their bare template key (flex_event) BEFORE subtypeTemplate resolves the
