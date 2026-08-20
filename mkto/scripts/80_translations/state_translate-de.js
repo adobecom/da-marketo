@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T130916
+// ## 80_translations/state_translate-de.js
 // ##
 //lang code =de, form locale = de_DE, form language = Deutsch
 var translateState = {
@@ -252,3 +253,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-de.js

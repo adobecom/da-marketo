@@ -23,3 +23,8 @@ jobs:
         uses: tj-actions/eslint-changed-files@74f98653675512158746d3136cd2d9326fbfb6e1
         with:
           config_path: "eslint.config.js"
+          ignore_patterns: |
+            mkto/deps/**
+            mkto/scripts/[0-9]*/**
+            nala/results/**
+            scripts/fallback.js

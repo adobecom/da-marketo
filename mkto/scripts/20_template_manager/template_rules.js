@@ -768,3 +768,5 @@ if (typeof templateRules == "undefined") {
 
 // ##
 // ##
+
+//# sourceURL=template_rules.js
