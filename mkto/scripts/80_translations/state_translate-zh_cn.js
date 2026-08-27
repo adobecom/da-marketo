@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T131045
+// ## 80_translations/state_translate-zh_cn.js
 // ##
 //lang code =zh_cn, form locale = zh_CN
 var translateState = {
@@ -1581,3 +1582,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-zh_cn.js

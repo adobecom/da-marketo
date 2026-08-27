@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230505T210858
+// ## 80_translations/state_translate-ru.js
 // ##
 //lang code =ru, form locale = ru_RU,  form language = Russian
 var translateState = {
@@ -1192,3 +1193,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-ru.js

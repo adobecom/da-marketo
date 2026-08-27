@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T131430
+// ## 80_translations/state_translate-da.js
 // ##
 //lang code = da, form locale = da-DK,  form language = Dansk, form country = Danmark
 var translateState = {
@@ -159,3 +160,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-da.js
