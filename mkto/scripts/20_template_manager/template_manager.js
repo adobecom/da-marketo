@@ -3,7 +3,7 @@
 // ##
 // ##
 // ##
-// ## Template Manager Module v0.5b
+// ## 20_template_manager/template_manager.js - Template Manager Module v0.5b
 // ##
 // ##
 
@@ -787,3 +787,5 @@ if (typeof templateManager != "function" && typeof form_dynamics !== "undefined"
 
 // ##
 // ##
+
+//# sourceURL=template_manager.js

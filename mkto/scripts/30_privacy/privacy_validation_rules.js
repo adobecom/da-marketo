@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20251001T195718
+// ## Updated 20260824T201502
 // ##
 // ##
 // ##
-// ## 30_privacy/privacy_validation_rules.js - 20251001T195718
+// ## 30_privacy/privacy_validation_rules.js - 20260824T201502
 // ##
 // ##
 //
@@ -31,6 +31,7 @@ var SUPPORTED_LANGUAGES = [
   "tr", // Turkish
   "pl", // Polish
   "cs", // Czech
+  "ar", // Arabic
 
   "en_au", // English (Australian)
   "en_nz", // English (New Zealand)
@@ -442,3 +443,5 @@ var PRIVACY_CODE_RULES = [
 
 // ##
 // ##
+
+//# sourceURL=privacy_validation_rules.js

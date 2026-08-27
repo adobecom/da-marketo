@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T132326
+// ## 80_translations/state_translate-pl.js
 // ##
 //lang code =pl, form locale = pl_PL, form language = Polish
 
@@ -265,3 +266,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-pl.js

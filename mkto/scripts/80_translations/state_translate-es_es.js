@@ -1,5 +1,6 @@
 // ##
 // ## Updated 20230720T130822
+// ## 80_translations/state_translate-es_es.js
 // ##
 //lang code es, form locale = es-ES,  form language = Español, form country = España
 var translateState = {
@@ -399,3 +400,5 @@ var translateState = {
 
 // ##
 // ##
+
+//# sourceURL=state_translate-es_es.js
