@@ -17,6 +17,21 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
       temp: "temp",
     };
 
+    const noneRuleFields = new Set();
+    function reassertNoneRuleFields() {
+      noneRuleFields.forEach(function (fieldname) {
+        const field = document.querySelector('[name="' + fieldname + '"]');
+        if (!field) return;
+        const row = field.closest(".mktoFormRowTop");
+        if (row && !row.classList.contains("mktoHidden")) {
+          row.classList.add("mktoHidden", "mktohandleFieldRuleLegend");
+        }
+        if (field.classList.contains("mktoRequired") || field.hasAttribute("required")) {
+          setRequired(fieldname, false);
+        }
+      });
+    }
+
     async function mkto_addCSS(mktoForm) {
       if (!mktoForm.classList.contains("mktoForm--styles-added")) {
         const baseCss = `
@@ -527,7 +542,6 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
 
           let RuleLegend_try = 0;
           let handleFieldRuleLegend_max = 30;
-          const noneRuleFields = new Set();
           function handleFieldRuleLegend(mktoFormRowLegend, mktoFormRow, mktoForm, mktoFieldset) {
             mktoFormRow.classList.add("mktoHidden");
             mktoFormRow.classList.add("mktoFieldRuleLegend");
@@ -827,20 +841,6 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
               }
 
               // textElem.innerHTML = "passed: " + reference.trim();
-            });
-          }
-
-          function reassertNoneRuleFields() {
-            noneRuleFields.forEach(function (fieldname) {
-              const field = document.querySelector('[name="' + fieldname + '"]');
-              if (!field) return;
-              const row = field.closest(".mktoFormRowTop");
-              if (row && !row.classList.contains("mktoHidden")) {
-                row.classList.add("mktoHidden", "mktohandleFieldRuleLegend");
-              }
-              if (field.classList.contains("mktoRequired") || field.hasAttribute("required")) {
-                setRequired(fieldname, false);
-              }
             });
           }
 
