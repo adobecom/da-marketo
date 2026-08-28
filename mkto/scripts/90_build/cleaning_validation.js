@@ -388,6 +388,13 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
 
       let mktoForm = document.querySelector(".mktoForm[id]");
 
+      if (!window.__mktoFieldRuleNoneReasserted) {
+        window.__mktoFieldRuleNoneReasserted = true;
+        $("body").on("mktoRender", function () {
+          reassertNoneRuleFields();
+        });
+      }
+
       let mktoFormElements = mktoForm.querySelectorAll("[style]:not(.mktoCleaned)");
       if (mktoFormElements.length > 0) {
         for (var i = 0; i < mktoFormElements.length; i++) {
