@@ -401,14 +401,9 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
     function normalizeMktoStyles() {
       normalizeMktoStyles_run += 1;
 
-      let mktoForm = document.querySelector(".mktoForm[id]");
+      reassertNoneRuleFields();
 
-      if (!window.__mktoFieldRuleNoneReasserted) {
-        window.__mktoFieldRuleNoneReasserted = true;
-        $("body").on("mktoRender", function () {
-          reassertNoneRuleFields();
-        });
-      }
+      let mktoForm = document.querySelector(".mktoForm[id]");
 
       let mktoFormElements = mktoForm.querySelectorAll("[style]:not(.mktoCleaned)");
       if (mktoFormElements.length > 0) {
