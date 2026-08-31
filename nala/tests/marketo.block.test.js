@@ -15,6 +15,9 @@ const currentSite = (() => {
   return parts.length === 3 ? parts[1] : label;
 })();
 const isFeatureAllowedOnSite = (feature) => !feature.sites || feature.sites.includes(currentSite);
+// Restricts a feature to specific Playwright projects (e.g. browser-agnostic JS-state assertions
+// that don't need cross-browser coverage). Add `browsers: ['chromium']` to a feature to scope it.
+const isFeatureAllowedOnBrowser = (feature, testInfo) => !feature.browsers || feature.browsers.includes(testInfo.project.name);
 
 // WebKit blocks the mixed-content http://localhost fetch that ?marketolibs=local relies on, so the
 // page silently falls back to whatever script is already live instead of the local, not-yet-pushed
@@ -709,17 +712,18 @@ test.describe('Marketo block test suite', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Template version normalization tests (MWPW-201774): templateVersions must
-  // map dme_/comb_ prefixed template variants (e.g. comb_flex_event) down to
-  // their bare template key (flex_event) BEFORE subtypeTemplate resolves the
-  // channel/subtype. Regression guard for the June 2026 templateVersions
-  // regression that left flex_event variants unnormalized, mis-assigning
-  // strategy_webinar forms as request_for_information.
+  // Template version subtype tests (MWPW-201774): dme_/comb_ prefixed
+  // template variants (e.g. dme_flex_event) resolve their channel/subtype via
+  // explicit dme_/comb_ keys in subtypeTemplate — form.template itself is NOT
+  // normalized (templateVersions is currently an identity map). Regression
+  // guard for the templateVersions/subtypeTemplate flip-flopping seen across
+  // PRs #35/#38/#39.
   // -------------------------------------------------------------------------
   features.filter((f) => f.type === 'templateVersion').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
         test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
+        test.skip(!isFeatureAllowedOnBrowser(feature, testInfo), `browser-agnostic JS-state assertion — scoped to ${feature.browsers?.join(', ')}`);
         const testPage = buildTestUrl(baseURL, path);
         console.info(`[Test Page]: ${testPage}`);
 
@@ -735,6 +739,29 @@ test.describe('Marketo block test suite', () => {
 
         await test.step(`step-3: form.subtype resolves to "${feature.expectedSubtype}"`, async () => {
           expect(await marketoBlock.getFormSubtype()).toBe(feature.expectedSubtype);
+        });
+      });
+    });
+  });
+
+  features.filter((f) => f.type === 'subtypeMapping').forEach((feature) => {
+    feature.cases.forEach((c, i) => {
+      test(`${feature.tcid}.${i}: ${feature.name} (${c.template}), ${feature.tags}, path: ${c.path}`, async ({ page, baseURL }, testInfo) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
+        test.skip(!isFeatureAllowedOnBrowser(feature, testInfo), `browser-agnostic JS-state assertion — scoped to ${feature.browsers?.join(', ')}`);
+        const testPage = buildTestUrl(baseURL, c.path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('step-1: Navigate and wait for template processing to resolve', async () => {
+          await marketoBlock.navigateTo(testPage, { waitForField: false });
+        });
+
+        await test.step(`step-2: form.template: "${c.template}"`, async () => {
+          expect(await marketoBlock.getFormTemplate()).toBe(c.template);
+        });
+
+        await test.step(`step-3: form.subtype resolves to "${c.subtype}"`, async () => {
+          expect(await marketoBlock.getFormSubtype()).toBe(c.subtype);
         });
       });
     });

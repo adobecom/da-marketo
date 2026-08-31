@@ -364,6 +364,7 @@ const features = [
     expectedTemplate: 'dme_flex_event',
     expectedSubtype: 'strategy_webinar',
     sites: ['da-marketo'],
+    browsers: ['chromium'],
   },
   {
     tcid: '33',
@@ -384,6 +385,29 @@ const features = [
     formType: 'full',
     locale: 'in',
     sites: ['da-marketo'],
+  },
+  {
+    tcid: '35',
+    name: '@marketo subtype mapping: template resolves expected subtype',
+    tags: '@marketo @marketoSubtypeMapping @regression',
+    type: 'subtypeMapping',
+    sites: ['da-marketo'],
+    browsers: ['chromium'],
+    cases: [
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/flex-contact', template: 'flex_contact', subtype: 'request_for_information' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/dme-flex-contact', template: 'dme_flex_contact', subtype: 'request_for_information' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/comb-flex-contact', template: 'comb_flex_contact', subtype: 'request_for_information' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/flex-content', template: 'flex_content', subtype: 'whitepaper_form' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/dme-flex-content', template: 'dme_flex_content', subtype: 'whitepaper_form' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/comb-flex-content', template: 'comb_flex_content', subtype: 'whitepaper_form' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/flex-event', template: 'flex_event', subtype: 'strategy_webinar' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/dme-flex-event', template: 'dme_flex_event', subtype: 'strategy_webinar' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/comb-flex-event', template: 'comb_flex_event', subtype: 'strategy_webinar' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/content-explore', template: 'content_explore', subtype: 'strategy_webinar' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/content-discover', template: 'content_discover', subtype: 'whitepaper_form' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/content-evaluate', template: 'content_evaluate', subtype: 'request_for_information' },
+      { path: '/drafts/nala/blocks/marketo/subtype-mapping/subscription', template: 'subscription', subtype: 'email' },
+    ],
   },
 ];
 
