@@ -409,6 +409,27 @@ const features = [
       { path: '/drafts/nala/blocks/marketo/subtype-mapping/subscription', template: 'subscription', subtype: 'email' },
     ],
   },
+  {
+    tcid: '36',
+    name: '@marketo Verifying that the Country dropdown displays all the expected countries.',
+    tags: '@marketo @marketoCountryDropdown @regression',
+    type: 'countryDropdown',
+    sites: ['da-marketo'],
+    cases: [
+      { locale: 'en_us', path: '/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'uk', path: '/uk/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'au', path: '/au/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'in', path: '/in/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'fr', path: '/fr/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'de', path: '/de/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'es', path: '/es/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'it', path: '/it/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'pt', path: '/pt/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'jp', path: '/jp/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'kr', path: '/kr/drafts/nala/blocks/marketo/country-test' },
+      { locale: 'ara', path: '/ara/drafts/nala/blocks/marketo/country-test' },
+    ],
+  },
 ];
 
 export default features;
