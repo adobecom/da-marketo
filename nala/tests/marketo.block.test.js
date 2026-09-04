@@ -2,6 +2,7 @@ import { expect, test } from '../fixtures.js';
 import features from '../features/marketo.block.spec.js';
 import MarketoBlock from '../selectors/marketo.block.page.js';
 import TEST_DATA from '../utils/marketo.test.data.js';
+import { CANONICAL_COUNTRY_CODES } from '../utils/country.test.data.js';
 
 const UPDATE_PLACEHOLDERS = 'Please check placeholders.json';
 const miloLibs = process.env.MILO_LIBS || '';
@@ -762,6 +763,35 @@ test.describe('Marketo block test suite', () => {
 
         await test.step(`step-3: form.subtype resolves to "${c.subtype}"`, async () => {
           expect(await marketoBlock.getFormSubtype()).toBe(c.subtype);
+        });
+      });
+    });
+  });
+
+  features.filter((f) => f.type === 'countryDropdown').forEach((feature) => {
+    feature.cases.forEach((c) => {
+      test(`${feature.tcid}: ${feature.name} (${c.locale}), ${feature.tags}, path: ${c.path}`, async ({ baseURL }) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
+        const testPage = buildTestUrl(baseURL, c.path);
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step(`step-1: Navigate to the ${c.locale} country-test page`, async () => {
+          await marketoBlock.navigateTo(testPage, { waitForField: false });
+          await marketoBlock.country.locator('option').nth(1).waitFor({ state: 'attached', timeout: 20000 });
+        });
+
+        await test.step('step-2: Country dropdown contains exactly the canonical country set, no duplicates', async () => {
+          const renderedCodes = await marketoBlock.getCountryCodes();
+          const renderedSet = new Set(renderedCodes);
+          const canonicalSet = new Set(CANONICAL_COUNTRY_CODES);
+          const missing = CANONICAL_COUNTRY_CODES.filter((code) => !renderedSet.has(code));
+          const unexpected = renderedCodes.filter((code) => !canonicalSet.has(code));
+          const counts = renderedCodes.reduce((acc, code) => acc.set(code, (acc.get(code) || 0) + 1), new Map());
+          const duplicates = [...counts].filter(([, count]) => count > 1).map(([code]) => code);
+
+          expect(missing, `[${c.locale}] missing countries: ${missing.join(', ')}`).toHaveLength(0);
+          expect(unexpected, `[${c.locale}] unexpected countries: ${unexpected.join(', ')}`).toHaveLength(0);
+          expect(duplicates, `[${c.locale}] duplicate countries: ${duplicates.join(', ')}`).toHaveLength(0);
         });
       });
     });

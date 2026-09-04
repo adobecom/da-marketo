@@ -450,6 +450,22 @@ export default class MarketoBlock {
     }
   }
 
+  /**
+   * Returns the ISO-2 `value`s of every real option in the Country <select>,
+   * excluding the "Select" placeholder. Marketo renders that placeholder
+   * with value="_" (not ""), so both are excluded defensively. `value` stays
+   * the ISO code across locales even when the visible label is translated,
+   * so this is the locale-agnostic way to check dropdown membership.
+   * @returns {Promise<string[]>}
+   */
+  async getCountryCodes() {
+    return this.country.evaluate(
+      (el) => Array.from(el.options)
+        .map((o) => o.value)
+        .filter((value) => value !== '' && value !== '_'),
+    );
+  }
+
   getFormElements(formType) {
     const fieldNames = ['firstName', 'lastName', 'email', 'company', 'country'];
 
