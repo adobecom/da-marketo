@@ -17,6 +17,21 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
       temp: "temp",
     };
 
+    const noneRuleFields = new Set();
+    function reassertNoneRuleFields() {
+      noneRuleFields.forEach(function (fieldname) {
+        const field = document.querySelector('[name="' + fieldname + '"]');
+        if (!field) return;
+        const row = field.closest(".mktoFormRowTop");
+        if (row && !row.classList.contains("mktoHidden")) {
+          row.classList.add("mktoHidden", "mktohandleFieldRuleLegend");
+        }
+        if (field.classList.contains("mktoRequired") || field.hasAttribute("required")) {
+          setRequired(fieldname, false);
+        }
+      });
+    }
+
     async function mkto_addCSS(mktoForm) {
       if (!mktoForm.classList.contains("mktoForm--styles-added")) {
         const baseCss = `
@@ -386,6 +401,8 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
     function normalizeMktoStyles() {
       normalizeMktoStyles_run += 1;
 
+      reassertNoneRuleFields();
+
       let mktoForm = document.querySelector(".mktoForm[id]");
 
       let mktoFormElements = mktoForm.querySelectorAll("[style]:not(.mktoCleaned)");
@@ -605,6 +622,7 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
                   }
                   mktoFormRowTop.classList.add("mktoHidden", "mktohandleFieldRuleLegend");
                 }
+                noneRuleFields.add(fieldname);
                 return;
               }
 
