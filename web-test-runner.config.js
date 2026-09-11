@@ -1,4 +1,3 @@
-import { importMapsPlugin } from '@web/dev-server-import-maps';
 import { defaultReporter } from '@web/test-runner';
 
 function customReporter() {
@@ -23,7 +22,11 @@ export default {
       '**/deps/**',
     ],
   },
-  plugins: [importMapsPlugin({})],
+  plugins: [],
+  // Note: the browser resolves the <script type="importmap"> below natively; the
+  // @web/dev-server-import-maps plugin is intentionally NOT registered here, as it
+  // rewrites dynamic-import requests to a `?wds-import-map=N` URL, which produces a
+  // second, un-synced module instance for anything already mapped natively.
   reporters: [
     defaultReporter({ reportTestResults: true, reportTestProgress: true }),
     customReporter(),
@@ -31,6 +34,16 @@ export default {
   testRunnerHtml: (testFramework) => `
     <html>
       <head>
+        <script type='importmap'>
+          {
+            "imports": {
+              "https://main--milo--adobecom.aem.live/libs/utils/utils.js": "/test/blocks/da-marketo/mocks/utils.js",
+              "https://main--milo--adobecom.aem.live/libs/utils/action.js": "/test/blocks/da-marketo/mocks/action.js",
+              "https://main--milo--adobecom.aem.live/libs/features/placeholders.js": "/test/blocks/da-marketo/mocks/placeholders.js",
+              "http://localhost:2000/mkto/mkto.js": "/test/blocks/da-marketo/mocks/mkto.js"
+            }
+          }
+        </script>
         <script type='module'>
           const oldFetch = window.fetch;
           window.fetch = async (resource, options) => {

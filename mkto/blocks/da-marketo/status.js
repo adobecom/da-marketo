@@ -21,6 +21,7 @@ function getDetails(el, formID) {
 
   return `
     <button class="miw-close" aria-label="Close"></button>
+    <p>DA Marketo Form Info</p>
     <p>Form ID: <span>${formID || '(not set)'}</span></p>
     <p>Template: <span>${template || '(not set)'}</span></p>
     <p>Subtype: <span>${subtype || '(not set)'}</span></p>

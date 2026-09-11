@@ -22,13 +22,13 @@ const VALIDATION_STEP = {
 let stepText = {};
 
 export function updateTabIndex(formEl, stepToAdd, stepToRemove) {
-  const fieldsToAdd = formEl.querySelectorAll(`.mktoFormRowTop[data-validate="${stepToAdd}"]:not(.mktoHidden) input,
-    .mktoFormRowTop[data-validate="${stepToAdd}"]:not(.mktoHidden) select,
+  const fieldsToAdd = formEl.querySelectorAll(`.mktoFormRowTop[data-validate="${stepToAdd}"]:not(.mktoHidden) input, 
+    .mktoFormRowTop[data-validate="${stepToAdd}"]:not(.mktoHidden) select, 
     .mktoFormRowTop[data-validate="${stepToAdd}"]:not(.mktoHidden) textarea`);
   fieldsToAdd.forEach((f) => { f.tabIndex = 0; });
 
-  const fieldsToRemove = formEl.querySelectorAll(`.mktoFormRowTop[data-validate="${stepToRemove}"]:not(.mktoHidden) input,
-    .mktoFormRowTop[data-validate="${stepToRemove}"]:not(.mktoHidden) select,
+  const fieldsToRemove = formEl.querySelectorAll(`.mktoFormRowTop[data-validate="${stepToRemove}"]:not(.mktoHidden) input, 
+    .mktoFormRowTop[data-validate="${stepToRemove}"]:not(.mktoHidden) select, 
     .mktoFormRowTop[data-validate="${stepToRemove}"]:not(.mktoHidden) textarea`);
   fieldsToRemove.forEach((f) => { f.tabIndex = -1; });
 }
