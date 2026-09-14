@@ -20,7 +20,7 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
     const noneRuleFields = new Set();
     function reassertNoneRuleFields() {
       noneRuleFields.forEach(function (fieldname) {
-        const field = document.querySelector('[name="' + fieldname + '"]');
+        const field = document.querySelector(`[name="${fieldname}"]`);
         if (!field) return;
         const row = field.closest(".mktoFormRowTop");
         if (row && !row.classList.contains("mktoHidden")) {
