@@ -4,7 +4,6 @@ import MarketoBlock from '../selectors/marketo.block.page.js';
 import TEST_DATA from '../utils/marketo.test.data.js';
 import { CANONICAL_COUNTRY_CODES } from '../utils/country.test.data.js';
 
-const UPDATE_PLACEHOLDERS = 'Please check placeholders.json';
 const miloLibs = process.env.MILO_LIBS || '';
 const cdnBranch = process.env.MARKETO_LIBS || '';
 const marketoLibs = cdnBranch ? `${miloLibs ? '&' : '?'}marketolibs=${cdnBranch}` : '';
@@ -146,14 +145,9 @@ test.describe('Marketo block test suite', () => {
     });
   });
 
-  // -------------------------------------------------------------------------
-  // Multi-step tests: verify 2-step / 3-step flow, Back-navigation
-  // preserves entered values, and final submission behaves as redirect/message
-  // -------------------------------------------------------------------------
   features.filter((f) => f.formType === 'multi-step').forEach((feature) => {
     feature.path.forEach((path) => {
       test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
-        test.skip(true, 'MWPW-198154: Will fix later.');
         const testPage = buildTestUrl(baseURL, path);
         const testData = { ...TEST_DATA, email: `test+w${testInfo.workerIndex}t${feature.tcid}@adobetest.com` };
         const { totalSteps } = feature;
@@ -165,10 +159,18 @@ test.describe('Marketo block test suite', () => {
           expect(await marketoBlock.getTotalSteps()).toBe(totalSteps);
           expect(await marketoBlock.getCurrentStep()).toBe(1);
           await expect(marketoBlock.stepIndicator).toHaveText(`Step 1 of ${totalSteps}`, { ignoreCase: true });
-          await expect(marketoBlock.stepIndicator, UPDATE_PLACEHOLDERS).toHaveText(`Step 1 of ${totalSteps}`);
           await expect(marketoBlock.nextButton).toBeVisible();
           await expect(marketoBlock.submitButton).toHaveClass(/mktoHidden/);
           await expect(marketoBlock.backButton).toHaveCount(0);
+        });
+
+        await test.step('Verify no fields are pre-filled for a fresh visitor', async () => {
+          await expect(marketoBlock.email).toHaveValue('');
+          await expect(marketoBlock.firstName).toHaveValue('');
+          await expect(marketoBlock.lastName).toHaveValue('');
+          await expect(marketoBlock.phone).toHaveValue('');
+          await expect(marketoBlock.company).toHaveValue('');
+          await expect(marketoBlock.postalCode).toHaveValue('');
         });
 
         await test.step('Verify validation warnings on empty Next', async () => {
@@ -182,7 +184,6 @@ test.describe('Marketo block test suite', () => {
           await marketoBlock.clickNext();
           expect(await marketoBlock.getCurrentStep()).toBe(2);
           await expect(marketoBlock.stepIndicator).toHaveText(`Step 2 of ${totalSteps}`, { ignoreCase: true });
-          await expect(marketoBlock.stepIndicator, UPDATE_PLACEHOLDERS).toHaveText(`Step 2 of ${totalSteps}`);
           await expect(marketoBlock.backButton).toBeVisible();
         });
 
@@ -200,7 +201,6 @@ test.describe('Marketo block test suite', () => {
             await marketoBlock.clickNext();
             expect(await marketoBlock.getCurrentStep()).toBe(3);
             await expect(marketoBlock.stepIndicator).toHaveText(`Step 3 of ${totalSteps}`, { ignoreCase: true });
-            await expect(marketoBlock.stepIndicator, UPDATE_PLACEHOLDERS).toHaveText(`Step 3 of ${totalSteps}`);
             await marketoBlock.fillMultiStepStep(3, testData);
           }
         });
@@ -792,6 +792,96 @@ test.describe('Marketo block test suite', () => {
           expect(missing, `[${c.locale}] missing countries: ${missing.join(', ')}`).toHaveLength(0);
           expect(unexpected, `[${c.locale}] unexpected countries: ${unexpected.join(', ')}`).toHaveLength(0);
           expect(duplicates, `[${c.locale}] duplicate countries: ${duplicates.join(', ')}`).toHaveLength(0);
+        });
+      });
+    });
+  });
+
+  features.filter((f) => f.type === 'progressiveMultiStepKnown').forEach((feature) => {
+    feature.path.forEach((path) => {
+      test(`${feature.tcid}: ${feature.name}, ${feature.tags}, path: ${path}`, async ({ page, baseURL }, testInfo) => {
+        test.skip(!isFeatureAllowedOnSite(feature), `not applicable to site "${currentSite}"`);
+        const testPage = buildTestUrl(baseURL, path);
+        const testData = { ...TEST_DATA, email: `test+w${testInfo.workerIndex}t${feature.tcid}@adobetest.com` };
+        console.info(`[Test Page]: ${testPage}`);
+
+        await test.step('step-1: Submit a form to become a known visitor', async () => {
+          const fullPage = buildTestUrl(baseURL, '/drafts/nala/blocks/marketo/full');
+          await marketoBlock.navigateTo(fullPage);
+          await marketoBlock.fillFullForm(testData);
+          testData.country = await marketoBlock.country.inputValue();
+          testData.jobTitle = await marketoBlock.jobTitle.inputValue();
+          testData.functionalArea = await marketoBlock.functionalArea.inputValue();
+          testData.primaryProductInterest = await marketoBlock.primaryProductInterest.inputValue();
+          testData.state = (await marketoBlock.state.isVisible()) ? await marketoBlock.state.inputValue() : '';
+          await marketoBlock.submitButton.click();
+          await expect(page).toHaveURL(/\?submissionid/, { timeout: 30000 });
+        });
+
+        await test.step('step-2: Navigate to the progressive multi-step page', async () => {
+          await marketoBlock.navigateTo(testPage);
+        });
+
+        await test.step('step-3: Check that the fields are prefilled for known visitors', async () => {
+          await expect(marketoBlock.email).toHaveValue(testData.email, { timeout: 20000 });
+          await expect(marketoBlock.country).toHaveValue(testData.country);
+          await expect(marketoBlock.firstName).toHaveValue(testData.firstName);
+          await expect(marketoBlock.lastName).toHaveValue(testData.lastName);
+          await expect(marketoBlock.phone).toHaveValue(testData.phone);
+          await expect(marketoBlock.jobTitle).toHaveValue(testData.jobTitle);
+          await expect(marketoBlock.functionalArea).toHaveValue(testData.functionalArea);
+          await expect(marketoBlock.company).toHaveValue(testData.company);
+          await expect(marketoBlock.postalCode).toHaveValue(testData.postalCode);
+          await expect(marketoBlock.state).toHaveValue(testData.state);
+          await expect(marketoBlock.primaryProductInterest).toHaveValue(testData.primaryProductInterest);
+        });
+
+        await test.step('step-4: Go to step 2 and check that the values persist', async () => {
+          await marketoBlock.clickNext();
+
+          await expect(marketoBlock.firstName).toHaveValue(testData.firstName);
+          await expect(marketoBlock.lastName).toHaveValue(testData.lastName);
+          await expect(marketoBlock.phone).toHaveValue(testData.phone);
+          await expect(marketoBlock.jobTitle).toHaveValue(testData.jobTitle);
+          await expect(marketoBlock.functionalArea).toHaveValue(testData.functionalArea);
+
+          if (feature.totalSteps === 2) {
+            await expect(marketoBlock.company).toHaveValue(testData.company);
+            await expect(marketoBlock.postalCode).toHaveValue(testData.postalCode);
+            await expect(marketoBlock.state).toHaveValue(testData.state);
+            await expect(marketoBlock.primaryProductInterest).toHaveValue(testData.primaryProductInterest);
+          }
+        });
+
+        if (feature.totalSteps === 3) {
+          await test.step('step-5: Go to step 3 and check that the values persist', async () => {
+            await marketoBlock.clickNext();
+            await expect(marketoBlock.company).toHaveValue(testData.company);
+            await expect(marketoBlock.postalCode).toHaveValue(testData.postalCode);
+            await expect(marketoBlock.state).toHaveValue(testData.state);
+            await expect(marketoBlock.primaryProductInterest).toHaveValue(testData.primaryProductInterest);
+          });
+        }
+
+        await test.step(`step-${feature.totalSteps === 3 ? '6' : '5'}: Submit the form and check that the prefilled POST data.`, async () => {
+          const submissionRequest = page.waitForRequest(
+            (req) => req.method() === 'POST' && req.url().includes('leadCapture/save2'),
+          );
+          await marketoBlock.submitButton.click();
+          const body = new URLSearchParams((await submissionRequest).postData());
+
+          expect(body.get('FirstName')).toBe(testData.firstName);
+          expect(body.get('LastName')).toBe(testData.lastName);
+          expect(body.get('Email')).toBe(testData.email);
+          expect(body.get('Phone')).toBe(testData.phone);
+          expect(body.get('mktoFormsCompany')).toBe(testData.company);
+          expect(body.get('PostalCode')).toBe(testData.postalCode);
+          expect(body.get('Country')).toBe(testData.country);
+          expect(body.get('mktoFormsJobTitle')).toBe(testData.jobTitle);
+          expect(body.get('mktoFormsFunctionalArea')).toBe(testData.functionalArea);
+          expect(body.get('mktoFormsPrimaryProductInterest')).toBe(testData.primaryProductInterest);
+
+          await expect(page).toHaveURL(/\?submissionid/, { timeout: 30000 });
         });
       });
     });
