@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260615T104331
+// ## Updated 20260917T210306
 // ##
 // ##
 // ##
-// ## 90_build/cleaning_validation.js - Cleaning and Validation 20260615T104331
+// ## 90_build/cleaning_validation.js - Cleaning and Validation 20260917T210306
 // ##
 
 var rendering_ready = false;
@@ -603,7 +603,11 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
                       mktoFieldDescriptor.classList.remove("mktoFieldDescriptor");
                     });
                   }
-                  mktoFormRowTop.classList.add("mktoHidden", "mktohandleFieldRuleLegend");
+                  mktoFormRowTop.classList.add(
+                    "mktoHidden",
+                    "mktohandleFieldRuleLegend",
+                    "mktoNoneRuleField"
+                  );
                 }
                 return;
               }
@@ -627,7 +631,11 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
                   });
                 }
 
-                mktoFormRowTop.classList.remove("mktoHidden", "mktohandleFieldRuleLegend");
+                mktoFormRowTop.classList.remove(
+                  "mktoHidden",
+                  "mktohandleFieldRuleLegend",
+                  "mktoNoneRuleField"
+                );
               }
 
               if (mktoFormRowTop) {

@@ -246,7 +246,7 @@ export default class MarketoBlock {
         return dir === 'next' ? now > prev : now < prev;
       },
       { dir: direction, prev: fromStep },
-      { timeout: 5000 },
+      { timeout: 20000 },
     );
     await this.page.waitForTimeout(110);
   }
