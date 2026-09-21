@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20250929T205629
+// ## Updated 20260917T210306
 // ##
 // ##
 // ##
-// ## 40_field_management/field_preferences.js - 20250929T205629
+// ## 40_field_management/field_preferences.js - 20260917T210306
 // ##
 // ##
 
@@ -66,6 +66,17 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
       if (field_active) {
         setRequired_set[fieldName] = 0;
         let field = document.querySelector('[name="' + fieldName + '"]');
+
+        if (window.jQuery) {
+          let mktoFieldDescriptorElem = field.closest(".mktoFieldDescriptor");
+          if (mktoFieldDescriptorElem) {
+            let mktoFieldDescriptor = window.jQuery(mktoFieldDescriptorElem).data("mktoFieldDescriptor");
+            if (mktoFieldDescriptor) {
+              mktoFieldDescriptor.required = direction;
+            }
+          }
+        }
+
         if (direction == true) {
           field.classList.remove("mktoValid");
           field.classList.add("mktoRequired");
@@ -196,6 +207,11 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
               newFieldPreferences += fieldNames[i] + "#";
               setRequired(fieldNames[i], false);
             } else if (setting === "required") {
+              let mktoNoneRuleField = document.querySelector(`[name="${fieldNames[i]}"]`);
+              let mktoNoneRuleRow = mktoNoneRuleField && mktoNoneRuleField.closest(".mktoFormRowTop");
+              if (mktoNoneRuleRow && mktoNoneRuleRow.classList.contains("mktoNoneRuleField")) {
+                continue;
+              }
               newFieldPreferences += fieldNames[i] + "-required#";
               setRequired(fieldNames[i], true);
             }
