@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260813T153111
+// ## Updated 20260923T223949
 // ##
 // ##
 // ##
-// ##  00_config/marketo_form_setup_rules.js - 20260813T153111
+// ##  00_config/marketo_form_setup_rules.js - 20260923T223949
 // ##
 // ##
 
@@ -418,6 +418,8 @@ if (typeof window.mcz_marketoForm_pref_example == "undefined") {
         postcode: "PostalCode",
         company_size: "mktoDemandbaseEmployeeRange",
         website: "mktodemandbaseWebsite",
+        date_of_incorporation: "mktoField1",
+        total_funding_raised: "mktoField2",
       },
       field_mapping_dl: {
         //Marketo Form Field Names to Data Layer positions
