@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260615T104331
+// ## Updated 20260923T070057
 // ##
 // ##
 // ##
-// ## 90_build/cleaning_validation.js - Cleaning and Validation 20260615T104331
+// ## 90_build/cleaning_validation.js - Cleaning and Validation 20260923T070057
 // ##
 
 var rendering_ready = false;
@@ -333,6 +333,11 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
           dropdownField.add(select_lbloption);
         }
 
+        // Get the selected value from the Country field
+        let selectedCountry = document.querySelector('select[name="Country"] option:checked')?.value;
+
+        // If the Country value is JP and the dropdownField is State, skip sorting the State list
+        if (selectedCountry !== "JP" && dropdownField !== "Select") {
           optionsArray = optionsArray.concat(unsortedOptions);
 
           optionsArray.sort((a, b) => {
@@ -346,6 +351,7 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
             }
             return 0;
           });
+        }
 
         if (select_lbloption) {
           optionsArray.unshift(select_lbloption);
@@ -1605,5 +1611,3 @@ if (typeof window?.cleaning_validation != "function" && typeof form_dynamics !==
 
 // ##
 // ##
-
-//# sourceURL=cleaning_validation.js
