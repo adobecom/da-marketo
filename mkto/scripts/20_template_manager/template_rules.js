@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260615T160532
+// ## Updated 20260923T223949
 // ##
 // ##
 // ##
-// ## 20_template_manager/template_rules.js - 20260615T160532
+// ## 20_template_manager/template_rules.js - 20260923T223949
 // ##
 // ##
 if (typeof templateRules == "undefined") {
@@ -101,6 +101,16 @@ if (typeof templateRules == "undefined") {
           // hidden:Hide Field (hidden),
           // visible:Show Field (visible),
           //
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          // hidden:Hide Field (hidden),
+          // visible:Show Field (visible),
+          // required:Make Required (required)
+          //
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
+          // hidden:Hide Field (hidden),
+          // visible:Show Field (visible),
+          // required:Make Required (required)
+          //
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -185,6 +195,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -216,6 +228,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -247,6 +261,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -278,6 +294,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -309,6 +327,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -340,6 +360,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["hidden:Hide Field (hidden)"],
@@ -371,6 +393,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["hidden:Hide Field (hidden)"],
@@ -402,6 +426,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -432,6 +458,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DX:DX Specific Options (Functional Area-DX)"],
@@ -463,6 +491,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["hidden:Hide Field (hidden)"],
@@ -494,6 +524,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DMe:DMe Specific Options (Functional Area-DMe)"],
@@ -524,6 +556,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DMe:DMe Specific Options (Functional Area-DMe)"],
@@ -555,6 +589,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["hidden:Hide Field (hidden)"],
@@ -586,6 +622,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: [
@@ -618,6 +656,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: [
@@ -651,6 +691,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: [
@@ -684,6 +726,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["hidden:Hide Field (hidden)"],
@@ -715,6 +759,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["Functional Area-DALP:DALP Specific Options (Functional Area-DALP)"],
@@ -745,6 +791,8 @@ if (typeof templateRules == "undefined") {
           company_size: ["hidden:Hide Field (hidden)"],
           comments: ["hidden:Hide Field (hidden)"],
           demo: ["hidden:Hide Field (hidden)"],
+          date_of_incorporation: ["hidden:Hide Field (hidden)"],
+          total_funding_raised: ["hidden:Hide Field (hidden)"],
         },
         field_filters: {
           functional_area: ["hidden:Hide Field (hidden)"],
