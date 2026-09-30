@@ -9,6 +9,7 @@ import StepPanel from './step-panel.js';
 
 const { utf8ToB64, loadBlock, createTag } = await import(`${LIBS}/utils/utils.js`);
 
+const CONFIG_URL = 'https://milo.adobe.com/tools/marketo';
 const TEMPLATE_RULE_MAPPING = {
   formVersion: 'form.id',
   formSuccessType: 'form.success.type',
@@ -149,6 +150,7 @@ const AdvancedPanel = ({ lsKey }) => {
 
     localStorage.removeItem(lsKey);
     dispatch({ type: 'RESET_STATE' });
+    saveStateToLocalStorage(state, lsKey);
     firstPanel.click();
   };
 
@@ -203,10 +205,7 @@ const getPanels = (panelsData, lsKey) => {
   return panels;
 };
 
-const getDataUrl = (state) => {
-  const configUrl = `${window.location.origin}${window.location.pathname}`;
-  return `${configUrl}#${utf8ToB64(JSON.stringify(state))}`;
-};
+const getDataUrl = (state) => `${CONFIG_URL}#${utf8ToB64(JSON.stringify(state))}`;
 
 const Configurator = ({ title, panelsData, lsKey }) => {
   const { dispatch, state } = useContext(ConfiguratorContext);
@@ -251,11 +250,10 @@ const Configurator = ({ title, panelsData, lsKey }) => {
 
   useEffect(() => {
     const contentEl = document.querySelector('.content-panel');
-    if (!contentEl) return;
     const validatedState = validateState(state, panelsData);
     const windowUrl = new URL(window.location.href);
     const iframeUrl = new URL(windowUrl.origin + windowUrl.pathname);
-    const allowedParams = ['preview', 'milolibs', 'marketolibs', 'lang'];
+    const allowedParams = ['preview', 'milolibs', 'marketolibs', 'lang', 'marketoform'];
     const { searchParams } = windowUrl;
     allowedParams.forEach((param) => {
       if (searchParams.has(param)) {
@@ -387,7 +385,7 @@ function createDataBlock(blockClass, data) {
 }
 
 export default async function init(el) {
-  el.classList.add('marketo-config');
+  el.classList.add('marketo-config'); // Do not remove
   const children = Array.from(el.querySelectorAll(':scope > div'));
   const title = children[0].textContent.trim();
   const linkElement = children[1].querySelector('a[href$="json"]');
@@ -404,8 +402,8 @@ export default async function init(el) {
     const postMarketoRules = () => {
       if (window?.MktoForms2 && window?.templateRules) {
         window.MktoForms2.whenReady(() => {
-          window.parent.postMessage({ type: 'templateRules', data: window.templateRules }, window.location.origin);
-          window.parent.postMessage({ type: 'supportedLanguages', data: window.SUPPORTED_LANGUAGES }, window.location.origin);
+          window.parent.postMessage({ type: 'templateRules', data: window.templateRules }, '*');
+          window.parent.postMessage({ type: 'supportedLanguages', data: window.SUPPORTED_LANGUAGES }, '*');
         });
       } else {
         setTimeout(postMarketoRules, 100);

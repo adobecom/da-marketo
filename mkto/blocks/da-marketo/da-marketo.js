@@ -28,8 +28,10 @@ const {
 } = await import(`${LIBS}/utils/utils.js`);
 
 const { replaceKeyArray } = await import(`${LIBS}/features/placeholders.js`);
+const { sanitizeHtmlBody } = await import(`${LIBS}/utils/sanitizeHtml.js`);
 
 const BLOCK_BASE = new URL('../../', import.meta.url).href;
+const sanitizeFormHtml = (value) => (typeof value === 'string' ? sanitizeHtmlBody(value).innerHTML : value);
 
 const ROOT_MARGIN = 50;
 const FAILURE_TIMEOUT = 10000;
@@ -391,12 +393,12 @@ function decorateForm(el, formData) {
   const formWrapper = createTag('section', { class: 'marketo-form-wrapper' });
 
   if (formData.title) {
-    const title = createTag('h3', { class: 'marketo-title' }, formData.title);
+    const title = createTag('h3', { class: 'marketo-title' }, sanitizeFormHtml(formData.title));
     formWrapper.append(title);
   }
 
   if (formData.description) {
-    const description = createTag('p', { class: 'marketo-description' }, formData.description);
+    const description = createTag('p', { class: 'marketo-description' }, sanitizeFormHtml(formData.description));
     formWrapper.append(description);
   }
 
