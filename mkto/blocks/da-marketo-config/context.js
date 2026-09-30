@@ -2,6 +2,19 @@ import { LIBS } from '../../constants.js';
 import { createContext, html, useReducer } from '../../deps/htm-preact.js';
 
 const { parseEncodedConfig } = await import(`${LIBS}/utils/utils.js`);
+const { sanitizeHtmlBody } = await import(`${LIBS}/utils/sanitizeHtml.js`);
+
+export const sanitizeConfigValue = (value) => {
+  if (typeof value !== 'string') return value;
+  return sanitizeHtmlBody(value).innerHTML;
+};
+
+export const sanitizeHashConfig = (config) => {
+  if (!config || typeof config !== 'object') return config;
+  return Object.fromEntries(
+    Object.entries(config).map(([key, value]) => [key, sanitizeConfigValue(value)]),
+  );
+};
 
 export const saveStateToLocalStorage = (state, lsKey) => {
   localStorage.setItem(lsKey, JSON.stringify(state));
@@ -11,7 +24,7 @@ export const loadStateFromLocalStorage = (lsKey) => {
   const lsState = localStorage.getItem(lsKey);
   if (lsState) {
     try {
-      return JSON.parse(lsState);
+      return sanitizeHashConfig(JSON.parse(lsState));
       /* c8 ignore next 2 */
       // eslint-disable-next-line no-empty
     } catch (e) { }
@@ -30,7 +43,7 @@ const getHashConfig = () => {
   window.location.hash = '';
 
   const encodedConfig = hash.startsWith('#') ? hash.substring(1) : hash;
-  return parseEncodedConfig(encodedConfig);
+  return sanitizeHashConfig(parseEncodedConfig(encodedConfig));
 };
 
 const getInitialState = (defaultState, lsKey) => {

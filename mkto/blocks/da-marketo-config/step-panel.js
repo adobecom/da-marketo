@@ -14,15 +14,16 @@ const FORM_FIELDS = [
   { name: 'phone', label: 'Phone', step: 2 },
   { name: 'mktoFormsJobTitle', label: 'Job Title', step: 2 },
   { name: 'mktoFormsFunctionalArea', label: 'Functional Area', step: 2 },
-  { name: 'mktoFormsRevenue', label: 'Annual Revenue', step: 2 },
-  { name: 'mktoFormsEmployeeRange', label: 'Employee Range', step: 2 },
+  { name: 'mktodemandbaseIndustry', label: 'Industry', step: 2 },
+  { name: 'companysize', label: 'Employee Range', step: 2 },
+  { name: 'website', label: 'Website', step: 2 },
   { name: 'company', label: 'Company', step: 3 },
   { name: 'state', label: 'State', step: 3 },
   { name: 'postcode', label: 'Postal Code', step: 3 },
   { name: 'mktoFormsPrimaryProductInterest', label: 'Primary Product Interest', step: 3 },
   { name: 'mktoFormsCompanyType', label: 'Company Type', step: 3 },
-  { name: 'mktoFormsComments', label: 'Comments', step: 3 },
-  { name: 'mktoRequestProductDemo', label: 'Request Product Demo', step: 3 },
+  { name: 'comments', label: 'Comments', step: 3 },
+  { name: 'demo', label: 'Request Product Demo', step: 3 },
 ];
 
 const SYNCED_FIELDS = ['mktoFormsPrimaryProductInterest', 'mktoFormsCompanyType'];
@@ -142,7 +143,7 @@ const StepPanel = () => {
     };
 
     return html`
-      <div class="step-field" key=${`step-${currentStep}-${stepValues.length}-${Object.keys(currentStepOptions).length}`}>
+      <div class="step-field" key=${`step-${currentStep}-${stepValues.length}-${currentStepOptions.length}`}>
         <${TagSelect} options=${currentStepOptions} label="Fields for step ${currentStep}" value=${[...stepValues]} onChange=${onChange} />
       </div>
     `;
@@ -160,7 +161,7 @@ const StepPanel = () => {
     <div class="step-panel">
       <div class="steps-config">
         <${Select} label="Number of Steps" name="fldStepCount" options=${STEP_OPTIONS} value=${stepCount} onChange=${handleStepCountChange} />
-        <div class="step-field" key=${`step-1-${Object.keys(unselected).length}`}>
+        <div class="step-field" key=${`step-1-${unselected.length}`}>
           <${ReadonlyTagSelect} options=${unselected} label="Fields for step 1 (default)" value=${Object.keys(unselected)} />
         </div>
         ${[...Array(stepCount - 1)].map((_, i) => getStepOptions(i + 1))}

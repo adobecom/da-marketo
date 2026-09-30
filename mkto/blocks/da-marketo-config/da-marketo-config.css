@@ -85,7 +85,7 @@
 
 .tagselect .tagselect-plus,
 .tagselect .tagselect-plus::after {
-  background: #efefef;
+  background: #EFEFEF;
 }
 
 .tool-content {
@@ -100,11 +100,11 @@
 }
 
 .marketo-config .debug-settings button.active {
-  background: #777;
+    background: #777;
 }
 
 .marketo-config .debug-settings button.active:hover {
-  background: #999;
+    background: #999;
 }
 
 .config-panel {
