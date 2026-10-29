@@ -9,15 +9,17 @@ function decorateMarketo(area = document) {
   area.querySelectorAll('.marketo-config').forEach((el) => el.classList.replace('marketo-config', 'da-marketo-config'));
 }
 
-export function register({ getConfig, setConfig }) {
+export function register({ getConfig }) {
   decorateMarketo(document);
   const config = getConfig();
-  setConfig({
-    ...config,
-    externalLibs: [...(config.externalLibs ?? []), { base: BASE, blocks: MARKETO_BLOCKS }],
-    decorateArea: (area = document) => {
-      decorateMarketo(area);
-      config.decorateArea?.(area);
-    },
-  });
+  const previousDecorateArea = config.decorateArea;
+
+  config.externalLibs = [
+    ...(config.externalLibs ?? []),
+    { base: BASE, blocks: MARKETO_BLOCKS },
+  ];
+  config.decorateArea = (area = document) => {
+    decorateMarketo(area);
+    previousDecorateArea?.(area);
+  };
 }
