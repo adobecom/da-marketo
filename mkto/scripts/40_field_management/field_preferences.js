@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20261112T165924
+// ## Updated 20261112T203314
 // ##
 // ##
 // ##
-// ## 40_field_management/field_preferences.js - 20261112T165924
+// ## 40_field_management/field_preferences.js - 20261112T203314
 // ##
 // ##
 
@@ -38,7 +38,7 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
     var setRequired_set = {};
 
     const setRequired_attempts = 30;
-    window.setRequired = function (fieldName, direction) {
+    window.setRequired = function (fieldName, required) {
       if (fieldName == "" || fieldName == null || fieldName == undefined) {
         // mkf_c.log("setRequired - fieldName is empty");
         return;
@@ -93,7 +93,7 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
                 // clear a field Marketo itself marks required (native required
                 // fields are already required here and were not flagged by us),
                 // otherwise native validation would stop enforcing them.
-                if (direction === true) {
+                if (required === true) {
                   if (!mktoFieldDescriptor.required) {
                     mktoFieldDescriptor.required = true;
                     mktoFieldDescriptor.daMarketoRequired = true;
@@ -109,7 +109,7 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
           // non-fatal: class-based enforcement below still applies.
         }
 
-        if (direction == true) {
+        if (required == true) {
           field.classList.remove("mktoValid");
           field.classList.add("mktoRequired");
           field.classList.add("mkto_toggle");
@@ -210,7 +210,7 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
         setRequired_set[fieldName] = setRequired_set[fieldName] + 1;
         if (setRequired_set[fieldName] < setRequired_attempts) {
           setTimeout(function () {
-            setRequired(fieldName, direction);
+            setRequired(fieldName, required);
           }, 20);
         } else {
           //mkf_c.log(`setRequired - [${fieldName}] found after ${setRequired_set[fieldName]} attempts.`)
