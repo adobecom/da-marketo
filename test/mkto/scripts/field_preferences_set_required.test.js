@@ -64,11 +64,8 @@ describe('field_preferences.js: setRequired descriptor path (MWPW-204804)', () =
     descriptorMap.set(descriptorEl, { mktoFieldDescriptor: { required: false } });
 
     window.getMktoFormID = () => '123';
-    window.MktoForms2 = {
-      getForm: () => ({
-        getFormElem: () => makeFormElemStub(formEl, descriptorMap),
-      }),
-    };
+    const getFormElem = () => makeFormElemStub(formEl, descriptorMap);
+    window.MktoForms2 = { getForm: () => ({ getFormElem }) };
 
     // field_pref() defines window.setRequired (and starts its own polling loop,
     // which is harmless here); call it once to obtain the function under test.
