@@ -83,6 +83,29 @@ Each file carries a header timestamp comment (`// ## Updated <YYYYMMDDTHHMMSS>` 
 4. Check the diff, commit, and push the branch.
 5. Test again with `?marketolibs=<branch>` against the pushed branch.
 
+### ⚠️ Gotcha: native Marketo `descriptor.required` must only be set additively
+
+Before editing any field/required/validation logic in `mkto/scripts/`:
+
+- `window.setRequired(field, direction)` (`40_field_management/field_preferences.js`)
+  is called with `direction=false` for every field the config marks
+  visible/optional, from many callers (`field_preferences.js`,
+  `90_build/cleaning_validation.js`).
+- Marketo's native validator reads required-ness from the field **descriptor**
+  (`mkto/deps/forms2.js` `checkOne`) via the **SDK's own bundled jQuery
+  instance**. Access the descriptor through the form's `getFormElem()` jQuery
+  (same instance), NOT a page-level `window.jQuery` — per-instance jQuery
+  `.data()` stores don't match, so a `window.jQuery(...).data(...)` write
+  silently no-ops.
+- Setting `descriptor.required = false` indiscriminately **disables Marketo's
+  own native required validation** on natively-required fields (email, country,
+  product interest), so the form shows NO invalid fields at all. This was a real
+  MWPW-204804 regression.
+- Correct pattern: on `direction=true`, set `required=true` only if not already
+  required and tag `descriptor.daMarketoRequired = true`; on `direction=false`,
+  clear `required` only when `daMarketoRequired` is set. Never touch descriptors
+  da-marketo did not flag.
+
 ## Architecture
 
 See `ARCHITECTURE.md` for the full loading chain, phase descriptions, and environment matrix. Summary:
