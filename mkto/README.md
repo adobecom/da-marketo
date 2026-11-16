@@ -2,7 +2,7 @@
 
 Marketo script pipeline for business.adobe.com forms. These scripts run against the [Marketo Forms 2.0 API](https://engage.adobe.com) and know nothing about EDS or DA — the `blocks/da-marketo/` block is responsible for translating page content into the state they need.
 
-**Exception:** `libs.js` is the one EDS-aware file in this folder. It is the Milo/AEM EDS entry point for this repo — see [EDS/Milo entry point](#edsmilo-entry-point) below.
+**Exceptions:** `libs.js` is the Milo/AEM EDS entry point, and `features/marketo-consent-banner/` contains the thank-you reminder UI — see [EDS/Milo entry point](#edsmilo-entry-point) below.
 
 ## Relationship to mkto-frms
 
@@ -63,9 +63,29 @@ mkto.register({ getConfig, setConfig });
 
 `register()` reads the current Milo config, appends `{ base, blocks: ['da-marketo'] }` to `externalLibs`, and wraps `decorateArea` to rename `.marketo` elements to `.da-marketo`. The base URL is self-resolved via `import.meta.url` — no URL needs to be passed in.
 
-This is the only file in `mkto/` that knows about Milo's API. All other files are EDS-agnostic.
+The loader and consent-banner renderer use Milo's API; the numbered pipeline scripts remain EDS-agnostic.
 
 `eslint.config.js` explicitly ignores `mkto/mkto.js`, `mkto/deps/**`, and `mkto/[0-9]*/**` (the vendored pipeline scripts) but **not** `libs.js` — so linting applies here.
+
+### Germany consent reminder POC
+
+The block's genuine Forms2 success callback queues a reminder only for submitted `Country === 'DE'` and `mktoKoreaPrivacyThirdParty === 'yes'`. This mapping is verified for form 2277, not all form families. The destination comes from the custom runtime's current configuration, not Forms2's follow-up URL. Like the custom controller, valid URL content is treated as a redirect even when the runtime type is `msg` or `message`. Modal, section, IMS, Adobe Connect, actual message, cross-origin and same-path outcomes do not queue a reminder. Auto-success and test-emulation controllers do not invoke this hook.
+
+The one-shot `milo:marketo-consent-reminder` session entry contains only version, destination origin/path and creation time, with a 10-minute expiry. New submissions and ineligible successes clear old intent. The German banner is dismissible and removed on `pagehide`; no analytics, URL flags, cookies, local storage or raw form values are added.
+
+`register()` conditionally imports the receiver after Milo's deferred readiness when pending state exists, including pages without a form. This works with unchanged `milolibs=main`, but **both the form and thank-you page must load this da-marketo branch** through the existing `marketolibs` URL or `marketo-libs` metadata setup. A form-page query parameter is not automatically carried across the redirect. No new banner metadata is required.
+
+For branch previews, select `milolibs=main&marketolibs=marketo-germany-check-poc` on both pages (or use existing site metadata to select the same da-marketo branch). Production hostnames use the host's `/mkto` mapping rather than a query-selected feature branch.
+
+Manual focused checks:
+
+```sh
+npx wtr './test/blocks/da-marketo/consent-reminder.test.js' './test/blocks/da-marketo/da-marketo.test.js' './test/mkto/libs.test.js' --node-resolve --port=2000
+npx eslint mkto/libs.js mkto/blocks/da-marketo/da-marketo.js mkto/features/marketo-consent-banner/*.js test/blocks/da-marketo/consent-reminder.test.js test/blocks/da-marketo/mocks/sanitizeHtml.js web-test-runner.config.js
+npx stylelint 'mkto/features/marketo-consent-banner/*.css'
+```
+
+Site-wide consent-field coverage, deployed redirects, actual email confirmation and applicable functional-storage/CMP policy remain rollout gates.
 
 ## Marketo entry point
 

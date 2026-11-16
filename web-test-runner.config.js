@@ -39,6 +39,7 @@ export default {
             "imports": {
               "https://main--milo--adobecom.aem.live/libs/utils/utils.js": "/test/blocks/da-marketo/mocks/utils.js",
               "https://main--milo--adobecom.aem.live/libs/utils/action.js": "/test/blocks/da-marketo/mocks/action.js",
+              "https://main--milo--adobecom.aem.live/libs/utils/sanitizeHtml.js": "/test/blocks/da-marketo/mocks/sanitizeHtml.js",
               "https://main--milo--adobecom.aem.live/libs/features/placeholders.js": "/test/blocks/da-marketo/mocks/placeholders.js",
               "http://localhost:2000/mkto/mkto.js": "/test/blocks/da-marketo/mocks/mkto.js"
             }

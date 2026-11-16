@@ -1,4 +1,5 @@
 import { LIBS } from '../../constants.js';
+import { updateConsentReminder } from '../../features/marketo-consent-banner/consent-reminder.js';
 
 /*
  * Copyright 2022 Adobe. All rights reserved.
@@ -272,18 +273,27 @@ const toggleSuccessSection = (formData) => {
 };
 
 export const formSubmit = (formEl) => {
+  updateConsentReminder();
   const el = formEl.closest('.marketo');
   const testRecord = window.mkto_isTestRecord?.();
   if (testRecord && testRecord !== 'not_test') return;
   el.dataset.submitTimeoutId = formTimeout(el, () => !el.classList.contains('success'), LANA_MESSAGE.SUBMIT_FAILED);
 };
 
-export const formSuccess = (formEl, formData) => {
+export const formSuccess = (formEl, formData, values) => {
   const el = formEl.closest('.marketo');
   const parentModal = formEl?.closest('.dialog-modal');
   const mktoSubmit = new Event('mktoSubmit');
+  // The custom controller owns navigation and does not use Forms2's follow-up URL.
+  const success = getDataLayer('form.success');
+  const successType = typeof success?.type === 'string' ? success.type.trim().toLowerCase() : '';
+  // A valid URL overrides message/msg in the controller, except for Adobe Connect.
+  const destination = !parentModal && formData?.[SUCCESS_TYPE] === 'redirect'
+    && successType !== 'adobe_connect' && typeof success?.content === 'string'
+    && window.MktoFormsValidUrl?.(success.content.trim()) ? success.content.trim() : null;
 
   clearTimeout(el.dataset.submitTimeoutId);
+  updateConsentReminder(values, destination);
   el.classList.add('success');
   window.dispatchEvent(mktoSubmit);
   window.mktoSubmitted = true;
@@ -359,7 +369,7 @@ const readyForm = (form, formData) => {
   }, true);
   form.onValidate(() => formValidate(formEl));
   form.onSubmit(() => formSubmit(formEl));
-  form.onSuccess(() => formSuccess(formEl, formData));
+  form.onSuccess((values) => formSuccess(formEl, formData, values));
 };
 
 export const loadMarketo = async (el, formData) => {
@@ -374,7 +384,9 @@ export const loadMarketo = async (el, formData) => {
     setDataLayer(FORM_STATUS, 'loaded');
     const { MktoForms2 } = window;
     formTimeout(el, () => !isVisible(el.querySelector('form')), LANA_MESSAGE.RENDER_FAILED);
-    MktoForms2.whenReady((form) => { readyForm(form, formData); });
+    MktoForms2.whenReady((form) => {
+      if (form.getFormElem().get(0) === el.querySelector('form')) readyForm(form, formData);
+    });
 
     /* c8 ignore next 3 */
     if (el.classList.contains('multi-step')) {
