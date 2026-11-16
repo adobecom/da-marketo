@@ -369,6 +369,22 @@ describe('da-marketo failure logging', () => {
       )).to.be.true;
     });
 
+    it('cancels the render-failure timeout after successful submission hides the form', async () => {
+      buildBlock();
+      window.MktoForms2 = { whenReady: () => {} };
+      await loadMarketo(el, formData);
+      expect(getDataLayer('form.status')).to.equal('loaded');
+      const formEl = el.querySelector('form');
+      formSubmit(formEl);
+      formSuccess(formEl, {});
+      formEl.style.visibility = 'hidden';
+      await clock.tickAsync(FAILURE_TIMEOUT);
+
+      expect(window.lana.log.calledWith(LANA_MESSAGE.RENDER_FAILED)).to.be.false;
+      expect(window.lana.log.calledWith(LANA_MESSAGE.SUBMIT_FAILED)).to.be.false;
+      expect(el.querySelector('.marketo-overlay')).to.not.exist;
+    });
+
     it('logs a forms2/mkto pipeline load failure and hides the block', async () => {
       buildBlock();
       window.mktoMockFail = true;
