@@ -317,6 +317,39 @@ describe('da-marketo failure logging', () => {
   });
 
   describe('loadMarketo', () => {
+    it('sets the date max on focus when no authored max exists', async () => {
+      buildBlock();
+      const dateField = document.createElement('input');
+      dateField.type = 'date';
+      el.querySelector('form').appendChild(dateField);
+
+      await loadMarketo(el, formData);
+
+      expect(dateField.hasAttribute('max')).to.be.false;
+      dateField.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+      expect(dateField.getAttribute('max')).to.equal('9999-12-31');
+    });
+
+    it('preserves an authored date max on focus', async () => {
+      buildBlock();
+      const dateField = document.createElement('input');
+      dateField.type = 'date';
+      dateField.setAttribute('max', '2026-12-31');
+      el.querySelector('form').appendChild(dateField);
+
+      await loadMarketo(el, formData);
+
+      dateField.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+      expect(dateField.getAttribute('max')).to.equal('2026-12-31');
+    });
+
+    it('handles focus safely when the form has no date field', async () => {
+      buildBlock();
+      await loadMarketo(el, formData);
+
+      expect(() => el.querySelector('form').dispatchEvent(new FocusEvent('focus'))).to.not.throw();
+    });
+
     it('logs handshake failure when the iframe never signals ready', async () => {
       buildBlock();
       await loadMarketo(el, formData);
