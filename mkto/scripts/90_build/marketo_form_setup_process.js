@@ -1,8 +1,8 @@
 // ##
-// ## Updated 20251125T133842
+// ## Updated 20261112T001630
 // ##
 // ##
-// ## 90_build/marketo_form_setup_process.js - 20251125T133842
+// ## 90_build/marketo_form_setup_process.js - 20261112T001630
 // ##
 var mkto_formsLoaded = mkto_formsLoaded || {};
 var mktoFrmParams = new URLSearchParams(window.location.search);
@@ -331,6 +331,21 @@ if (typeof mktoPerformanceObserver == "undefined") {
               if (review == "") {
                 requiredFieldsFilled = false;
                 mkf_c.log(`Required Field Missing: '${key}'`);
+                let emptyRequiredFields = document.querySelectorAll(
+                  `#mktoForm_${formId} [name="${key}"].mktoRequired`
+                );
+                for (let r = 0; r < emptyRequiredFields.length; r++) {
+                  let emptyField = emptyRequiredFields[r];
+                  let fieldRow = emptyField.closest(".mktoFormRowTop");
+                  let fieldVisible =
+                    (!fieldRow || !fieldRow.classList.contains("mktoHidden")) &&
+                    emptyField.offsetParent !== null;
+                  if (fieldVisible) {
+                    emptyField.classList.remove("mktoValid");
+                    emptyField.classList.add("mktoInvalid");
+                    emptyField.setAttribute("aria-invalid", "true");
+                  }
+                }
               }
             }
           }
