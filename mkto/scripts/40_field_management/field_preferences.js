@@ -1,9 +1,9 @@
 // ##
-// ## Updated 20260917T210306
+// ## Updated 20261112T203314
 // ##
 // ##
 // ##
-// ## 40_field_management/field_preferences.js - 20260917T210306
+// ## 40_field_management/field_preferences.js - 20261112T203314
 // ##
 // ##
 
@@ -38,7 +38,7 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
     var setRequired_set = {};
 
     const setRequired_attempts = 30;
-    window.setRequired = function (fieldName, direction) {
+    window.setRequired = function (fieldName, required) {
       if (fieldName == "" || fieldName == null || fieldName == undefined) {
         // mkf_c.log("setRequired - fieldName is empty");
         return;
@@ -67,17 +67,49 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
         setRequired_set[fieldName] = 0;
         let field = document.querySelector('[name="' + fieldName + '"]');
 
-        if (window.jQuery) {
+        // Make the required state authoritative for Marketo's native validator.
+        // The SDK reads the descriptor via its own (bundled) jQuery instance, so the
+        // descriptor must be accessed through the form's getFormElem() rather than a
+        // page-level window.jQuery, whose per-instance .data() store would not match.
+        try {
           let mktoFieldDescriptorElem = field.closest(".mktoFieldDescriptor");
           if (mktoFieldDescriptorElem) {
-            let mktoFieldDescriptor = window.jQuery(mktoFieldDescriptorElem).data("mktoFieldDescriptor");
-            if (mktoFieldDescriptor) {
-              mktoFieldDescriptor.required = direction;
+            let formId =
+              typeof window.getMktoFormID === "function" ? window.getMktoFormID() : null;
+            let form =
+              formId && window.MktoForms2 ? window.MktoForms2.getForm(formId) : null;
+            let formElem =
+              form && typeof form.getFormElem === "function" ? form.getFormElem() : null;
+            if (formElem && typeof formElem.find === "function") {
+              let descriptorMatch = formElem.find(".mktoFieldDescriptor").filter(function () {
+                return this === mktoFieldDescriptorElem;
+              });
+              let mktoFieldDescriptor =
+                descriptorMatch && typeof descriptorMatch.data === "function"
+                  ? descriptorMatch.data("mktoFieldDescriptor")
+                  : null;
+              if (mktoFieldDescriptor) {
+                // Only make da-marketo-added required fields authoritative. Never
+                // clear a field Marketo itself marks required (native required
+                // fields are already required here and were not flagged by us),
+                // otherwise native validation would stop enforcing them.
+                if (required === true) {
+                  if (!mktoFieldDescriptor.required) {
+                    mktoFieldDescriptor.required = true;
+                    mktoFieldDescriptor.daMarketoRequired = true;
+                  }
+                } else if (mktoFieldDescriptor.daMarketoRequired) {
+                  mktoFieldDescriptor.required = false;
+                  mktoFieldDescriptor.daMarketoRequired = false;
+                }
+              }
             }
           }
+        } catch (e) {
+          // non-fatal: class-based enforcement below still applies.
         }
 
-        if (direction == true) {
+        if (required == true) {
           field.classList.remove("mktoValid");
           field.classList.add("mktoRequired");
           field.classList.add("mkto_toggle");
@@ -178,7 +210,7 @@ if (typeof window?.field_pref != "function" && typeof form_dynamics == "undefine
         setRequired_set[fieldName] = setRequired_set[fieldName] + 1;
         if (setRequired_set[fieldName] < setRequired_attempts) {
           setTimeout(function () {
-            setRequired(fieldName, direction);
+            setRequired(fieldName, required);
           }, 20);
         } else {
           //mkf_c.log(`setRequired - [${fieldName}] found after ${setRequired_set[fieldName]} attempts.`)

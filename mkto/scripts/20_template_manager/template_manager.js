@@ -1,5 +1,5 @@
 // ##
-// ## Updated 20241118T190526
+// ## Updated 20261104T173007
 // ##
 // ##
 // ##
@@ -421,14 +421,12 @@ if (typeof templateManager != "function" && typeof form_dynamics !== "undefined"
           selectBox.appendChild(option);
         });
 
-        if (params.has("template")) {
-          let currTemp = params.get("template");
-          if (currTemp) {
-            selectBox.value = currTemp;
-          }
-        } else {
-          selectBox.value = mcz_marketoForm_pref.form.template || "";
-        }
+        const requestedTemplate = params.get("template");
+        const defaultTemplate = mcz_marketoForm_pref.form.template || "";
+        const selectedTemplate = activeTemps.includes(requestedTemplate)
+          ? requestedTemplate
+          : defaultTemplate;
+        selectBox.value = activeTemps.includes(selectedTemplate) ? selectedTemplate : "";
 
         if (selectBox.value == "subscription") {
           var subId =
@@ -485,14 +483,12 @@ if (typeof templateManager != "function" && typeof form_dynamics !== "undefined"
           selectBox.appendChild(option);
         });
 
-        if (params.has("lang")) {
-          let currLang = params.get("lang");
-          if (currLang) {
-            selectBox.value = currLang;
-          }
-        } else {
-          selectBox.value = mcz_marketoForm_pref.profile.prefLanguage || "";
-        }
+        const requestedLang = params.get("lang");
+        const defaultLang = mcz_marketoForm_pref.profile.prefLanguage || "";
+        const selectedLang = activeLangs.includes(requestedLang)
+          ? requestedLang
+          : defaultLang;
+        selectBox.value = activeLangs.includes(selectedLang) ? selectedLang : "";
 
         selectBox.style.position = "absolute";
         selectBox.style.top = "60px";
