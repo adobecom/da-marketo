@@ -275,6 +275,11 @@
   background-position: 3% 50%;
 }
 
+.marketo .mktoForm input[type="date"] {
+  appearance: none;
+  height: 40px;
+}
+
 [dir="rtl"] .marketo .mktoForm input[type="tel"] {
   direction: inherit;
 }
