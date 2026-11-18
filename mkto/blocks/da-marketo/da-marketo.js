@@ -284,6 +284,7 @@ export const formSuccess = (formEl, formData) => {
   const mktoSubmit = new Event('mktoSubmit');
 
   clearTimeout(el.dataset.submitTimeoutId);
+  clearTimeout(el.dataset.renderTimeoutId);
   el.classList.add('success');
   window.dispatchEvent(mktoSubmit);
   window.mktoSubmitted = true;
@@ -345,6 +346,14 @@ const readyForm = (form, formData) => {
   window.addEventListener('message', handleIframeReady);
   formTimeout(el, () => getDataLayer(FORM_XDFRAME) !== 'ready', LANA_MESSAGE.HANDSHAKE_FAILED);
 
+  function handleDateMax() {
+    const dateField = formEl.querySelector('input[type="date"]');
+    if (dateField && !dateField.hasAttribute('max')) dateField.setAttribute('max', '9999-12-31');
+    formEl.removeEventListener('focus', handleDateMax, true);
+  }
+
+  formEl.addEventListener('focus', handleDateMax, true);
+
   formEl.addEventListener('focus', ({ target }) => {
     /* c8 ignore next 9 */
     const hasError = formEl.classList.contains('show-warnings');
@@ -373,7 +382,7 @@ export const loadMarketo = async (el, formData) => {
     await loadMkto(baseURL, munchkinID, formID);
     setDataLayer(FORM_STATUS, 'loaded');
     const { MktoForms2 } = window;
-    formTimeout(el, () => !isVisible(el.querySelector('form')), LANA_MESSAGE.RENDER_FAILED);
+    el.dataset.renderTimeoutId = formTimeout(el, () => !isVisible(el.querySelector('form')), LANA_MESSAGE.RENDER_FAILED);
     MktoForms2.whenReady((form) => { readyForm(form, formData); });
 
     /* c8 ignore next 3 */

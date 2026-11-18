@@ -317,6 +317,39 @@ describe('da-marketo failure logging', () => {
   });
 
   describe('loadMarketo', () => {
+    it('sets the date max on focus when no authored max exists', async () => {
+      buildBlock();
+      const dateField = document.createElement('input');
+      dateField.type = 'date';
+      el.querySelector('form').appendChild(dateField);
+
+      await loadMarketo(el, formData);
+
+      expect(dateField.hasAttribute('max')).to.be.false;
+      dateField.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+      expect(dateField.getAttribute('max')).to.equal('9999-12-31');
+    });
+
+    it('preserves an authored date max on focus', async () => {
+      buildBlock();
+      const dateField = document.createElement('input');
+      dateField.type = 'date';
+      dateField.setAttribute('max', '2026-12-31');
+      el.querySelector('form').appendChild(dateField);
+
+      await loadMarketo(el, formData);
+
+      dateField.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+      expect(dateField.getAttribute('max')).to.equal('2026-12-31');
+    });
+
+    it('handles focus safely when the form has no date field', async () => {
+      buildBlock();
+      await loadMarketo(el, formData);
+
+      expect(() => el.querySelector('form').dispatchEvent(new FocusEvent('focus'))).to.not.throw();
+    });
+
     it('logs handshake failure when the iframe never signals ready', async () => {
       buildBlock();
       await loadMarketo(el, formData);
@@ -367,6 +400,22 @@ describe('da-marketo failure logging', () => {
         LANA_MESSAGE.RENDER_FAILED,
         sinon.match({ severity: 'e' }),
       )).to.be.true;
+    });
+
+    it('cancels the render-failure timeout after successful submission hides the form', async () => {
+      buildBlock();
+      window.MktoForms2 = { whenReady: () => {} };
+      await loadMarketo(el, formData);
+      expect(getDataLayer('form.status')).to.equal('loaded');
+      const formEl = el.querySelector('form');
+      formSubmit(formEl);
+      formSuccess(formEl, {});
+      formEl.style.visibility = 'hidden';
+      await clock.tickAsync(FAILURE_TIMEOUT);
+
+      expect(window.lana.log.calledWith(LANA_MESSAGE.RENDER_FAILED)).to.be.false;
+      expect(window.lana.log.calledWith(LANA_MESSAGE.SUBMIT_FAILED)).to.be.false;
+      expect(el.querySelector('.marketo-overlay')).to.not.exist;
     });
 
     it('logs a forms2/mkto pipeline load failure and hides the block', async () => {
