@@ -12,6 +12,7 @@ import init, {
   formSubmit,
   formValidate,
   loadMarketo,
+  addDatePlaceholders,
   logFailure,
   formTimeout,
   LANA_MESSAGE,
@@ -317,6 +318,62 @@ describe('da-marketo failure logging', () => {
   });
 
   describe('loadMarketo', () => {
+    ['en-GB', 'en-US'].forEach((locale) => {
+      it(`initializes and updates the date placeholder for ${locale}`, async () => {
+        buildBlock();
+        const formEl = el.querySelector('form');
+        formEl.lang = locale;
+        const fieldWrap = document.createElement('div');
+        fieldWrap.className = 'mktoFieldWrap';
+        const dateField = document.createElement('input');
+        dateField.type = 'date';
+        fieldWrap.append(dateField);
+        formEl.append(fieldWrap);
+
+        await loadMarketo(el, formData);
+
+        const placeholder = fieldWrap.querySelector('.mktoDatePlaceholder');
+        expect(placeholder.textContent).to.equal(locale === 'en-GB' ? 'DD/MM/YYYY' : 'MM/DD/YYYY');
+        expect(placeholder.getAttribute('aria-hidden')).to.equal('true');
+        expect(fieldWrap.classList.contains('mktoDateFieldEmpty')).to.be.true;
+        dateField.focus();
+        expect(fieldWrap.classList.contains('mktoDateFieldEmpty')).to.be.true;
+
+        dateField.value = '2026-02-01';
+        dateField.dispatchEvent(new Event('input'));
+        expect(fieldWrap.classList.contains('mktoDateFieldEmpty')).to.be.false;
+        dateField.value = '';
+        dateField.dispatchEvent(new Event('change'));
+        expect(fieldWrap.classList.contains('mktoDateFieldEmpty')).to.be.true;
+
+        addDatePlaceholders(formEl);
+        expect(fieldWrap.querySelectorAll('.mktoDatePlaceholder').length).to.equal(1);
+      });
+    });
+
+    ['converted', 'inserted'].forEach((mode) => {
+      it(`adds the placeholder when a date field is ${mode} after Forms2 is ready`, async () => {
+        buildBlock();
+        const formEl = el.querySelector('form');
+        formEl.lang = 'en-US';
+        const fieldWrap = document.createElement('div');
+        fieldWrap.className = 'mktoFieldWrap';
+        const dateField = document.createElement('input');
+        if (mode === 'converted') fieldWrap.append(dateField);
+        formEl.append(fieldWrap);
+
+        await loadMarketo(el, formData);
+        expect(fieldWrap.querySelector('.mktoDatePlaceholder')).to.not.exist;
+
+        dateField.type = 'date';
+        if (mode === 'inserted') fieldWrap.append(dateField);
+        await Promise.resolve();
+
+        expect(fieldWrap.querySelector('.mktoDatePlaceholder').textContent).to.equal('MM/DD/YYYY');
+        expect(fieldWrap.classList.contains('mktoDateFieldEmpty')).to.be.true;
+      });
+    });
+
     it('sets the date max on focus when no authored max exists', async () => {
       buildBlock();
       const dateField = document.createElement('input');
